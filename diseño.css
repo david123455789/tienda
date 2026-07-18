@@ -1,0 +1,145 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f7f4ef;
+  color: #2d2418;
+}
+
+header {
+  height: 86px;
+  padding: 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fffaf2;
+  border-bottom: 1px solid #e2d6c6;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+#logo {
+  width: 120px;
+  height: 70px;
+  object-fit: contain;
+}
+
+#btn-menu {
+  border: 1px solid #6b4e2e;
+  background: #6b4e2e;
+  color: white;
+  padding: 10px 18px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+#btn-menu:hover {
+  background: #4b351f;
+}
+
+.hero {
+  min-height: 340px;
+  padding: 72px 48px;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(rgba(45, 36, 24, 0.35), rgba(45, 36, 24, 0.35)),
+    url("imagenes/logo.png");
+  background-size: contain;
+  background-position: right center;
+  background-repeat: no-repeat;
+  background-color: #efe6d8;
+}
+
+.hero div {
+  max-width: 560px;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #6b4e2e;
+}
+
+.hero h1 {
+  margin: 10px 0;
+  font-size: 48px;
+  line-height: 1.05;
+}
+
+.hero p {
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.catalogo {
+  padding: 48px;
+}
+
+.catalogo-header {
+  margin-bottom: 24px;
+}
+
+.catalogo-header h2 {
+  margin: 0;
+  font-size: 34px;
+}
+
+.catalogo-header p {
+  margin: 8px 0 0;
+  color: #715f4b;
+}
+
+.productos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 22px;
+}
+
+.producto {
+  background: white;
+  border: 1px solid #e3d8ca;
+  padding: 22px;
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(45, 36, 24, 0.08);
+}
+
+.producto h2 {
+  margin: 0 0 14px;
+  font-size: 22px;
+}
+
+.producto p {
+  margin: 8px 0;
+  color: #4a3a28;
+}
+
+.producto strong {
+  color: #2d2418;
+}
+
+@media (max-width: 700px) {
+  header {
+    padding: 0 20px;
+  }
+
+  .hero {
+    padding: 48px 20px;
+    background-size: 280px;
+    background-position: center bottom;
+    align-items: flex-start;
+  }
+
+  .hero h1 {
+    font-size: 34px;
+  }
+
+  .catalogo {
+    padding: 32px 20px;
+  }
+}
