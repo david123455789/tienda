@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "nombre": "Jacket Mujer Classic",
+    "categoria": "Mujer",
+    "subcategoria": "Jackets",
+    "precio": 129.99,
+    "stock": 10,
+    "imagen": "imagenes/jacket.jpg"
+  }
+]
