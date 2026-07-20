@@ -1,55 +1,83 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Página Básica</title>
-    
-    <link rel="stylesheet" href="diseño.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tienda Equestre</title>
+  <link rel="stylesheet" href="diseño.css">
 </head>
 <body>
 
-    <header>
+<header>
   <img src="imagenes/logo.png" alt="Logo de la empresa" id="logo">
 
   <nav class="navbar">
-    <a href="#" class="nav-link active">Inicio</a>
+    <a href="#" class="nav-link active" id="btn-inicio">Inicio</a>
 
     <div class="dropdown">
-      <button id="btn-maximilian" class="nav-link dropdown-btn">
+      <button id="btn-maximilian" class="nav-link dropdown-btn" type="button">
         Maximilian <span>⌄</span>
       </button>
 
-     <div class="dropdown-menu">
-  <div class="menu-group">
-    <button class="menu-title">Mujer</button>
-    <div class="submenu">
-      <a href="#" data-categoria="Mujer" data-subcategoria="Jackets">Jackets</a>
-      <a href="#" data-categoria="Mujer" data-subcategoria="Hoodies">Hoodies</a>
-      <a href="#" data-categoria="Mujer" data-subcategoria="Sweatshirts">Sweatshirts</a>
-      <a href="#" data-categoria="Mujer" data-subcategoria="Tops">Tops</a>
-      <a href="#" data-categoria="Mujer" data-subcategoria="Breeches">Breeches</a>
-      <a href="#" data-categoria="Mujer" data-subcategoria="Leggings">Leggings</a>
-      <a href="#" data-categoria="Mujer" data-subcategoria="Jumpsuits">Jumpsuits</a>
-      <a href="#" data-categoria="Mujer" data-subcategoria="Competition">Competition</a>
-    </div>
-  </div>
+      <div class="dropdown-menu">
+        <div class="menu-category">
+          <button class="category-btn" type="button">Mujer <span>⌄</span></button>
+          <div class="subcategory-list">
+            <a href="#" data-categoria="Mujer" data-subcategoria="Jackets">Jackets</a>
+            <a href="#" data-categoria="Mujer" data-subcategoria="Hoodies">Hoodies</a>
+            <a href="#" data-categoria="Mujer" data-subcategoria="Sweatshirts">Sweatshirts</a>
+            <a href="#" data-categoria="Mujer" data-subcategoria="Tops">Tops</a>
+            <a href="#" data-categoria="Mujer" data-subcategoria="Breeches">Breeches</a>
+            <a href="#" data-categoria="Mujer" data-subcategoria="Leggings">Leggings</a>
+            <a href="#" data-categoria="Mujer" data-subcategoria="Jumpsuits">Jumpsuits</a>
+            <a href="#" data-categoria="Mujer" data-subcategoria="Competition">Competition</a>
+          </div>
+        </div>
 
-  <div class="menu-group">
-    <button class="menu-title">Hombre</button>
-    <div class="submenu">
-      <a href="#" data-categoria="Hombre" data-subcategoria="Jackets and Hoodies">Jackets and Hoodies</a>
-      <a href="#" data-categoria="Hombre" data-subcategoria="Top">Top</a>
-      <a href="#" data-categoria="Hombre" data-subcategoria="Riding Breeches">Riding Breeches</a>
-      <a href="#" data-categoria="Hombre" data-subcategoria="Competition">Competition</a>
-    </div>
-  </div>
-</div>
+        <div class="menu-category">
+          <button class="category-btn" type="button">Hombre <span>⌄</span></button>
+          <div class="subcategory-list">
+            <a href="#" data-categoria="Hombre" data-subcategoria="Jackets and Hoodies">Jackets and Hoodies</a>
+            <a href="#" data-categoria="Hombre" data-subcategoria="Top">Top</a>
+            <a href="#" data-categoria="Hombre" data-subcategoria="Riding Breeches">Riding Breeches</a>
+            <a href="#" data-categoria="Hombre" data-subcategoria="Competition">Competition</a>
+          </div>
+        </div>
+
+        <div class="menu-category">
+          <button class="category-btn" type="button">Young Riders <span>⌄</span></button>
+          <div class="subcategory-list">
+            <a href="#" data-categoria="Young Rider" data-subcategoria="YR Jackets and Hoodies">YR Jackets and Hoodies</a>
+            <a href="#" data-categoria="Young Rider" data-subcategoria="YR Tops">YR Tops</a>
+            <a href="#" data-categoria="Young Rider" data-subcategoria="YR Leggings">YR Leggings</a>
+            <a href="#" data-categoria="Young Rider" data-subcategoria="YR Breeches">YR Breeches</a>
+            <a href="#" data-categoria="Young Rider" data-subcategoria="YR Competition">YR Competition</a>
+          </div>
+        </div>
+
+        <div class="menu-category">
+          <button class="category-btn" type="button">Accesorios <span>⌄</span></button>
+          <div class="subcategory-list">
+            <a href="#" data-categoria="Accesorios" data-subcategoria="">Todos</a>
+          </div>
+        </div>
+
+        <div class="menu-category">
+          <button class="category-btn" type="button">Caballos <span>⌄</span></button>
+          <div class="subcategory-list">
+            <a href="#" data-categoria="Caballos" data-subcategoria="Saddle Pads">Saddle Pads</a>
+            <a href="#" data-categoria="Caballos" data-subcategoria="Bandages">Bandages</a>
+            <a href="#" data-categoria="Caballos" data-subcategoria="Ear Bonnets">Ear Bonnets</a>
+            <a href="#" data-categoria="Caballos" data-subcategoria="Brushing Boots">Brushing Boots</a>
+            <a href="#" data-categoria="Caballos" data-subcategoria="Bell Boots">Bell Boots</a>
+          </div>
+        </div>
+      </div>
     </div>
   </nav>
 </header>
 
-   <main>
+<main>
   <section class="hero">
     <div>
       <p class="eyebrow">Equestrian Store</p>
@@ -60,16 +88,14 @@
 
   <section class="catalogo">
     <div class="catalogo-header">
-      <h2>Productos</h2>
-      <p>Catálogo conectado a la base de datos</p>
+      <h2 id="titulo-catalogo">Productos</h2>
+      <p id="descripcion-catalogo">Catálogo conectado a la base de datos</p>
     </div>
 
     <div id="productos" class="productos-grid"></div>
   </section>
 </main>
 
-    
-    <script src="operaciones.js"></script>
-     <script src="server.js"></script>
+<script src="operaciones.js"></script>
 </body>
 </html>

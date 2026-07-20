@@ -74,7 +74,11 @@ header {
   box-shadow: 0 16px 30px rgba(0, 0, 0, 0.08);
 }
 
-.dropdown:hover .dropdown-menu {
+.dropdown-menu {
+  display: none;
+}
+
+.dropdown.open .dropdown-menu {
   display: block;
 }
 
@@ -217,5 +221,86 @@ header {
 
   .catalogo {
     padding: 32px 20px;
+  }
+}
+
+.dropdown-menu {
+  width: 310px;
+  padding: 12px 0;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.category-btn {
+  width: 100%;
+  border: 0;
+  background: white;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  text-transform: uppercase;
+  color: #555;
+  cursor: pointer;
+}
+
+.category-btn:hover {
+  background: #f6f6f6;
+  color: #111;
+}
+
+.subcategory-list {
+  display: none;
+  padding: 6px 0 12px;
+  background: #f7f7f7;
+}
+
+.menu-category.open .subcategory-list {
+  display: block;
+}
+
+.subcategory-list a {
+  display: block;
+  padding: 11px 34px;
+  color: #666;
+  text-decoration: none;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+.subcategory-list a:hover {
+  color: #111;
+  background: #eeeeee;
+}
+
+@media (max-width: 700px) {
+  header {
+    height: auto;
+    padding: 16px 20px;
+    align-items: flex-start;
+    gap: 18px;
+  }
+
+  #logo {
+    width: 76px;
+    height: 76px;
+  }
+
+  .navbar {
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .dropdown-menu {
+    position: fixed;
+    top: 108px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    max-height: 70vh;
+  }
+
+  .hero h1 {
+    font-size: 34px;
   }
 }
