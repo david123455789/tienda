@@ -10,16 +10,92 @@ body {
 }
 
 header {
-  height: 86px;
-  padding: 0 48px;
+  height: 110px;
+  padding: 0 12%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: #fffaf2;
-  border-bottom: 1px solid #e2d6c6;
+  gap: 60px;
+  background: white;
+  border-bottom: 1px solid #eeeeee;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 100;
+}
+
+#logo {
+  width: 95px;
+  height: 95px;
+  object-fit: contain;
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+}
+
+.nav-link {
+  background: none;
+  border: none;
+  color: #5f6368;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 10px 0;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: #1f1f1f;
+  border-bottom: 1px solid #1f1f1f;
+}
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 42px;
+  left: 0;
+  width: 250px;
+  background: white;
+  border: 1px solid #e5e5e5;
+  padding: 14px 0;
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.08);
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-menu a {
+  display: flex;
+  justify-content: space-between;
+  padding: 13px 24px;
+  color: #6a6a6a;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  text-decoration: none;
+}
+
+.dropdown-menu a::after {
+  content: "⌄";
+}
+
+.dropdown-menu a:hover {
+  color: #1f1f1f;
+  background: #f7f7f7;
 }
 
 #logo {

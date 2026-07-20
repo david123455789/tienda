@@ -10,12 +10,44 @@
 <body>
 
     <header>
-    
-        <img src="imagenes/logo.png" alt="Logo de la empresa" id="logo">
-        
-       
-        <button id="btn-menu">Menú</button>
-    </header>
+  <img src="imagenes/logo.png" alt="Logo de la empresa" id="logo">
+
+  <nav class="navbar">
+    <a href="#" class="nav-link active">Inicio</a>
+
+    <div class="dropdown">
+      <button id="btn-maximilian" class="nav-link dropdown-btn">
+        Maximilian <span>⌄</span>
+      </button>
+
+     <div class="dropdown-menu">
+  <div class="menu-group">
+    <button class="menu-title">Mujer</button>
+    <div class="submenu">
+      <a href="#" data-categoria="Mujer" data-subcategoria="Jackets">Jackets</a>
+      <a href="#" data-categoria="Mujer" data-subcategoria="Hoodies">Hoodies</a>
+      <a href="#" data-categoria="Mujer" data-subcategoria="Sweatshirts">Sweatshirts</a>
+      <a href="#" data-categoria="Mujer" data-subcategoria="Tops">Tops</a>
+      <a href="#" data-categoria="Mujer" data-subcategoria="Breeches">Breeches</a>
+      <a href="#" data-categoria="Mujer" data-subcategoria="Leggings">Leggings</a>
+      <a href="#" data-categoria="Mujer" data-subcategoria="Jumpsuits">Jumpsuits</a>
+      <a href="#" data-categoria="Mujer" data-subcategoria="Competition">Competition</a>
+    </div>
+  </div>
+
+  <div class="menu-group">
+    <button class="menu-title">Hombre</button>
+    <div class="submenu">
+      <a href="#" data-categoria="Hombre" data-subcategoria="Jackets and Hoodies">Jackets and Hoodies</a>
+      <a href="#" data-categoria="Hombre" data-subcategoria="Top">Top</a>
+      <a href="#" data-categoria="Hombre" data-subcategoria="Riding Breeches">Riding Breeches</a>
+      <a href="#" data-categoria="Hombre" data-subcategoria="Competition">Competition</a>
+    </div>
+  </div>
+</div>
+    </div>
+  </nav>
+</header>
 
    <main>
   <section class="hero">
