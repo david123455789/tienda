@@ -102,13 +102,16 @@ function mostrarProductos(lista) {
     const card = document.createElement('div');
     card.classList.add('producto');
 
-    card.innerHTML = `
-      <h2>${product.name}</h2>
-      <p><strong>Categoría:</strong> ${product.categoria}</p>
-      <p><strong>Subcategoría:</strong> ${product.subcategoria}</p>
-      <p><strong>Precio:</strong> $${product.price}</p>
-      <p><strong>Stock:</strong> ${product.stock}</p>
-    `;
+  card.innerHTML = `
+  <img class="producto-imagen" src="${product.image_url}" alt="${product.name}">
+  <div class="producto-info">
+    <h2>${product.name}</h2>
+    <p><strong>Categoría:</strong> ${product.categoria}</p>
+    <p><strong>Subcategoría:</strong> ${product.subcategoria}</p>
+    <p><strong>Precio:</strong> $${product.price}</p>
+    <p><strong>Stock:</strong> ${product.stock}</p>
+  </div>
+`;
 
     contenedorProductos.appendChild(card);
   });
