@@ -1,6 +1,8 @@
 const contenedorProductos = document.getElementById('productos');
 const tituloCatalogo = document.getElementById('titulo-catalogo');
 const descripcionCatalogo = document.getElementById('descripcion-catalogo');
+const vistaInicio = document.getElementById('vista-inicio');
+const vistaColeccion = document.getElementById('vista-coleccion');
 
 let productos = [];
 
@@ -55,38 +57,58 @@ function configurarMenu() {
   });
 
   btnInicio.addEventListener('click', event => {
-    event.preventDefault();
-    tituloCatalogo.textContent = 'Productos';
-    descripcionCatalogo.textContent = 'Catálogo conectado a la base de datos';
-    mostrarProductos(productos);
-    dropdown.classList.remove('open');
+  event.preventDefault();
+
+  vistaInicio.style.display = 'block';
+  vistaColeccion.style.display = 'none';
+
+  tituloCatalogo.textContent = 'Productos';
+  descripcionCatalogo.textContent = 'Catálogo conectado a la base de datos';
+
+  dropdown.classList.remove('open');
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
   });
+});
 }
+
 
 function cargarProductos() {
   fetch('http://localhost:3000/api/products')
     .then(response => response.json())
     .then(data => {
       productos = data;
-      mostrarProductos(productos);
+     vistaColeccion.style.display = 'none';
     })
     .catch(error => {
       console.error('Error cargando productos:', error);
-      contenedorProductos.innerHTML = '<p>No se pudieron cargar los productos.</p>';
+      contenedorProductos.innerHTML = `<p>No se pudieron cargar los productos: ${error.message}</p>`;
     });
 }
 
 function filtrarProductos(categoria, subcategoria) {
   const filtrados = productos.filter(product => {
+    const categoriaProducto = product.categoria || product['categoría'];
+    const subcategoriaProducto = product.subcategoria || product['subcategoría'];
+
     if (subcategoria) {
-      return product.categoria === categoria && product.subcategoria === subcategoria;
+      return categoriaProducto === categoria && subcategoriaProducto === subcategoria;
     }
 
-    return product.categoria === categoria;
+    return categoriaProducto === categoria;
   });
 
   tituloCatalogo.textContent = subcategoria || categoria;
   descripcionCatalogo.textContent = `Maximilian - ${categoria}${subcategoria ? ' - ' + subcategoria : ''}`;
+  vistaInicio.style.display = 'none';
+vistaColeccion.style.display = 'block';
+
+window.scrollTo({
+  top: 0,
+  behavior: 'smooth'
+});
   mostrarProductos(filtrados);
 }
 
@@ -99,19 +121,25 @@ function mostrarProductos(lista) {
   }
 
   lista.forEach(product => {
+    const nombre = product.name || product.nombre;
+    const precio = product.price || product.precio;
+    const categoria = product.categoria || product['categoría'];
+    const subcategoria = product.subcategoria || product['subcategoría'];
+    const imagen = product.image_url || 'imagenes/productos/placeholder.jpg';
+
     const card = document.createElement('div');
     card.classList.add('producto');
 
-  card.innerHTML = `
-  <img class="producto-imagen" src="${product.image_url}" alt="${product.name}">
-  <div class="producto-info">
-    <h2>${product.name}</h2>
-    <p><strong>Categoría:</strong> ${product.categoria}</p>
-    <p><strong>Subcategoría:</strong> ${product.subcategoria}</p>
-    <p><strong>Precio:</strong> $${product.price}</p>
-    <p><strong>Stock:</strong> ${product.stock}</p>
-  </div>
-`;
+    card.innerHTML = `
+      <img class="producto-imagen" src="${imagen}" alt="${nombre}">
+      <div class="producto-info">
+        <h2>${nombre}</h2>
+        <p><strong>Categoría:</strong> ${categoria}</p>
+        <p><strong>Subcategoría:</strong> ${subcategoria}</p>
+        <p><strong>Precio:</strong> $${precio}</p>
+        <p><strong>Stock:</strong> ${product.stock}</p>
+      </div>
+    `;
 
     contenedorProductos.appendChild(card);
   });

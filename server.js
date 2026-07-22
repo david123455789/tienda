@@ -16,27 +16,39 @@ const pool = new Pool({
   password: '12345'
 });
 
-
-
-
 app.get('/api/products', async (req, res) => {
-  const result = await pool.query(`
-    SELECT
-      p.id,
-      p.name,
-      p.slug,
-      p.description,
-      p.price,
-      p.stock,
-      c.name AS subcategoria,
-      parent.name AS categoria,
-      pi.image_url
-    FROM products p
-    LEFT JOIN categories c ON p.category_id = c.id
-    LEFT JOIN categories parent ON c.parent_id = parent.id
-    LEFT JOIN product_images pi ON pi.product_id = p.id
-    ORDER BY parent.name, c.name, p.name;
-  `);
+  try {
+    const result = await pool.query(`
+      SELECT
+        p.id,
+        p.name,
+        p.slug,
+        p.description,
+        p.price,
+        p.stock,
+        sub.name AS subcategoria,
+        main.name AS categoria,
+        img.image_url
+      FROM products p
+      LEFT JOIN categories sub ON p.category_id = sub.id
+      LEFT JOIN categories main ON sub.parent_id = main.id
+      LEFT JOIN product_images img ON img.product_id = p.id
+      ORDER BY main.name, sub.name, p.name;
+    `);
 
-  res.json(result.rows);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('ERROR COMPLETO:', error);
+
+    res.status(500).json({
+      error: 'Error consultando productos',
+      message: error.message,
+      code: error.code,
+      detail: error.detail
+    });
+  }
+});
+
+app.listen(3000, () => {
+  console.log('Servidor corriendo en http://localhost:3000');
 });
