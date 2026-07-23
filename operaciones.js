@@ -16,22 +16,27 @@ function configurarMenu() {
   const btnMaximilian = document.getElementById('btn-maximilian');
   const btnInicio = document.getElementById('btn-inicio');
 
-  btnMaximilian.addEventListener('click', event => {
-    event.preventDefault();
-    event.stopPropagation();
-    dropdown.classList.toggle('open');
-  });
+  if (btnMaximilian && dropdown) {
+    btnMaximilian.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      dropdown.classList.toggle('open');
+    });
 
-  dropdown.addEventListener('click', event => {
-    event.stopPropagation();
-  });
+    dropdown.addEventListener('click', event => {
+      event.stopPropagation();
+    });
 
-  document.addEventListener('click', () => {
-    dropdown.classList.remove('open');
-  });
+    document.addEventListener('click', () => {
+      dropdown.classList.remove('open');
+    });
+  }
 
   document.querySelectorAll('.category-btn').forEach(button => {
-    button.addEventListener('click', () => {
+    button.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+
       const category = button.closest('.menu-category');
 
       document.querySelectorAll('.menu-category').forEach(item => {
@@ -52,40 +57,69 @@ function configurarMenu() {
       const subcategoria = link.dataset.subcategoria;
 
       filtrarProductos(categoria, subcategoria);
-      dropdown.classList.remove('open');
+
+      if (dropdown) {
+        dropdown.classList.remove('open');
+      }
     });
   });
 
-  btnInicio.addEventListener('click', event => {
-  event.preventDefault();
+  document.querySelectorAll('[data-categoria-home]').forEach(button => {
+    button.addEventListener('click', event => {
+      event.preventDefault();
 
-  vistaInicio.style.display = 'block';
-  vistaColeccion.style.display = 'none';
-
-  tituloCatalogo.textContent = 'Productos';
-  descripcionCatalogo.textContent = 'Catálogo conectado a la base de datos';
-
-  dropdown.classList.remove('open');
-
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
+      const categoria = button.dataset.categoriaHome;
+      filtrarProductos(categoria, '');
+    });
   });
-});
-}
 
+  if (btnInicio) {
+    btnInicio.addEventListener('click', event => {
+      event.preventDefault();
+
+      mostrarInicio();
+
+      if (dropdown) {
+        dropdown.classList.remove('open');
+      }
+    });
+  }
+}
 
 function cargarProductos() {
   fetch('http://localhost:3000/api/products')
     .then(response => response.json())
     .then(data => {
       productos = data;
-     vistaColeccion.style.display = 'none';
+      mostrarInicio();
     })
     .catch(error => {
       console.error('Error cargando productos:', error);
       contenedorProductos.innerHTML = `<p>No se pudieron cargar los productos: ${error.message}</p>`;
     });
+}
+
+function mostrarInicio() {
+  if (vistaInicio) {
+    vistaInicio.style.display = 'block';
+  }
+
+  if (vistaColeccion) {
+    vistaColeccion.style.display = 'none';
+  }
+
+  if (tituloCatalogo) {
+    tituloCatalogo.textContent = 'Productos';
+  }
+
+  if (descripcionCatalogo) {
+    descripcionCatalogo.textContent = 'Catálogo conectado a la base de datos';
+  }
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
 }
 
 function filtrarProductos(categoria, subcategoria) {
@@ -100,16 +134,28 @@ function filtrarProductos(categoria, subcategoria) {
     return categoriaProducto === categoria;
   });
 
-  tituloCatalogo.textContent = subcategoria || categoria;
-  descripcionCatalogo.textContent = `Maximilian - ${categoria}${subcategoria ? ' - ' + subcategoria : ''}`;
-  vistaInicio.style.display = 'none';
-vistaColeccion.style.display = 'block';
+  if (tituloCatalogo) {
+    tituloCatalogo.textContent = subcategoria || categoria;
+  }
 
-window.scrollTo({
-  top: 0,
-  behavior: 'smooth'
-});
+  if (descripcionCatalogo) {
+    descripcionCatalogo.textContent = `Maximilian - ${categoria}${subcategoria ? ' - ' + subcategoria : ''}`;
+  }
+
+  if (vistaInicio) {
+    vistaInicio.style.display = 'none';
+  }
+
+  if (vistaColeccion) {
+    vistaColeccion.style.display = 'block';
+  }
+
   mostrarProductos(filtrados);
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
 }
 
 function mostrarProductos(lista) {
