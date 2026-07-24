@@ -1,13 +1,31 @@
 const contenedorProductos = document.getElementById('productos');
 const tituloCatalogo = document.getElementById('titulo-catalogo');
 const descripcionCatalogo = document.getElementById('descripcion-catalogo');
+
 const vistaInicio = document.getElementById('vista-inicio');
 const vistaColeccion = document.getElementById('vista-coleccion');
+const vistaProducto = document.getElementById('vista-producto');
+
+const btnVolverColeccion = document.getElementById('btn-volver-coleccion');
+
+const detalleImagen = document.getElementById('detalle-imagen');
+const detalleColorImg = document.getElementById('detalle-color-img');
+const detalleNombre = document.getElementById('detalle-nombre');
+const detallePrecio = document.getElementById('detalle-precio');
+const detalleDescripcion = document.getElementById('detalle-descripcion');
+
+const qtyMinus = document.getElementById('qty-minus');
+const qtyPlus = document.getElementById('qty-plus');
+const qtyValue = document.getElementById('qty-value');
 
 let productos = [];
+let ultimaCategoria = '';
+let ultimaSubcategoria = '';
+let cantidadProducto = 1;
 
 document.addEventListener('DOMContentLoaded', () => {
   configurarMenu();
+  configurarDetalleProducto();
   cargarProductos();
 });
 
@@ -76,7 +94,6 @@ function configurarMenu() {
   if (btnInicio) {
     btnInicio.addEventListener('click', event => {
       event.preventDefault();
-
       mostrarInicio();
 
       if (dropdown) {
@@ -84,6 +101,45 @@ function configurarMenu() {
       }
     });
   }
+}
+
+function configurarDetalleProducto() {
+  if (btnVolverColeccion) {
+    btnVolverColeccion.addEventListener('click', () => {
+      vistaProducto.classList.add('oculto');
+      vistaColeccion.classList.remove('oculto');
+      vistaInicio.classList.add('oculto');
+
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+  }
+
+  if (qtyMinus && qtyPlus && qtyValue) {
+    qtyMinus.addEventListener('click', () => {
+      if (cantidadProducto > 1) {
+        cantidadProducto -= 1;
+        qtyValue.textContent = cantidadProducto;
+      }
+    });
+
+    qtyPlus.addEventListener('click', () => {
+      cantidadProducto += 1;
+      qtyValue.textContent = cantidadProducto;
+    });
+  }
+
+  document.querySelectorAll('.size-grid button').forEach(button => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('.size-grid button').forEach(item => {
+        item.classList.remove('selected');
+      });
+
+      button.classList.add('selected');
+    });
+  });
 }
 
 function cargarProductos() {
@@ -95,18 +151,17 @@ function cargarProductos() {
     })
     .catch(error => {
       console.error('Error cargando productos:', error);
-      contenedorProductos.innerHTML = `<p>No se pudieron cargar los productos: ${error.message}</p>`;
+
+      if (contenedorProductos) {
+        contenedorProductos.innerHTML = `<p>No se pudieron cargar los productos: ${error.message}</p>`;
+      }
     });
 }
 
 function mostrarInicio() {
-  if (vistaInicio) {
-    vistaInicio.style.display = 'block';
-  }
-
-  if (vistaColeccion) {
-    vistaColeccion.style.display = 'none';
-  }
+  vistaInicio.classList.remove('oculto');
+  vistaColeccion.classList.add('oculto');
+  vistaProducto.classList.add('oculto');
 
   if (tituloCatalogo) {
     tituloCatalogo.textContent = 'Productos';
@@ -123,6 +178,9 @@ function mostrarInicio() {
 }
 
 function filtrarProductos(categoria, subcategoria) {
+  ultimaCategoria = categoria;
+  ultimaSubcategoria = subcategoria;
+
   const filtrados = productos.filter(product => {
     const categoriaProducto = product.categoria || product['categoría'];
     const subcategoriaProducto = product.subcategoria || product['subcategoría'];
@@ -142,13 +200,9 @@ function filtrarProductos(categoria, subcategoria) {
     descripcionCatalogo.textContent = `Maximilian - ${categoria}${subcategoria ? ' - ' + subcategoria : ''}`;
   }
 
-  if (vistaInicio) {
-    vistaInicio.style.display = 'none';
-  }
-
-  if (vistaColeccion) {
-    vistaColeccion.style.display = 'block';
-  }
+  vistaInicio.classList.add('oculto');
+  vistaColeccion.classList.remove('oculto');
+  vistaProducto.classList.add('oculto');
 
   mostrarProductos(filtrados);
 
@@ -169,8 +223,6 @@ function mostrarProductos(lista) {
   lista.forEach(product => {
     const nombre = product.name || product.nombre;
     const precio = product.price || product.precio;
-    const categoria = product.categoria || product['categoría'];
-    const subcategoria = product.subcategoria || product['subcategoría'];
     const imagen = product.image_url || 'imagenes/productos/placeholder.jpg';
 
     const card = document.createElement('div');
@@ -180,13 +232,43 @@ function mostrarProductos(lista) {
       <img class="producto-imagen" src="${imagen}" alt="${nombre}">
       <div class="producto-info">
         <h2>${nombre}</h2>
-        <p><strong>Categoría:</strong> ${categoria}</p>
-        <p><strong>Subcategoría:</strong> ${subcategoria}</p>
-        <p><strong>Precio:</strong> $${precio}</p>
-        <p><strong>Stock:</strong> ${product.stock}</p>
+        <p class="producto-precio">$${precio}</p>
       </div>
     `;
 
+    card.addEventListener('click', () => {
+      mostrarDetalleProducto(product);
+    });
+
     contenedorProductos.appendChild(card);
+  });
+}
+
+function mostrarDetalleProducto(product) {
+  const nombre = product.name || product.nombre;
+  const precio = product.price || product.precio;
+  const imagen = product.image_url || 'imagenes/productos/placeholder.jpg';
+  const descripcion = product.description || product.descripcion || 'Producto ecuestre seleccionado para comodidad, estilo y rendimiento.';
+
+  cantidadProducto = 1;
+  qtyValue.textContent = cantidadProducto;
+
+  detalleImagen.src = imagen;
+  detalleImagen.alt = nombre;
+
+  detalleColorImg.src = imagen;
+  detalleColorImg.alt = nombre;
+
+  detalleNombre.textContent = nombre;
+  detallePrecio.textContent = `$${precio}`;
+  detalleDescripcion.textContent = descripcion;
+
+  vistaInicio.classList.add('oculto');
+  vistaColeccion.classList.add('oculto');
+  vistaProducto.classList.remove('oculto');
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
   });
 }

@@ -156,6 +156,64 @@
 
     <div id="productos" class="productos-grid"></div>
   </section>
+
+  <section id="vista-producto" class="producto-detalle oculto">
+  <button id="btn-volver-coleccion" class="btn-volver" type="button">← Volver</button>
+
+  <div class="detalle-layout">
+    <div class="detalle-galeria">
+      <img id="detalle-imagen" src="" alt="">
+    </div>
+
+    <div class="detalle-info">
+      <p class="detalle-marca">Maximilian</p>
+      <h1 id="detalle-nombre"></h1>
+      <p id="detalle-precio" class="detalle-precio"></p>
+      <p class="detalle-impuestos">Impuestos incluidos. El envío se calcula al finalizar la compra.</p>
+
+      <div class="detalle-opcion">
+        <p>Color</p>
+        <button class="color-card" type="button">
+          <img id="detalle-color-img" src="" alt="">
+          <span>Black</span>
+        </button>
+      </div>
+
+      <div class="detalle-opcion">
+        <p>Size</p>
+        <div class="size-grid">
+          <button type="button" class="selected">XXS</button>
+          <button type="button">XS</button>
+          <button type="button">S</button>
+          <button type="button">M</button>
+          <button type="button">L</button>
+          <button type="button">XL</button>
+        </div>
+      </div>
+
+      <div class="detalle-opcion">
+        <p>Cantidad</p>
+        <div class="quantity-control">
+          <button type="button" id="qty-minus">−</button>
+          <span id="qty-value">1</span>
+          <button type="button" id="qty-plus">+</button>
+        </div>
+      </div>
+
+      <button class="add-cart-btn" type="button">Agregar al carrito</button>
+      <button class="buy-btn" type="button">Comprar ahora</button>
+
+      <div class="detalle-descripcion">
+        <p id="detalle-descripcion"></p>
+        <ul>
+          <li>Diseño cómodo para uso diario y entrenamiento.</li>
+          <li>Material suave con ajuste moderno.</li>
+          <li>Ideal para combinar dentro y fuera de la pista.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
 </main>
 
 <script src="operaciones.js"></script>
