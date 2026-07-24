@@ -17,6 +17,15 @@ const detalleDescripcion = document.getElementById('detalle-descripcion');
 const qtyMinus = document.getElementById('qty-minus');
 const qtyPlus = document.getElementById('qty-plus');
 const qtyValue = document.getElementById('qty-value');
+const vistaCarrito = document.getElementById('vista-carrito');
+const btnCarrito = document.getElementById('btn-carrito');
+const cartCount = document.getElementById('cart-count');
+const carritoContenido = document.getElementById('carrito-contenido');
+const carritoTotal = document.getElementById('carrito-total');
+const btnAgregarCarrito = document.getElementById('btn-agregar-carrito');
+
+let productoActual = null;
+let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
 
 let productos = [];
 let ultimaCategoria = '';
@@ -27,6 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
   configurarMenu();
   configurarDetalleProducto();
   cargarProductos();
+  configurarCarrito();
+actualizarContadorCarrito();
 });
 
 function configurarMenu() {
@@ -245,6 +256,7 @@ function mostrarProductos(lista) {
 }
 
 function mostrarDetalleProducto(product) {
+  productoActual = product;
   const nombre = product.name || product.nombre;
   const precio = product.price || product.precio;
   const imagen = product.image_url || 'imagenes/productos/placeholder.jpg';
@@ -271,4 +283,117 @@ function mostrarDetalleProducto(product) {
     top: 0,
     behavior: 'smooth'
   });
+}
+
+function configurarCarrito() {
+  if (btnCarrito) {
+    btnCarrito.addEventListener('click', event => {
+      event.preventDefault();
+      mostrarCarrito();
+    });
+  }
+
+  if (btnAgregarCarrito) {
+    btnAgregarCarrito.addEventListener('click', () => {
+      if (!productoActual) return;
+
+      agregarAlCarrito(productoActual);
+      mostrarCarrito();
+    });
+  }
+}
+
+function agregarAlCarrito(product) {
+  const id = product.id;
+  const nombre = product.name || product.nombre;
+  const precio = Number(product.price || product.precio);
+  const imagen = product.image_url || 'imagenes/productos/placeholder.jpg';
+
+  const itemExistente = carrito.find(item => item.id === id);
+
+  if (itemExistente) {
+    itemExistente.cantidad += cantidadProducto;
+  } else {
+    carrito.push({
+      id,
+      nombre,
+      precio,
+      imagen,
+      cantidad: cantidadProducto
+    });
+  }
+
+  guardarCarrito();
+  actualizarContadorCarrito();
+}
+
+function mostrarCarrito() {
+  if (vistaInicio) vistaInicio.classList.add('oculto');
+  if (vistaColeccion) vistaColeccion.classList.add('oculto');
+  if (vistaProducto) vistaProducto.classList.add('oculto');
+  if (vistaCarrito) vistaCarrito.classList.remove('oculto');
+
+  renderizarCarrito();
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
+
+function renderizarCarrito() {
+  carritoContenido.innerHTML = '';
+
+  if (carrito.length === 0) {
+    carritoContenido.innerHTML = '<p>Tu carrito está vacío.</p>';
+    carritoTotal.textContent = '$0.00';
+    return;
+  }
+
+  let total = 0;
+
+  carrito.forEach(item => {
+    const subtotal = item.precio * item.cantidad;
+    total += subtotal;
+
+    const card = document.createElement('div');
+    card.classList.add('cart-item');
+
+    card.innerHTML = `
+      <img src="${item.imagen}" alt="${item.nombre}">
+      <div>
+        <h3>${item.nombre}</h3>
+        <p>Precio: $${item.precio.toFixed(2)}</p>
+        <p>Cantidad: ${item.cantidad}</p>
+        <p>Subtotal: $${subtotal.toFixed(2)}</p>
+      </div>
+      <button class="cart-remove" data-id="${item.id}">Eliminar</button>
+    `;
+
+    carritoContenido.appendChild(card);
+  });
+
+  carritoTotal.textContent = `$${total.toFixed(2)}`;
+
+  document.querySelectorAll('.cart-remove').forEach(button => {
+    button.addEventListener('click', () => {
+      const id = Number(button.dataset.id);
+      carrito = carrito.filter(item => item.id !== id);
+      guardarCarrito();
+      actualizarContadorCarrito();
+      renderizarCarrito();
+    });
+  });
+}
+
+function guardarCarrito() {
+  localStorage.setItem('carrito', JSON.stringify(carrito));
+}
+
+function actualizarContadorCarrito() {
+  const totalItems = carrito.reduce((total, item) => total + item.cantidad, 0);
+
+  if (cartCount) {
+    cartCount.textContent = totalItems;
+  }
 }

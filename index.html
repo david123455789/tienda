@@ -13,7 +13,9 @@
 
   <nav class="navbar">
     <a href="#" class="nav-link active" id="btn-inicio">Inicio</a>
-
+<button id="btn-carrito" class="nav-link cart-btn">
+  Carrito <span id="cart-count">0</span>
+</button>
     <div class="dropdown">
       <button id="btn-maximilian" class="nav-link dropdown-btn" type="button">
         Maximilian <span>⌄</span>
@@ -95,7 +97,7 @@
       </div>
 
       <div class="home-hero-image">
-        <img src="imagenes/logo.png" alt="Tienda ecuestre">
+        <img src="imagenes/equitacion.png" alt="Tienda ecuestre">
       </div>
     </section>
 
@@ -157,63 +159,80 @@
     <div id="productos" class="productos-grid"></div>
   </section>
 
-  <section id="vista-producto" class="producto-detalle oculto">
-  <button id="btn-volver-coleccion" class="btn-volver" type="button">← Volver</button>
+    <section id="vista-producto" class="producto-detalle oculto">
+    <button id="btn-volver-coleccion" class="btn-volver" type="button">← Volver</button>
 
-  <div class="detalle-layout">
-    <div class="detalle-galeria">
-      <img id="detalle-imagen" src="" alt="">
-    </div>
-
-    <div class="detalle-info">
-      <p class="detalle-marca">Maximilian</p>
-      <h1 id="detalle-nombre"></h1>
-      <p id="detalle-precio" class="detalle-precio"></p>
-      <p class="detalle-impuestos">Impuestos incluidos. El envío se calcula al finalizar la compra.</p>
-
-      <div class="detalle-opcion">
-        <p>Color</p>
-        <button class="color-card" type="button">
-          <img id="detalle-color-img" src="" alt="">
-          <span>Black</span>
-        </button>
+    <div class="detalle-layout">
+      <div class="detalle-galeria">
+        <img id="detalle-imagen" src="" alt="">
       </div>
 
-      <div class="detalle-opcion">
-        <p>Size</p>
-        <div class="size-grid">
-          <button type="button" class="selected">XXS</button>
-          <button type="button">XS</button>
-          <button type="button">S</button>
-          <button type="button">M</button>
-          <button type="button">L</button>
-          <button type="button">XL</button>
+      <div class="detalle-info">
+        <p class="detalle-marca">Maximilian</p>
+        <h1 id="detalle-nombre"></h1>
+        <p id="detalle-precio" class="detalle-precio"></p>
+        <p class="detalle-impuestos">Impuestos incluidos. El envío se calcula al finalizar la compra.</p>
+
+        <div class="detalle-opcion">
+          <p>Color</p>
+          <button class="color-card" type="button">
+            <img id="detalle-color-img" src="" alt="">
+            <span>Black</span>
+          </button>
+        </div>
+
+        <div class="detalle-opcion">
+          <p>Size</p>
+          <div class="size-grid">
+            <button type="button" class="selected">XXS</button>
+            <button type="button">XS</button>
+            <button type="button">S</button>
+            <button type="button">M</button>
+            <button type="button">L</button>
+            <button type="button">XL</button>
+          </div>
+        </div>
+
+        <div class="detalle-opcion">
+          <p>Cantidad</p>
+          <div class="quantity-control">
+            <button type="button" id="qty-minus">−</button>
+            <span id="qty-value">1</span>
+            <button type="button" id="qty-plus">+</button>
+          </div>
+        </div>
+
+        <button id="btn-agregar-carrito" class="add-cart-btn" type="button">Agregar al carrito</button>
+        <button class="buy-btn" type="button">Comprar ahora</button>
+
+        <div class="detalle-descripcion">
+          <p id="detalle-descripcion"></p>
+          <ul>
+            <li>Diseño cómodo para uso diario y entrenamiento.</li>
+            <li>Material suave con ajuste moderno.</li>
+            <li>Ideal para combinar dentro y fuera de la pista.</li>
+          </ul>
         </div>
       </div>
-
-      <div class="detalle-opcion">
-        <p>Cantidad</p>
-        <div class="quantity-control">
-          <button type="button" id="qty-minus">−</button>
-          <span id="qty-value">1</span>
-          <button type="button" id="qty-plus">+</button>
-        </div>
-      </div>
-
-      <button class="add-cart-btn" type="button">Agregar al carrito</button>
-      <button class="buy-btn" type="button">Comprar ahora</button>
-
-      <div class="detalle-descripcion">
-        <p id="detalle-descripcion"></p>
-        <ul>
-          <li>Diseño cómodo para uso diario y entrenamiento.</li>
-          <li>Material suave con ajuste moderno.</li>
-          <li>Ideal para combinar dentro y fuera de la pista.</li>
-        </ul>
-      </div>
     </div>
-  </div>
-</section>
+  </section>
+
+  <section id="vista-carrito" class="cart-section oculto">
+    <div class="cart-header">
+      <p class="eyebrow">Tu selección</p>
+      <h1>Carrito</h1>
+      <p>Revisa tus productos antes de continuar con la compra.</p>
+    </div>
+
+    <div id="carrito-contenido" class="cart-list"></div>
+
+    <div class="cart-summary">
+      <p>Total</p>
+      <strong id="carrito-total">$0.00</strong>
+      <button class="buy-now-btn" type="button">Finalizar compra</button>
+    </div>
+  </section>
+</main>
 </main>
 
 <script src="operaciones.js"></script>
