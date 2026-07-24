@@ -1,7 +1,7 @@
 const contenedorProductos = document.getElementById('productos');
 const tituloCatalogo = document.getElementById('titulo-catalogo');
 const descripcionCatalogo = document.getElementById('descripcion-catalogo');
-
+const productosDestacados = document.getElementById('productos-destacados');
 const vistaInicio = document.getElementById('vista-inicio');
 const vistaColeccion = document.getElementById('vista-coleccion');
 const vistaProducto = document.getElementById('vista-producto');
@@ -173,7 +173,7 @@ function mostrarInicio() {
   vistaInicio.classList.remove('oculto');
   vistaColeccion.classList.add('oculto');
   vistaProducto.classList.add('oculto');
-
+mostrarProductosAleatorios();
   if (tituloCatalogo) {
     tituloCatalogo.textContent = 'Productos';
   }
@@ -309,7 +309,10 @@ function agregarAlCarrito(product) {
   const precio = Number(product.price || product.precio);
   const imagen = product.image_url || 'imagenes/productos/placeholder.jpg';
 
-  const itemExistente = carrito.find(item => item.id === id);
+  const tallaSeleccionada = document.querySelector('.size-grid button.selected');
+  const talla = tallaSeleccionada ? tallaSeleccionada.textContent.trim() : 'Sin talla';
+
+  const itemExistente = carrito.find(item => item.id === id && item.talla === talla);
 
   if (itemExistente) {
     itemExistente.cantidad += cantidadProducto;
@@ -319,6 +322,7 @@ function agregarAlCarrito(product) {
       nombre,
       precio,
       imagen,
+      talla,
       cantidad: cantidadProducto
     });
   }
@@ -360,15 +364,16 @@ function renderizarCarrito() {
     card.classList.add('cart-item');
 
     card.innerHTML = `
-      <img src="${item.imagen}" alt="${item.nombre}">
-      <div>
-        <h3>${item.nombre}</h3>
-        <p>Precio: $${item.precio.toFixed(2)}</p>
-        <p>Cantidad: ${item.cantidad}</p>
-        <p>Subtotal: $${subtotal.toFixed(2)}</p>
-      </div>
-      <button class="cart-remove" data-id="${item.id}">Eliminar</button>
-    `;
+  <img src="${item.imagen}" alt="${item.nombre}">
+  <div>
+    <h3>${item.nombre}</h3>
+    <p>Talla: ${item.talla || 'Sin talla'}</p>
+    <p>Precio: $${item.precio.toFixed(2)}</p>
+    <p>Cantidad: ${item.cantidad}</p>
+    <p>Subtotal: $${subtotal.toFixed(2)}</p>
+  </div>
+  <button class="cart-remove" data-id="${item.id}" data-talla="${item.talla || ''}">Eliminar</button>
+`;
 
     carritoContenido.appendChild(card);
   });
@@ -396,4 +401,53 @@ function actualizarContadorCarrito() {
   if (cartCount) {
     cartCount.textContent = totalItems;
   }
+}
+document.querySelectorAll('.cart-remove').forEach(button => {
+  button.addEventListener('click', () => {
+    const id = Number(button.dataset.id);
+    const talla = button.dataset.talla;
+
+    carrito = carrito.filter(item => !(item.id === id && item.talla === talla));
+
+    guardarCarrito();
+    actualizarContadorCarrito();
+    renderizarCarrito();
+  });
+});
+
+function mostrarProductosAleatorios() {
+  if (!productosDestacados) return;
+
+  productosDestacados.innerHTML = '';
+
+  if (productos.length === 0) {
+    productosDestacados.innerHTML = '<p>No hay productos para mostrar.</p>';
+    return;
+  }
+
+  const productosMezclados = [...productos].sort(() => Math.random() - 0.5);
+  const seleccionados = productosMezclados.slice(0, 3);
+
+  seleccionados.forEach(product => {
+    const nombre = product.name || product.nombre;
+    const precio = product.price || product.precio;
+    const imagen = product.image_url || 'imagenes/productos/placeholder.jpg';
+
+    const card = document.createElement('div');
+    card.classList.add('producto');
+
+    card.innerHTML = `
+      <img class="producto-imagen" src="${imagen}" alt="${nombre}">
+      <div class="producto-info">
+        <h2>${nombre}</h2>
+        <p class="producto-precio">$${precio}</p>
+      </div>
+    `;
+
+    card.addEventListener('click', () => {
+      mostrarDetalleProducto(product);
+    });
+
+    productosDestacados.appendChild(card);
+  });
 }
