@@ -13,9 +13,11 @@
 
   <nav class="navbar">
     <a href="#" class="nav-link active" id="btn-inicio">Inicio</a>
-<button id="btn-carrito" class="nav-link cart-btn">
-  Carrito <span id="cart-count">0</span>
-</button>
+
+    <button id="btn-carrito" class="nav-link cart-btn" type="button">
+      Carrito <span id="cart-count">0</span>
+    </button>
+
     <div class="dropdown">
       <button id="btn-maximilian" class="nav-link dropdown-btn" type="button">
         Maximilian <span>⌄</span>
@@ -101,46 +103,45 @@
       </div>
     </section>
 
-    
+    <section class="featured-products">
+      <div class="featured-header">
+        <p class="section-kicker">Productos destacados</p>
+        <h2>Selección para hoy</h2>
+        <p>Nuestras recomendaciones para ti.</p>
+      </div>
 
-   <section class="featured-products">
-  <div class="featured-header">
-    <p class="section-kicker">Productos destacados</p>
-    <h2>Selección para hoy</h2>
-    <p>Nuestras recomendaciones para ti.</p>
-  </div>
+      <div id="productos-destacados" class="productos-grid"></div>
+    </section>
 
-  <div id="productos-destacados" class="productos-grid"></div>
-</section>
+    <section class="store-notes">
+      <div class="store-notes-intro">
+        <p class="section-kicker">Por qué elegirnos</p>
+        <h2>Detalles pensados para cada salida a la pista</h2>
+      </div>
 
-   <section class="store-notes">
-  <div class="store-notes-intro">
-    <p class="section-kicker">Por qué elegirnos</p>
-    <h2>Detalles pensados para cada salida a la pista</h2>
-  </div>
+      <div class="store-notes-grid">
+        <article class="store-note">
+          <span>01</span>
+          <h3>Selección ecuestre</h3>
+          <p>Productos pensados para entrenamiento, competencia y cuidado diario.</p>
+        </article>
 
-  <div class="store-notes-grid">
-    <article class="store-note">
-      <span>01</span>
-      <h3>Selección ecuestre</h3>
-      <p>Productos pensados para entrenamiento, competencia y cuidado diario.</p>
-    </article>
+        <article class="store-note">
+          <span>02</span>
+          <h3>Estilo limpio</h3>
+          <p>Diseños modernos, colores sobrios y piezas fáciles de combinar.</p>
+        </article>
 
-    <article class="store-note">
-      <span>02</span>
-      <h3>Estilo limpio</h3>
-      <p>Diseños modernos, colores sobrios y piezas fáciles de combinar.</p>
-    </article>
+        <article class="store-note">
+          <span>03</span>
+          <h3>Para rider y caballo</h3>
+          <p>Categorías para mujer, hombre, young riders, accesorios y caballos.</p>
+        </article>
+      </div>
+    </section>
+  </section>
 
-    <article class="store-note">
-      <span>03</span>
-      <h3>Para rider y caballo</h3>
-      <p>Categorías para mujer, hombre, young riders, accesorios y caballos.</p>
-    </article>
-  </div>
-</section>
-
-  <section id="vista-coleccion" class="catalogo">
+  <section id="vista-coleccion" class="catalogo oculto">
     <div class="catalogo-header">
       <h2 id="titulo-catalogo">Productos</h2>
       <p id="descripcion-catalogo">Catálogo conectado a la base de datos</p>
@@ -149,7 +150,7 @@
     <div id="productos" class="productos-grid"></div>
   </section>
 
-    <section id="vista-producto" class="producto-detalle oculto">
+  <section id="vista-producto" class="producto-detalle oculto">
     <button id="btn-volver-coleccion" class="btn-volver" type="button">← Volver</button>
 
     <div class="detalle-layout">
@@ -223,7 +224,7 @@
     </div>
   </section>
 </main>
-</main>
+
 <footer class="footer">
   <div class="footer-newsletter">
     <div>
@@ -258,6 +259,7 @@
     </div>
   </div>
 </footer>
+
 <script src="operaciones.js"></script>
 </body>
 </html>

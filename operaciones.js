@@ -212,8 +212,9 @@ function filtrarProductos(categoria, subcategoria) {
   }
 
   vistaInicio.classList.add('oculto');
-  vistaColeccion.classList.remove('oculto');
   vistaProducto.classList.add('oculto');
+  vistaCarrito.classList.add('oculto');
+  vistaColeccion.classList.remove('oculto');
 
   mostrarProductos(filtrados);
 
@@ -222,7 +223,6 @@ function filtrarProductos(categoria, subcategoria) {
     behavior: 'smooth'
   });
 }
-
 function mostrarProductos(lista) {
   contenedorProductos.innerHTML = '';
 
