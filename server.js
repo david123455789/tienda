@@ -1,54 +1,60 @@
 const express = require('express');
 const cors = require('cors');
-const { Pool } = require('pg');
+const { parse } = require('csv-parse/sync');
 
 const app = express();
+const PORT = 3000;
+
+const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QGmUxpghfQ4ksUmtL-79fJkke-pq7xBI7Pbv63H9DiJzksny0XSyOJzgJxKlxgM0ALjFD2FegOS/pub?gid=0&single=true&output=csv';
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
 
-const pool = new Pool({
-  host: 'localhost',
-  port: 5433,
-  database: 'tienda',
-  user: 'postgres',
-  password: '12345'
-});
-
 app.get('/api/products', async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT
-        p.id,
-        p.name,
-        p.slug,
-        p.description,
-        p.price,
-        p.stock,
-        sub.name AS subcategoria,
-        main.name AS categoria,
-        img.image_url
-      FROM products p
-      LEFT JOIN categories sub ON p.category_id = sub.id
-      LEFT JOIN categories main ON sub.parent_id = main.id
-      LEFT JOIN product_images img ON img.product_id = p.id
-      ORDER BY main.name, sub.name, p.name;
-    `);
+    const response = await fetch(GOOGLE_SHEETS_CSV_URL);
 
-    res.json(result.rows);
+    if (!response.ok) {
+      throw new Error('No se pudo leer Google Sheets');
+    }
+
+    const csvText = await response.text();
+
+    const rows = parse(csvText, {
+      columns: true,
+      skip_empty_lines: true,
+      trim: true
+    });
+
+    const products = rows
+      .filter(product => product.activo === 'SI')
+      .map(product => ({
+        id: Number(product.id),
+        nombre: product.nombre,
+        name: product.nombre,
+        slug: product.slug,
+        categoria: product.categoria,
+        subcategoria: product.subcategoria,
+        description: product.descripcion,
+        descripcion: product.descripcion,
+        precio: Number(product.precio),
+        price: Number(product.precio),
+        stock: Number(product.stock),
+        tallas: product.tallas,
+        image_url: product.imagen_url
+      }));
+
+    res.json(products);
   } catch (error) {
-    console.error('ERROR COMPLETO:', error);
-
+    console.error('Error consultando productos:', error);
     res.status(500).json({
       error: 'Error consultando productos',
-      message: error.message,
-      code: error.code,
-      detail: error.detail
+      message: error.message
     });
   }
 });
 
-app.listen(3000, () => {
-  console.log('Servidor corriendo en http://localhost:3000');
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
