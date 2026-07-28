@@ -1,43 +1,48 @@
 const contenedorProductos = document.getElementById('productos');
+const productosDestacados = document.getElementById('productos-destacados');
+
 const tituloCatalogo = document.getElementById('titulo-catalogo');
 const descripcionCatalogo = document.getElementById('descripcion-catalogo');
-const productosDestacados = document.getElementById('productos-destacados');
+
 const vistaInicio = document.getElementById('vista-inicio');
 const vistaColeccion = document.getElementById('vista-coleccion');
 const vistaProducto = document.getElementById('vista-producto');
+const vistaCarrito = document.getElementById('vista-carrito');
 
 const btnVolverColeccion = document.getElementById('btn-volver-coleccion');
+const btnCarrito = document.getElementById('btn-carrito');
+const cartCount = document.getElementById('cart-count');
 
 const detalleImagen = document.getElementById('detalle-imagen');
-const detalleColorImg = document.getElementById('detalle-color-img');
 const detalleNombre = document.getElementById('detalle-nombre');
 const detallePrecio = document.getElementById('detalle-precio');
 const detalleDescripcion = document.getElementById('detalle-descripcion');
 
+const colorOptions = document.getElementById('color-options');
+
 const qtyMinus = document.getElementById('qty-minus');
 const qtyPlus = document.getElementById('qty-plus');
 const qtyValue = document.getElementById('qty-value');
-const vistaCarrito = document.getElementById('vista-carrito');
-const btnCarrito = document.getElementById('btn-carrito');
-const cartCount = document.getElementById('cart-count');
-const carritoContenido = document.getElementById('carrito-contenido');
-const carritoTotal = document.getElementById('carrito-total');
+
 const btnAgregarCarrito = document.getElementById('btn-agregar-carrito');
 
-let productoActual = null;
-let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+const carritoContenido = document.getElementById('carrito-contenido');
+const carritoTotal = document.getElementById('carrito-total');
 
 let productos = [];
 let ultimaCategoria = '';
 let ultimaSubcategoria = '';
 let cantidadProducto = 1;
+let productoActual = null;
+let varianteActual = null;
+let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
 
 document.addEventListener('DOMContentLoaded', () => {
   configurarMenu();
   configurarDetalleProducto();
-  cargarProductos();
   configurarCarrito();
-actualizarContadorCarrito();
+  actualizarContadorCarrito();
+  cargarProductos();
 });
 
 function configurarMenu() {
@@ -117,14 +122,7 @@ function configurarMenu() {
 function configurarDetalleProducto() {
   if (btnVolverColeccion) {
     btnVolverColeccion.addEventListener('click', () => {
-      vistaProducto.classList.add('oculto');
-      vistaColeccion.classList.remove('oculto');
-      vistaInicio.classList.add('oculto');
-
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
+      mostrarColeccionActual();
     });
   }
 
@@ -141,23 +139,31 @@ function configurarDetalleProducto() {
       qtyValue.textContent = cantidadProducto;
     });
   }
+}
 
-  document.querySelectorAll('.size-grid button').forEach(button => {
-    button.addEventListener('click', () => {
-      document.querySelectorAll('.size-grid button').forEach(item => {
-        item.classList.remove('selected');
-      });
-
-      button.classList.add('selected');
+function configurarCarrito() {
+  if (btnCarrito) {
+    btnCarrito.addEventListener('click', event => {
+      event.preventDefault();
+      mostrarCarrito();
     });
-  });
+  }
+
+  if (btnAgregarCarrito) {
+    btnAgregarCarrito.addEventListener('click', () => {
+      if (!productoActual) return;
+
+      agregarAlCarrito(productoActual);
+      mostrarCarrito();
+    });
+  }
 }
 
 function cargarProductos() {
   fetch('http://localhost:3000/api/products')
     .then(response => response.json())
     .then(data => {
-      productos = data;
+      productos = Array.isArray(data) ? data : [];
       mostrarInicio();
     })
     .catch(error => {
@@ -170,17 +176,24 @@ function cargarProductos() {
 }
 
 function mostrarInicio() {
-  vistaInicio.classList.remove('oculto');
-  vistaColeccion.classList.add('oculto');
-  vistaProducto.classList.add('oculto');
-mostrarProductosAleatorios();
-  if (tituloCatalogo) {
-    tituloCatalogo.textContent = 'Productos';
-  }
+  if (vistaInicio) vistaInicio.classList.remove('oculto');
+  if (vistaColeccion) vistaColeccion.classList.add('oculto');
+  if (vistaProducto) vistaProducto.classList.add('oculto');
+  if (vistaCarrito) vistaCarrito.classList.add('oculto');
 
-  if (descripcionCatalogo) {
-    descripcionCatalogo.textContent = 'Catálogo conectado a la base de datos';
-  }
+  mostrarProductosAleatorios();
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
+
+function mostrarColeccionActual() {
+  if (vistaInicio) vistaInicio.classList.add('oculto');
+  if (vistaColeccion) vistaColeccion.classList.remove('oculto');
+  if (vistaProducto) vistaProducto.classList.add('oculto');
+  if (vistaCarrito) vistaCarrito.classList.add('oculto');
 
   window.scrollTo({
     top: 0,
@@ -211,73 +224,104 @@ function filtrarProductos(categoria, subcategoria) {
     descripcionCatalogo.textContent = `Maximilian - ${categoria}${subcategoria ? ' - ' + subcategoria : ''}`;
   }
 
-  vistaInicio.classList.add('oculto');
-  vistaProducto.classList.add('oculto');
-  vistaCarrito.classList.add('oculto');
-  vistaColeccion.classList.remove('oculto');
-
+  mostrarColeccionActual();
   mostrarProductos(filtrados);
-
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  });
 }
+
 function mostrarProductos(lista) {
+  if (!contenedorProductos) return;
+
   contenedorProductos.innerHTML = '';
 
-  if (lista.length === 0) {
+  if (!lista || lista.length === 0) {
     contenedorProductos.innerHTML = '<p class="mensaje-vacio">No hay productos en esta categoría.</p>';
     return;
   }
 
   lista.forEach(product => {
-    const nombre = product.name || product.nombre;
-    const precio = product.price || product.precio;
-    const imagen = product.image_url || 'imagenes/productos/placeholder.jpg';
-
-    const card = document.createElement('div');
-    card.classList.add('producto');
-
-    card.innerHTML = `
-      <img class="producto-imagen" src="${imagen}" alt="${nombre}">
-      <div class="producto-info">
-        <h2>${nombre}</h2>
-        <p class="producto-precio">$${precio}</p>
-      </div>
-    `;
-
-    card.addEventListener('click', () => {
-      mostrarDetalleProducto(product);
-    });
-
+    const card = crearCardProducto(product);
     contenedorProductos.appendChild(card);
   });
 }
 
+function mostrarProductosAleatorios() {
+  if (!productosDestacados) return;
+
+  productosDestacados.innerHTML = '';
+
+  if (productos.length === 0) {
+    productosDestacados.innerHTML = '<p>No hay productos para mostrar.</p>';
+    return;
+  }
+
+  const productosMezclados = [...productos].sort(() => Math.random() - 0.5);
+  const seleccionados = productosMezclados.slice(0, 3);
+
+  seleccionados.forEach(product => {
+    const card = crearCardProducto(product);
+    productosDestacados.appendChild(card);
+  });
+}
+
+function crearCardProducto(product) {
+  const nombre = product.name || product.nombre;
+  const precio = product.price || product.precio;
+  const imagen = product.image_url || 'imagenes/productos/placeholder.jpg';
+
+  const card = document.createElement('div');
+  card.classList.add('producto');
+
+  card.innerHTML = `
+    <img class="producto-imagen" src="${imagen}" alt="${nombre}">
+    <div class="producto-info">
+      <h2>${nombre}</h2>
+      <p class="producto-precio">$${precio}</p>
+    </div>
+  `;
+
+  card.addEventListener('click', () => {
+    mostrarDetalleProducto(product);
+  });
+
+  return card;
+}
+
 function mostrarDetalleProducto(product) {
   productoActual = product;
+  cantidadProducto = 1;
+
+  if (qtyValue) {
+    qtyValue.textContent = cantidadProducto;
+  }
+
   const nombre = product.name || product.nombre;
   const precio = product.price || product.precio;
   const imagen = product.image_url || 'imagenes/productos/placeholder.jpg';
   const descripcion = product.description || product.descripcion || 'Producto ecuestre seleccionado para comodidad, estilo y rendimiento.';
 
-  cantidadProducto = 1;
-  qtyValue.textContent = cantidadProducto;
+  if (detalleImagen) {
+    detalleImagen.src = imagen;
+    detalleImagen.alt = nombre;
+  }
 
-  detalleImagen.src = imagen;
-  detalleImagen.alt = nombre;
+  if (detalleNombre) {
+    detalleNombre.textContent = nombre;
+  }
 
-  detalleColorImg.src = imagen;
-  detalleColorImg.alt = nombre;
+  if (detallePrecio) {
+    detallePrecio.textContent = `$${precio}`;
+  }
 
-  detalleNombre.textContent = nombre;
-  detallePrecio.textContent = `$${precio}`;
-  detalleDescripcion.textContent = descripcion;
+  if (detalleDescripcion) {
+    detalleDescripcion.textContent = descripcion;
+  }
 
-  vistaInicio.classList.add('oculto');
-  vistaColeccion.classList.add('oculto');
-  vistaProducto.classList.remove('oculto');
+  renderizarVariantes(product);
+
+  if (vistaInicio) vistaInicio.classList.add('oculto');
+  if (vistaColeccion) vistaColeccion.classList.add('oculto');
+  if (vistaCarrito) vistaCarrito.classList.add('oculto');
+  if (vistaProducto) vistaProducto.classList.remove('oculto');
 
   window.scrollTo({
     top: 0,
@@ -285,44 +329,142 @@ function mostrarDetalleProducto(product) {
   });
 }
 
-function configurarCarrito() {
-  if (btnCarrito) {
-    btnCarrito.addEventListener('click', event => {
-      event.preventDefault();
-      mostrarCarrito();
-    });
+function renderizarVariantes(product) {
+  if (!colorOptions) return;
+
+  colorOptions.innerHTML = '';
+
+  const variantes = product.variantes || [];
+
+  if (variantes.length === 0) {
+    varianteActual = null;
+
+    const nombre = product.name || product.nombre;
+    const imagen = product.image_url || 'imagenes/productos/placeholder.jpg';
+
+    colorOptions.innerHTML = `
+      <button class="color-card selected" type="button">
+        <img src="${imagen}" alt="${nombre}">
+        <span>Único</span>
+      </button>
+    `;
+
+    renderizarTallas(product.tallas);
+    return;
   }
 
-  if (btnAgregarCarrito) {
-    btnAgregarCarrito.addEventListener('click', () => {
-      if (!productoActual) return;
+  varianteActual = variantes[0];
+  aplicarVariante(varianteActual);
 
-      agregarAlCarrito(productoActual);
-      mostrarCarrito();
+  variantes.forEach((variant, index) => {
+    const button = document.createElement('button');
+    button.classList.add('color-card');
+
+    if (index === 0) {
+      button.classList.add('selected');
+    }
+
+    button.type = 'button';
+
+    button.innerHTML = `
+      <img src="${variant.image_url}" alt="${variant.color}">
+      <span>${variant.color}</span>
+      <small>$${variant.precio}</small>
+    `;
+
+    button.addEventListener('click', () => {
+      document.querySelectorAll('.color-card').forEach(item => {
+        item.classList.remove('selected');
+      });
+
+      button.classList.add('selected');
+      varianteActual = variant;
+      aplicarVariante(variant);
     });
+
+    colorOptions.appendChild(button);
+  });
+}
+
+function aplicarVariante(variant) {
+  if (detalleImagen) {
+    detalleImagen.src = variant.image_url;
+    detalleImagen.alt = variant.color;
   }
+
+  if (detallePrecio) {
+    detallePrecio.textContent = `$${variant.precio}`;
+  }
+
+  renderizarTallas(variant.tallas);
+}
+
+function renderizarTallas(tallasTexto) {
+  const sizeGrid = document.querySelector('.size-grid');
+
+  if (!sizeGrid) return;
+
+  const tallas = tallasTexto
+    ? tallasTexto.split(',').map(talla => talla.trim()).filter(Boolean)
+    : [];
+
+  sizeGrid.innerHTML = '';
+
+  if (tallas.length === 0) {
+    sizeGrid.innerHTML = '<p class="mensaje-vacio">Sin tallas disponibles.</p>';
+    return;
+  }
+
+  tallas.forEach((talla, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = talla;
+
+    if (index === 0) {
+      button.classList.add('selected');
+    }
+
+    button.addEventListener('click', () => {
+      document.querySelectorAll('.size-grid button').forEach(item => {
+        item.classList.remove('selected');
+      });
+
+      button.classList.add('selected');
+    });
+
+    sizeGrid.appendChild(button);
+  });
 }
 
 function agregarAlCarrito(product) {
   const id = product.id;
   const nombre = product.name || product.nombre;
-  const precio = Number(product.price || product.precio);
-  const imagen = product.image_url || 'imagenes/productos/placeholder.jpg';
 
   const tallaSeleccionada = document.querySelector('.size-grid button.selected');
   const talla = tallaSeleccionada ? tallaSeleccionada.textContent.trim() : 'Sin talla';
 
-  const itemExistente = carrito.find(item => item.id === id && item.talla === talla);
+  const color = varianteActual ? varianteActual.color : 'Único';
+  const precio = varianteActual ? Number(varianteActual.precio) : Number(product.price || product.precio);
+  const imagen = varianteActual ? varianteActual.image_url : product.image_url;
+  const idVariante = varianteActual ? varianteActual.id_variante : null;
+
+  const itemExistente = carrito.find(item =>
+    item.id === id &&
+    item.idVariante === idVariante &&
+    item.talla === talla
+  );
 
   if (itemExistente) {
     itemExistente.cantidad += cantidadProducto;
   } else {
     carrito.push({
       id,
+      idVariante,
       nombre,
+      color,
+      talla,
       precio,
       imagen,
-      talla,
       cantidad: cantidadProducto
     });
   }
@@ -346,6 +488,8 @@ function mostrarCarrito() {
 }
 
 function renderizarCarrito() {
+  if (!carritoContenido || !carritoTotal) return;
+
   carritoContenido.innerHTML = '';
 
   if (carrito.length === 0) {
@@ -364,16 +508,17 @@ function renderizarCarrito() {
     card.classList.add('cart-item');
 
     card.innerHTML = `
-  <img src="${item.imagen}" alt="${item.nombre}">
-  <div>
-    <h3>${item.nombre}</h3>
-    <p>Talla: ${item.talla || 'Sin talla'}</p>
-    <p>Precio: $${item.precio.toFixed(2)}</p>
-    <p>Cantidad: ${item.cantidad}</p>
-    <p>Subtotal: $${subtotal.toFixed(2)}</p>
-  </div>
-  <button class="cart-remove" data-id="${item.id}" data-talla="${item.talla || ''}">Eliminar</button>
-`;
+      <img src="${item.imagen}" alt="${item.nombre}">
+      <div>
+        <h3>${item.nombre}</h3>
+        <p>Color: ${item.color || 'Único'}</p>
+        <p>Talla: ${item.talla || 'Sin talla'}</p>
+        <p>Precio: $${item.precio.toFixed(2)}</p>
+        <p>Cantidad: ${item.cantidad}</p>
+        <p>Subtotal: $${subtotal.toFixed(2)}</p>
+      </div>
+      <button class="cart-remove" data-id="${item.id}" data-variante="${item.idVariante || ''}" data-talla="${item.talla || ''}">Eliminar</button>
+    `;
 
     carritoContenido.appendChild(card);
   });
@@ -383,7 +528,13 @@ function renderizarCarrito() {
   document.querySelectorAll('.cart-remove').forEach(button => {
     button.addEventListener('click', () => {
       const id = Number(button.dataset.id);
-      carrito = carrito.filter(item => item.id !== id);
+      const idVariante = button.dataset.variante ? Number(button.dataset.variante) : null;
+      const talla = button.dataset.talla;
+
+      carrito = carrito.filter(item =>
+        !(item.id === id && item.idVariante === idVariante && item.talla === talla)
+      );
+
       guardarCarrito();
       actualizarContadorCarrito();
       renderizarCarrito();
@@ -401,53 +552,4 @@ function actualizarContadorCarrito() {
   if (cartCount) {
     cartCount.textContent = totalItems;
   }
-}
-document.querySelectorAll('.cart-remove').forEach(button => {
-  button.addEventListener('click', () => {
-    const id = Number(button.dataset.id);
-    const talla = button.dataset.talla;
-
-    carrito = carrito.filter(item => !(item.id === id && item.talla === talla));
-
-    guardarCarrito();
-    actualizarContadorCarrito();
-    renderizarCarrito();
-  });
-});
-
-function mostrarProductosAleatorios() {
-  if (!productosDestacados) return;
-
-  productosDestacados.innerHTML = '';
-
-  if (productos.length === 0) {
-    productosDestacados.innerHTML = '<p>No hay productos para mostrar.</p>';
-    return;
-  }
-
-  const productosMezclados = [...productos].sort(() => Math.random() - 0.5);
-  const seleccionados = productosMezclados.slice(0, 3);
-
-  seleccionados.forEach(product => {
-    const nombre = product.name || product.nombre;
-    const precio = product.price || product.precio;
-    const imagen = product.image_url || 'imagenes/productos/placeholder.jpg';
-
-    const card = document.createElement('div');
-    card.classList.add('producto');
-
-    card.innerHTML = `
-      <img class="producto-imagen" src="${imagen}" alt="${nombre}">
-      <div class="producto-info">
-        <h2>${nombre}</h2>
-        <p class="producto-precio">$${precio}</p>
-      </div>
-    `;
-
-    card.addEventListener('click', () => {
-      mostrarDetalleProducto(product);
-    });
-
-    productosDestacados.appendChild(card);
-  });
 }
