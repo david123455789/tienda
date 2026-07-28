@@ -205,15 +205,20 @@ function filtrarProductos(categoria, subcategoria) {
   ultimaCategoria = categoria;
   ultimaSubcategoria = subcategoria;
 
+  const normalizar = texto => String(texto || '').trim().toLowerCase();
+
   const filtrados = productos.filter(product => {
     const categoriaProducto = product.categoria || product['categoría'];
     const subcategoriaProducto = product.subcategoria || product['subcategoría'];
 
     if (subcategoria) {
-      return categoriaProducto === categoria && subcategoriaProducto === subcategoria;
+      return (
+        normalizar(categoriaProducto) === normalizar(categoria) &&
+        normalizar(subcategoriaProducto) === normalizar(subcategoria)
+      );
     }
 
-    return categoriaProducto === categoria;
+    return normalizar(categoriaProducto) === normalizar(categoria);
   });
 
   if (tituloCatalogo) {
