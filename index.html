@@ -78,6 +78,10 @@
         </div>
       </div>
     </div>
+
+    <button id="btn-cuenta" class="nav-link cuenta-btn" type="button">
+      Cuenta
+    </button>
   </nav>
 </header>
 
@@ -104,24 +108,24 @@
     </section>
 
     <section class="video-section">
-  <video class="video-bg" autoplay muted loop playsinline>
-    <source src="imagenes/video.mp4" type="video/mp4">
-  </video>
+      <video class="video-bg" autoplay muted loop playsinline>
+        <source src="imagenes/video.mp4" type="video/mp4">
+      </video>
 
-  <div class="video-overlay"></div>
+      <div class="video-overlay"></div>
 
-  <div class="video-content">
-    <p class="section-kicker">Diseño ecuestre</p>
-    <h2>Una tienda pensada para entrenamiento, competencia y estilo diario</h2>
-    <p>
-      Seleccionamos piezas con colores sobrios, cortes limpios y detalles funcionales
-      para acompañarte en cada salida a la pista.
-    </p>
-  </div>
-</section>
+      <div class="video-content">
+        <p class="section-kicker">Diseño ecuestre</p>
+        <h2>Una tienda pensada para entrenamiento, competencia y estilo diario</h2>
+        <p>
+          Seleccionamos piezas con colores sobrios, cortes limpios y detalles funcionales
+          para acompañarte en cada salida a la pista.
+        </p>
+      </div>
+    </section>
+
     <section class="home-categories">
       <div class="section-heading">
-      
         <h2>Maximilian</h2>
       </div>
 
@@ -192,13 +196,13 @@
       <p id="descripcion-catalogo">Catálogo conectado a Google Sheets</p>
     </div>
 
-   <div class="catalogo-layout">
-  <div id="productos" class="productos-grid"></div>
+    <div class="catalogo-layout">
+      <div id="productos" class="productos-grid"></div>
 
-  <aside id="filtros-panel" class="filtros-panel">
-    <h3>Filtrar</h3>
-  </aside>
-</div>
+      <aside id="filtros-panel" class="filtros-panel">
+        <h3>Filtrar</h3>
+      </aside>
+    </div>
   </section>
 
   <section id="vista-producto" class="producto-detalle oculto">
@@ -301,6 +305,33 @@
   </div>
 </footer>
 
+<div id="auth-modal" class="auth-modal oculto">
+  <div class="auth-box">
+    <button id="cerrar-auth" class="cerrar-auth" type="button">×</button>
+
+    <h2 id="auth-titulo">Iniciar sesión</h2>
+
+    <input type="text" id="auth-nombre" placeholder="Nombre completo" class="oculto">
+    <input type="email" id="auth-email" placeholder="Correo electrónico">
+    <input type="password" id="auth-password" placeholder="Contraseña">
+
+    <button id="btn-auth-principal" class="auth-principal" type="button">
+      Iniciar sesión
+    </button>
+
+    <button id="btn-google" class="auth-google" type="button">
+      Continuar con Google
+    </button>
+
+    <p id="auth-cambiar">
+      ¿No tienes cuenta? <button id="btn-cambiar-auth" type="button">Regístrate</button>
+    </p>
+
+    <p id="auth-mensaje"></p>
+  </div>
+</div>
+
+<script type="module" src="auth.js"></script>
 <script src="operaciones.js"></script>
 </body>
 </html>
