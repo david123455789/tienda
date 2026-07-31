@@ -3,6 +3,7 @@ const productosDestacados = document.getElementById('productos-destacados');
 
 const tituloCatalogo = document.getElementById('titulo-catalogo');
 const descripcionCatalogo = document.getElementById('descripcion-catalogo');
+const tallas = ['XXS', 'XS', 'S', 'M', 'L', 'XL','2XS','3XS', '4XS', '5XS'];
 
 const vistaInicio = document.getElementById('vista-inicio');
 const vistaColeccion = document.getElementById('vista-coleccion');
@@ -36,6 +37,13 @@ let cantidadProducto = 1;
 let productoActual = null;
 let varianteActual = null;
 let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+let productosColeccionActual = [];
+let filtrosActivos = {
+  subcategorias: [],
+  precioMin: '',
+  precioMax: '',
+  orden: 'default'
+};
 
 document.addEventListener('DOMContentLoaded', () => {
   configurarMenu();
@@ -230,7 +238,10 @@ function filtrarProductos(categoria, subcategoria) {
   }
 
   mostrarColeccionActual();
-  mostrarProductos(filtrados);
+ productosColeccionActual = filtrados;
+resetearFiltros();
+renderizarFiltros(productosColeccionActual);
+mostrarProductos(productosColeccionActual);
 }
 
 function mostrarProductos(lista) {
@@ -272,17 +283,53 @@ function crearCardProducto(product) {
   const nombre = product.name || product.nombre;
   const precio = product.price || product.precio;
   const imagen = product.image_url || 'imagenes/productos/placeholder.jpg';
+  const variantes = product.variantes || [];
 
   const card = document.createElement('div');
   card.classList.add('producto');
 
+  const variantesHtml = variantes.length > 0
+    ? `
+      <div class="producto-variantes">
+        ${variantes.map(variant => `
+          <button
+            class="variante-mini"
+            type="button"
+            title="${variant.color}"
+            data-imagen="${variant.image_url}"
+          >
+            <img src="${variant.image_url}" alt="${variant.color}">
+          </button>
+        `).join('')}
+      </div>
+    `
+    : '';
+
   card.innerHTML = `
     <img class="producto-imagen" src="${imagen}" alt="${nombre}">
+    ${variantesHtml}
     <div class="producto-info">
       <h2>${nombre}</h2>
       <p class="producto-precio">$${precio}</p>
     </div>
   `;
+
+  const imagenProducto = card.querySelector('.producto-imagen');
+
+  card.querySelectorAll('.variante-mini').forEach(button => {
+    button.addEventListener('click', event => {
+      event.stopPropagation();
+
+      const nuevaImagen = button.dataset.imagen;
+      imagenProducto.src = nuevaImagen;
+
+      card.querySelectorAll('.variante-mini').forEach(item => {
+        item.classList.remove('selected');
+      });
+
+      button.classList.add('selected');
+    });
+  });
 
   card.addEventListener('click', () => {
     mostrarDetalleProducto(product);
@@ -557,4 +604,184 @@ function actualizarContadorCarrito() {
   if (cartCount) {
     cartCount.textContent = totalItems;
   }
+}
+
+function obtenerLista(valor) {
+  if (!valor) return [];
+
+  return String(valor)
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean);
+}
+
+function renderizarTallas(tallasTexto) {
+  const sizeGrid = document.querySelector('.size-grid');
+  if (!sizeGrid) return;
+
+  const tallas = obtenerLista(tallasTexto);
+
+  sizeGrid.innerHTML = '';
+
+  if (tallas.length === 0) {
+    sizeGrid.innerHTML = '<p class="mensaje-vacio">Sin tallas disponibles.</p>';
+    tallaSeleccionada = '';
+    return;
+  }
+
+  tallaSeleccionada = tallas[0];
+
+  tallas.forEach((talla, index) => {
+    const boton = document.createElement('button');
+    boton.textContent = talla;
+
+    if (index === 0) {
+      boton.classList.add('selected');
+    }
+
+    boton.addEventListener('click', () => {
+      tallaSeleccionada = talla;
+
+      document.querySelectorAll('.size-grid button').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+
+      boton.classList.add('selected');
+    });
+
+    sizeGrid.appendChild(boton);
+  });
+}
+
+function obtenerPrecio(producto) {
+  return Number(producto.precio || producto.price || 0);
+}
+
+function obtenerCategoria(producto) {
+  return producto.categoria || producto['categoría'] || '';
+}
+
+function obtenerSubcategoria(producto) {
+  return producto.subcategoria || producto['subcategoría'] || '';
+}
+
+function resetearFiltros() {
+  filtrosActivos = {
+    subcategorias: [],
+    precioMin: '',
+    precioMax: '',
+    orden: 'default'
+  };
+}
+
+function renderizarFiltros(lista) {
+  const panel = document.getElementById('filtros-panel');
+  if (!panel) return;
+
+  const subcategorias = [...new Set(
+    lista
+      .map(producto => obtenerSubcategoria(producto))
+      .filter(Boolean)
+  )];
+
+  panel.innerHTML = `
+    <h3>Filtrar</h3>
+
+    <div class="filtro-grupo">
+      <h4>Subcategoría</h4>
+      ${subcategorias.map(subcategoria => `
+        <label class="filtro-opcion">
+          <input type="checkbox" value="${subcategoria}" class="filtro-subcategoria">
+          <span>${subcategoria}</span>
+        </label>
+      `).join('')}
+    </div>
+
+    <div class="filtro-grupo">
+      <h4>Precio</h4>
+      <div class="precio-inputs">
+        <input type="number" id="precio-min" placeholder="Mín">
+        <input type="number" id="precio-max" placeholder="Máx">
+      </div>
+    </div>
+
+    <div class="filtro-grupo">
+      <h4>Ordenar</h4>
+      <select id="orden-productos" class="filtro-select">
+        <option value="default">Recomendados</option>
+        <option value="precio-menor">Precio menor</option>
+        <option value="precio-mayor">Precio mayor</option>
+        <option value="nombre">Nombre A-Z</option>
+      </select>
+    </div>
+
+    <button class="btn-limpiar-filtros" id="limpiar-filtros">
+      Limpiar filtros
+    </button>
+  `;
+
+  panel.querySelectorAll('.filtro-subcategoria').forEach(input => {
+    input.addEventListener('change', actualizarVistaConFiltros);
+  });
+
+  panel.querySelector('#precio-min').addEventListener('input', actualizarVistaConFiltros);
+  panel.querySelector('#precio-max').addEventListener('input', actualizarVistaConFiltros);
+  panel.querySelector('#orden-productos').addEventListener('change', actualizarVistaConFiltros);
+
+  panel.querySelector('#limpiar-filtros').addEventListener('click', () => {
+    resetearFiltros();
+    renderizarFiltros(productosColeccionActual);
+    mostrarProductos(productosColeccionActual);
+  });
+}
+
+function aplicarFiltrosColeccion() {
+  const panel = document.getElementById('filtros-panel');
+
+  if (panel) {
+    filtrosActivos.subcategorias = [...panel.querySelectorAll('.filtro-subcategoria:checked')]
+      .map(input => input.value);
+
+    filtrosActivos.precioMin = panel.querySelector('#precio-min')?.value || '';
+    filtrosActivos.precioMax = panel.querySelector('#precio-max')?.value || '';
+    filtrosActivos.orden = panel.querySelector('#orden-productos')?.value || 'default';
+  }
+
+  let resultado = [...productosColeccionActual];
+
+  if (filtrosActivos.subcategorias.length > 0) {
+    resultado = resultado.filter(producto =>
+      filtrosActivos.subcategorias.includes(obtenerSubcategoria(producto))
+    );
+  }
+
+  if (filtrosActivos.precioMin !== '') {
+    resultado = resultado.filter(producto =>
+      obtenerPrecio(producto) >= Number(filtrosActivos.precioMin)
+    );
+  }
+
+  if (filtrosActivos.precioMax !== '') {
+    resultado = resultado.filter(producto =>
+      obtenerPrecio(producto) <= Number(filtrosActivos.precioMax)
+    );
+  }
+
+  if (filtrosActivos.orden === 'precio-menor') {
+    resultado.sort((a, b) => obtenerPrecio(a) - obtenerPrecio(b));
+  }
+
+  if (filtrosActivos.orden === 'precio-mayor') {
+    resultado.sort((a, b) => obtenerPrecio(b) - obtenerPrecio(a));
+  }
+
+  if (filtrosActivos.orden === 'nombre') {
+    resultado.sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }
+
+  return resultado;
+}
+
+function actualizarVistaConFiltros() {
+  mostrarProductos(aplicarFiltrosColeccion());
 }

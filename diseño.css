@@ -331,48 +331,59 @@ header {
 
 .productos-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 28px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 34px 14px;
+  align-items: start;
 }
 
 .producto {
-  overflow: hidden;
-  background: var(--ivory);
-  border: 1px solid var(--border);
+  background: transparent;
+  border: none;
+  box-shadow: none;
   cursor: pointer;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  overflow: visible;
+  transition: opacity 0.25s ease;
 }
 
 .producto:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow);
+  transform: none;
+  box-shadow: none;
+  opacity: 0.82;
 }
 
 .producto-imagen {
   width: 100%;
-  height: 460px;
-  object-fit: contain;
-  background: var(--pearl);
+  height: 470px;
   display: block;
+  object-fit: cover;
+  object-position: center top;
+  background: #f4f4f4;
 }
 
 .producto-info {
-  padding: 28px;
-  background: var(--ivory);
+  padding: 20px 0 0;
+  min-height: auto;
+  background: transparent;
+  border: none;
+  text-align: center;
 }
 
 .producto-info h2 {
-  margin: 0 0 12px;
-  font-size: 23px;
-  font-weight: 500;
-  color: var(--black);
+  margin: 0 0 10px;
+  color: var(--charcoal);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 400;
+  letter-spacing: 0.04em;
 }
 
 .producto-precio {
   margin: 0;
-  color: var(--saddle);
-  font-size: 20px;
-  font-weight: 700;
+  color: var(--charcoal);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
 }
 
 .mensaje-vacio {
@@ -456,25 +467,31 @@ header {
 
 .detalle-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
-  gap: 70px;
+  grid-template-columns: minmax(0, 0.95fr) minmax(360px, 0.95fr);
+  gap: 82px;
   align-items: start;
 }
 
-.detalle-galeria {
-  background: var(--pearl);
-  min-height: 760px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 34px;
+.detalle-galeria img {
+  width: min(100%, 560px);
+  height: auto;
+  max-height: 680px;
+  object-fit: contain;
+  object-position: center top;
+  display: block;
+  background: transparent;
 }
 
-.detalle-galeria img {
-  width: 100%;
-  max-height: 720px;
-  object-fit: contain;
+.detalle-galeria {
+  background: transparent;
+  min-height: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0;
 }
+
+
 
 .detalle-info {
   position: sticky;
@@ -520,25 +537,37 @@ header {
 }
 
 .color-card {
-  width: 150px;
+  width: 140px;
   padding: 0;
-  border: 1px solid var(--black);
-  background: var(--ivory);
+  border: none;
+  background: transparent;
   text-align: left;
 }
 
 .color-card img {
   width: 100%;
-  height: 120px;
-  object-fit: contain;
-  background: var(--pearl);
+  height: 130px;
+  object-fit: cover;
+  object-position: center top;
+  background: transparent;
   display: block;
 }
 
 .color-card span {
   display: block;
-  padding: 10px;
+  padding: 9px 0 2px;
   font-weight: 700;
+}
+
+.color-card small {
+  display: block;
+  color: var(--saddle);
+  font-size: 14px;
+}
+
+.color-card.selected img {
+  outline: 1px solid var(--black);
+  outline-offset: 3px;
 }
 
 .size-grid {
@@ -912,8 +941,15 @@ header {
 
   .detalle-galeria {
     min-height: auto;
-    padding: 22px;
+    padding: 0;
+    background: transparent;
   }
+
+  .detalle-galeria img {
+  width: min(100%, 520px);
+  max-width: 100%;
+  max-height: none;
+}
 
   .detalle-info h1 {
     font-size: 40px;
@@ -1171,5 +1207,188 @@ header {
 
   .video-content p:not(.section-kicker) {
     font-size: 17px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .productos-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .producto-imagen {
+    height: 430px;
+  }
+}
+
+@media (max-width: 850px) {
+  .productos-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 30px 14px;
+  }
+
+  .producto-imagen {
+    height: 360px;
+  }
+
+  .producto-info h2 {
+    font-size: 14px;
+  }
+
+  .producto-precio {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 520px) {
+  .productos-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .producto-imagen {
+    height: 480px;
+  }
+
+  .producto-info {
+    padding-top: 16px;
+  }
+}
+
+.producto-variantes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px;
+  padding: 14px 8px 0;
+}
+
+.variante-mini {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(31, 31, 31, 0.18);
+  border-radius: 50%;
+  background: var(--pearl);
+}
+
+.variante-mini img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.variante-mini.selected {
+  border-color: var(--black);
+  box-shadow: 0 0 0 2px var(--ivory), 0 0 0 3px var(--black);
+}
+
+@media (max-width: 700px) {
+  .producto-variantes {
+    gap: 6px;
+    padding-top: 12px;
+  }
+
+  .variante-mini {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.catalogo-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 42px;
+  align-items: start;
+}
+
+.filtros-panel {
+  position: sticky;
+  top: 150px;
+  border-left: 1px solid var(--khaki);
+  padding-left: 26px;
+  color: var(--charcoal);
+}
+
+.filtros-panel h3 {
+  font-size: 22px;
+  margin-bottom: 24px;
+}
+
+.filtro-grupo {
+  border-bottom: 1px solid var(--khaki);
+  padding-bottom: 22px;
+  margin-bottom: 22px;
+}
+
+.filtro-grupo h4 {
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
+}
+
+.filtro-opcion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.filtro-opcion input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--midnight);
+}
+
+.precio-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.precio-inputs input,
+.filtro-select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--greige);
+  background: var(--ivory);
+  font-size: 15px;
+}
+
+.btn-limpiar-filtros {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid var(--midnight);
+  background: transparent;
+  color: var(--midnight);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.btn-limpiar-filtros:hover {
+  background: var(--midnight);
+  color: var(--ivory);
+}
+
+@media (max-width: 900px) {
+  .catalogo-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .filtros-panel {
+    order: -1;
+    position: static;
+    border-left: 0;
+    border-bottom: 1px solid var(--khaki);
+    padding-left: 0;
+    padding-bottom: 24px;
+  }
+
+  .precio-inputs {
+    grid-template-columns: 1fr;
   }
 }
