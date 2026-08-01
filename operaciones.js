@@ -167,19 +167,155 @@ function configurarCarrito() {
   }
 }
 
-function cargarProductos() {
-  fetch('http://localhost:3000/api/products')
-    .then(response => response.json())
-    .then(data => {
-      productos = Array.isArray(data) ? data : [];
-      mostrarInicio();
-    })
-    .catch(error => {
-      console.error('Error cargando productos:', error);
+const PRODUCTOS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QGmUxpghfQ4ksUmtL-79fJkke-pq7xBI7Pbv63H9DiJzksny0XSyOJzgJxKlxgM0ALjFD2FegOS/pub?gid=0&single=true&output=csv';
 
-      if (contenedorProductos) {
-        contenedorProductos.innerHTML = `<p>No se pudieron cargar los productos: ${error.message}</p>`;
+const VARIANTES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QGmUxpghfQ4ksUmtL-79fJkke-pq7xBI7Pbv63H9DiJzksny0XSyOJzgJxKlxgM0ALjFD2FegOS/pub?gid=1834938244&single=true&output=csv';
+
+async function cargarProductos() {
+  try {
+    const [productosRows, variantesRows] = await Promise.all([
+      leerCsvDirecto(PRODUCTOS_CSV_URL),
+      leerCsvDirecto(VARIANTES_CSV_URL)
+    ]);
+
+    productos = crearProductosDesdeSheets(productosRows, variantesRows);
+    mostrarInicio();
+  } catch (error) {
+    console.error('Error cargando productos:', error);
+
+    const mensaje = `<p>No se pudieron cargar los productos: ${error.message}</p>`;
+
+    if (contenedorProductos) {
+      contenedorProductos.innerHTML = mensaje;
+    }
+
+    if (productosDestacados) {
+      productosDestacados.innerHTML = mensaje;
+    }
+  }
+}
+
+async function leerCsvDirecto(url) {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error('No se pudo leer Google Sheets');
+  }
+
+  const texto = await response.text();
+  return parsearCsv(texto);
+}
+
+function parsearCsv(texto) {
+  const filas = [];
+  let fila = [];
+  let celda = '';
+  let entreComillas = false;
+
+  for (let i = 0; i < texto.length; i++) {
+    const char = texto[i];
+    const siguiente = texto[i + 1];
+
+    if (char === '"' && entreComillas && siguiente === '"') {
+      celda += '"';
+      i++;
+      continue;
+    }
+
+    if (char === '"') {
+      entreComillas = !entreComillas;
+      continue;
+    }
+
+    if (char === ',' && !entreComillas) {
+      fila.push(celda.trim());
+      celda = '';
+      continue;
+    }
+
+    if ((char === '\n' || char === '\r') && !entreComillas) {
+      if (char === '\r' && siguiente === '\n') {
+        i++;
       }
+
+      fila.push(celda.trim());
+
+      if (fila.some(valor => valor !== '')) {
+        filas.push(fila);
+      }
+
+      fila = [];
+      celda = '';
+      continue;
+    }
+
+    celda += char;
+  }
+
+  if (celda || fila.length > 0) {
+    fila.push(celda.trim());
+
+    if (fila.some(valor => valor !== '')) {
+      filas.push(fila);
+    }
+  }
+
+  const encabezados = filas.shift() || [];
+
+  return filas.map(filaActual => {
+    const objeto = {};
+
+    encabezados.forEach((encabezado, index) => {
+      objeto[encabezado.trim()] = filaActual[index] ? filaActual[index].trim() : '';
+    });
+
+    return objeto;
+  });
+}
+
+function estaActivo(valor) {
+  return String(valor || '').trim().toUpperCase() === 'SI';
+}
+
+function crearProductosDesdeSheets(productosRows, variantesRows) {
+  const variantesActivas = variantesRows
+    .filter(variante => estaActivo(variante.activo))
+    .map(variante => ({
+      id_variante: Number(variante.id_variante),
+      producto_slug: variante.producto_slug,
+      color: variante.color,
+      precio: Number(variante.precio),
+      price: Number(variante.precio),
+      stock: Number(variante.stock),
+      tallas: variante.tallas,
+      image_url: variante.imagen_url
+    }));
+
+  return productosRows
+    .filter(producto => estaActivo(producto.activo))
+    .map(producto => {
+      const variantes = variantesActivas.filter(
+        variante => variante.producto_slug === producto.slug
+      );
+
+      const primeraVariante = variantes[0];
+
+      return {
+        id: Number(producto.id),
+        nombre: producto.nombre,
+        name: producto.nombre,
+        slug: producto.slug,
+        categoria: producto.categoria,
+        subcategoria: producto.subcategoria,
+        description: producto.descripcion,
+        descripcion: producto.descripcion,
+        precio: primeraVariante ? primeraVariante.precio : Number(producto.precio),
+        price: primeraVariante ? primeraVariante.precio : Number(producto.precio),
+        stock: primeraVariante ? primeraVariante.stock : Number(producto.stock),
+        tallas: primeraVariante ? primeraVariante.tallas : producto.tallas,
+        image_url: primeraVariante ? primeraVariante.image_url : producto.imagen_url,
+        variantes
+      };
     });
 }
 
