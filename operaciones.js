@@ -1,4 +1,4 @@
-const contenedorProductos = document.getElementById('productos');
+﻿const contenedorProductos = document.getElementById('productos');
 const productosDestacados = document.getElementById('productos-destacados');
 
 const tituloCatalogo = document.getElementById('titulo-catalogo');
@@ -13,6 +13,11 @@ const vistaCarrito = document.getElementById('vista-carrito');
 const btnVolverColeccion = document.getElementById('btn-volver-coleccion');
 const btnCarrito = document.getElementById('btn-carrito');
 const cartCount = document.getElementById('cart-count');
+const btnBuscar = document.getElementById('btn-buscar');
+const busquedaPanel = document.getElementById('busqueda-panel');
+const inputBusqueda = document.getElementById('input-busqueda');
+const cerrarBusqueda = document.getElementById('cerrar-busqueda');
+const resultadosBusqueda = document.getElementById('resultados-busqueda');
 
 const detalleImagen = document.getElementById('detalle-imagen');
 const detalleNombre = document.getElementById('detalle-nombre');
@@ -49,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
   configurarMenu();
   configurarDetalleProducto();
   configurarCarrito();
+  configurarBusqueda();
   actualizarContadorCarrito();
   cargarProductos();
 });
@@ -352,8 +358,8 @@ function filtrarProductos(categoria, subcategoria) {
   const normalizar = texto => String(texto || '').trim().toLowerCase();
 
   const filtrados = productos.filter(product => {
-    const categoriaProducto = product.categoria || product['categoría'];
-    const subcategoriaProducto = product.subcategoria || product['subcategoría'];
+    const categoriaProducto = product.categoria || product['categorÃ­a'];
+    const subcategoriaProducto = product.subcategoria || product['subcategorÃ­a'];
 
     if (subcategoria) {
       return (
@@ -386,7 +392,7 @@ function mostrarProductos(lista) {
   contenedorProductos.innerHTML = '';
 
   if (!lista || lista.length === 0) {
-    contenedorProductos.innerHTML = '<p class="mensaje-vacio">No hay productos en esta categoría.</p>';
+    contenedorProductos.innerHTML = '<p class="mensaje-vacio">No hay productos en esta categorÃ­a.</p>';
     return;
   }
 
@@ -533,7 +539,7 @@ function renderizarVariantes(product) {
     colorOptions.innerHTML = `
       <button class="color-card selected" type="button">
         <img src="${imagen}" alt="${nombre}">
-        <span>Único</span>
+        <span>Ãšnico</span>
       </button>
     `;
 
@@ -631,7 +637,7 @@ function agregarAlCarrito(product) {
   const tallaSeleccionada = document.querySelector('.size-grid button.selected');
   const talla = tallaSeleccionada ? tallaSeleccionada.textContent.trim() : 'Sin talla';
 
-  const color = varianteActual ? varianteActual.color : 'Único';
+  const color = varianteActual ? varianteActual.color : 'Ãšnico';
   const precio = varianteActual ? Number(varianteActual.precio) : Number(product.price || product.precio);
   const imagen = varianteActual ? varianteActual.image_url : product.image_url;
   const idVariante = varianteActual ? varianteActual.id_variante : null;
@@ -681,7 +687,7 @@ function renderizarCarrito() {
   carritoContenido.innerHTML = '';
 
   if (carrito.length === 0) {
-    carritoContenido.innerHTML = '<p>Tu carrito está vacío.</p>';
+    carritoContenido.innerHTML = '<p>Tu carrito estÃ¡ vacÃ­o.</p>';
     carritoTotal.textContent = '$0.00';
     return;
   }
@@ -699,7 +705,7 @@ function renderizarCarrito() {
       <img src="${item.imagen}" alt="${item.nombre}">
       <div>
         <h3>${item.nombre}</h3>
-        <p>Color: ${item.color || 'Único'}</p>
+        <p>Color: ${item.color || 'Ãšnico'}</p>
         <p>Talla: ${item.talla || 'Sin talla'}</p>
         <p>Precio: $${item.precio.toFixed(2)}</p>
         <p>Cantidad: ${item.cantidad}</p>
@@ -794,11 +800,11 @@ function obtenerPrecio(producto) {
 }
 
 function obtenerCategoria(producto) {
-  return producto.categoria || producto['categoría'] || '';
+  return producto.categoria || producto['categorÃ­a'] || '';
 }
 
 function obtenerSubcategoria(producto) {
-  return producto.subcategoria || producto['subcategoría'] || '';
+  return producto.subcategoria || producto['subcategorÃ­a'] || '';
 }
 
 function resetearFiltros() {
@@ -824,7 +830,7 @@ function renderizarFiltros(lista) {
     <h3>Filtrar</h3>
 
     <div class="filtro-grupo">
-      <h4>Subcategoría</h4>
+      <h4>SubcategorÃ­a</h4>
       ${subcategorias.map(subcategoria => `
         <label class="filtro-opcion">
           <input type="checkbox" value="${subcategoria}" class="filtro-subcategoria">
@@ -836,8 +842,8 @@ function renderizarFiltros(lista) {
     <div class="filtro-grupo">
       <h4>Precio</h4>
       <div class="precio-inputs">
-        <input type="number" id="precio-min" placeholder="Mín">
-        <input type="number" id="precio-max" placeholder="Máx">
+        <input type="number" id="precio-min" placeholder="MÃ­n">
+        <input type="number" id="precio-max" placeholder="MÃ¡x">
       </div>
     </div>
 
@@ -920,4 +926,137 @@ function aplicarFiltrosColeccion() {
 
 function actualizarVistaConFiltros() {
   mostrarProductos(aplicarFiltrosColeccion());
+}
+function configurarBusqueda() {
+  if (!btnBuscar || !busquedaPanel || !inputBusqueda || !resultadosBusqueda) return;
+
+  btnBuscar.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    abrirBusqueda();
+  });
+
+  cerrarBusqueda?.addEventListener('click', cerrarPanelBusqueda);
+
+  inputBusqueda.addEventListener('input', () => {
+    renderizarResultadosBusqueda(inputBusqueda.value);
+  });
+
+  inputBusqueda.addEventListener('keydown', event => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+
+    const resultados = obtenerResultadosBusqueda(inputBusqueda.value);
+    if (!resultados.length) return;
+
+    mostrarBusquedaComoColeccion(resultados, inputBusqueda.value);
+    cerrarPanelBusqueda();
+  });
+
+  busquedaPanel.addEventListener('click', event => {
+    if (event.target === busquedaPanel) cerrarPanelBusqueda();
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') cerrarPanelBusqueda();
+  });
+}
+
+function abrirBusqueda() {
+  if (!busquedaPanel || !inputBusqueda) return;
+  busquedaPanel.classList.remove('oculto');
+  busquedaPanel.setAttribute('aria-hidden', 'false');
+  inputBusqueda.focus();
+  renderizarResultadosBusqueda(inputBusqueda.value);
+}
+
+function cerrarPanelBusqueda() {
+  if (!busquedaPanel) return;
+  busquedaPanel.classList.add('oculto');
+  busquedaPanel.setAttribute('aria-hidden', 'true');
+}
+
+function normalizarBusqueda(valor) {
+  return String(valor || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+function obtenerResultadosBusqueda(termino) {
+  const texto = normalizarBusqueda(termino);
+  if (!texto) return productos.slice(0, 6);
+
+  return productos.filter(producto => {
+    const contenido = [
+      producto.nombre,
+      producto.name,
+      producto.categoria,
+      producto.subcategoria,
+      producto.descripcion,
+      producto.description,
+      producto.slug
+    ].map(normalizarBusqueda).join(' ');
+
+    return contenido.includes(texto);
+  });
+}
+
+function escaparBusquedaHtml(valor) {
+  return String(valor || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function renderizarResultadosBusqueda(termino) {
+  if (!resultadosBusqueda) return;
+
+  const resultados = obtenerResultadosBusqueda(termino).slice(0, 8);
+
+  if (!resultados.length) {
+    resultadosBusqueda.innerHTML = '<p class="search-empty">No encontramos productos.</p>';
+    return;
+  }
+
+  resultadosBusqueda.innerHTML = resultados.map((producto, index) => `
+    <button class="search-result" type="button" data-search-index="${index}">
+      <img src="${escaparBusquedaHtml(producto.image_url || producto.imagen_url || producto.imagen || '')}" alt="${escaparBusquedaHtml(producto.nombre || producto.name || 'Producto')}">
+      <span>
+        <strong>${escaparBusquedaHtml(producto.nombre || producto.name || 'Producto')}</strong>
+        <small>${escaparBusquedaHtml(producto.categoria || '')}${producto.subcategoria ? ' - ' + escaparBusquedaHtml(producto.subcategoria) : ''}</small>
+      </span>
+    </button>
+  `).join('');
+
+  resultadosBusqueda.querySelectorAll('.search-result').forEach(boton => {
+    boton.addEventListener('click', () => {
+      const producto = resultados[Number(boton.dataset.searchIndex)];
+      if (!producto) return;
+      mostrarDetalleProducto(producto);
+      cerrarPanelBusqueda();
+    });
+  });
+}
+
+function mostrarBusquedaComoColeccion(resultados, termino) {
+  productosColeccionActual = resultados;
+  ultimaCategoria = 'Busqueda';
+  ultimaSubcategoria = termino;
+
+  vistaInicio?.classList.add('oculto');
+  vistaProducto?.classList.add('oculto');
+  vistaCarrito?.classList.add('oculto');
+  vistaColeccion?.classList.remove('oculto');
+
+  if (tituloCatalogo) tituloCatalogo.textContent = `Busqueda: ${termino}`;
+  if (descripcionCatalogo) descripcionCatalogo.textContent = `${resultados.length} producto(s) encontrado(s)`;
+
+  resetearFiltros();
+  renderizarFiltros(productosColeccionActual);
+  mostrarProductos(productosColeccionActual);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }

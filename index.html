@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -8,19 +8,23 @@
 </head>
 <body>
 
-<header>
-  <img src="imagenes/logos.png" alt="Logo de la empresa" id="logo">
+<header class="site-header">
+  <a href="#" class="logo-link" id="logo-inicio" aria-label="Inicio">
+    <img src="imagenes/logos.png" alt="Logo de la empresa" id="logo">
+  </a>
 
-  <nav class="navbar">
-    <a href="#" class="nav-link active" id="btn-inicio">Inicio</a>
-
-    <button id="btn-carrito" class="nav-link cart-btn" type="button">
-      Carrito <span id="cart-count">0</span>
-    </button>
+  <nav class="navbar" aria-label="Menu principal">
+    <a href="#" class="nav-link icon-nav-link active" id="btn-inicio" aria-label="Inicio">
+      <svg class="header-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 11.5 12 5l8 6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M6.5 10.5v8h11v-8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="nav-text">Inicio</span>
+    </a>
 
     <div class="dropdown">
-      <button id="btn-maximilian" class="nav-link dropdown-btn" type="button">
-        Maximilian <span>⌄</span>
+      <button id="btn-maximilian" class="nav-link dropdown-btn" type="button" aria-expanded="false">
+        <span class="menu-label">Men&uacute;</span> <span class="chevron">⌄</span>
       </button>
 
       <div class="dropdown-menu">
@@ -29,41 +33,39 @@
           <div class="subcategory-list">
             <a href="#" data-categoria="Mujer" data-subcategoria="Chamarras">Chamarras</a>
             <a href="#" data-categoria="Mujer" data-subcategoria="Sudaderas">Sudaderas</a>
-            <a href="#" data-categoria="Mujer" data-subcategoria="Sudaderas sin cierre">Sweatshirts</a>
-            <a href="#" data-categoria="Mujer" data-subcategoria="Blusas">Tops</a>
-            <a href="#" data-categoria="Mujer" data-subcategoria="Breeches">Breeches</a>
+            <a href="#" data-categoria="Mujer" data-subcategoria="Sudaderas sin cierre">Sudaderas sin cierre</a>
+            <a href="#" data-categoria="Mujer" data-subcategoria="Blusas">Blusas</a>
+            <a href="#" data-categoria="Mujer" data-subcategoria="Pantalones de montar">Pantalones de montar</a>
             <a href="#" data-categoria="Mujer" data-subcategoria="Leggings">Leggings</a>
             <a href="#" data-categoria="Mujer" data-subcategoria="Jumpsuits">Jumpsuits</a>
-            <a href="#" data-categoria="Mujer" data-subcategoria="Competition">Competition</a>
+            <a href="#" data-categoria="Mujer" data-subcategoria="Competencia">Competencia</a>
           </div>
         </div>
 
         <div class="menu-category">
           <button class="category-btn" type="button">Hombre <span>⌄</span></button>
           <div class="subcategory-list">
-            <a href="#" data-categoria="Hombre" data-subcategoria="Jackets and Hoodies">Jackets and Hoodies</a>
-            <a href="#" data-categoria="Hombre" data-subcategoria="Top">Top</a>
-            <a href="#" data-categoria="Hombre" data-subcategoria="Riding Breeches">Riding Breeches</a>
-            <a href="#" data-categoria="Hombre" data-subcategoria="Competition">Competition</a>
+            <a href="#" data-categoria="Hombre" data-subcategoria="Chamarras y sudaderas">Chamarras y sudaderas</a>
+            <a href="#" data-categoria="Hombre" data-subcategoria="Blusas">Blusas</a>
+            <a href="#" data-categoria="Hombre" data-subcategoria="Pantalones de montar">Pantalones de montar</a>
+            <a href="#" data-categoria="Hombre" data-subcategoria="Competencia">Competencia</a>
           </div>
         </div>
 
         <div class="menu-category">
           <button class="category-btn" type="button">Young Riders <span>⌄</span></button>
           <div class="subcategory-list">
-            <a href="#" data-categoria="Young Rider" data-subcategoria="Chamarras y sudaderas YR">YR Jackets and Hoodies</a>
-            <a href="#" data-categoria="Young Rider" data-subcategoria="YR Tops">YR Tops</a>
-            <a href="#" data-categoria="Young Rider" data-subcategoria="YR Leggings">YR Leggings</a>
-            <a href="#" data-categoria="Young Rider" data-subcategoria="YR Breeches">YR Breeches</a>
-            <a href="#" data-categoria="Young Rider" data-subcategoria="YR Competition">YR Competition</a>
+            <a href="#" data-categoria="Young Rider" data-subcategoria="Chamarras y sudaderas YR">Chamarras y sudaderas YR</a>
+            <a href="#" data-categoria="Young Rider" data-subcategoria="Blusas YR">Blusas YR</a>
+            <a href="#" data-categoria="Young Rider" data-subcategoria="Leggings YR">Leggings YR</a>
+            <a href="#" data-categoria="Young Rider" data-subcategoria="Pantalones de montar YR">Pantalones de montar YR</a>
+            <a href="#" data-categoria="Young Rider" data-subcategoria="Competencia YR">Competencia YR</a>
           </div>
         </div>
 
         <div class="menu-category">
           <button class="category-btn" type="button">Accesorios <span>⌄</span></button>
-          <div class="subcategory-list">
-            <a href="#" data-categoria="Accesorios" data-subcategoria="">Todos</a>
-          </div>
+          <div class="subcategory-list"></div>
         </div>
 
         <div class="menu-category">
@@ -79,12 +81,35 @@
       </div>
     </div>
 
-    <button id="btn-cuenta" class="nav-link cuenta-btn" type="button">
-      Cuenta
+    <button id="btn-buscar" class="nav-link header-search-btn" type="button" aria-label="Buscar productos">
+      <svg class="header-icon search-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="10.8" cy="10.8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <path d="m15.4 15.4 4.4 4.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <span class="nav-text">Buscar</span>
+    </button>
+
+    <button id="btn-cuenta" class="nav-link cuenta-btn" type="button">Cuenta</button>
+
+    <button id="btn-carrito" class="nav-link cart-btn" type="button" aria-label="Carrito">
+      <svg class="header-icon cart-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M5.5 8.5h13l-1 10h-11l-1-10Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M9 8.5V6.8a3 3 0 0 1 6 0v1.7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <span id="cart-count">0</span>
     </button>
   </nav>
 </header>
 
+<div id="busqueda-panel" class="search-panel oculto" aria-hidden="true">
+  <div class="search-inner">
+    <div class="search-box">
+      <input id="input-busqueda" type="search" placeholder="Buscar productos..." autocomplete="off">
+      <button id="cerrar-busqueda" type="button" aria-label="Cerrar busqueda">×</button>
+    </div>
+    <div id="resultados-busqueda" class="search-results"></div>
+  </div>
+</div>
 <main>
   <section id="vista-inicio">
     <section class="home-hero premium-hero">
@@ -193,7 +218,7 @@
   <section id="vista-coleccion" class="catalogo oculto">
     <div class="catalogo-header">
       <h2 id="titulo-catalogo">Productos</h2>
-      <p id="descripcion-catalogo">Catálogo conectado a Google Sheets</p>
+      <p id="descripcion-catalogo">Catalogo conectado a Google Sheets</p>
     </div>
 
     <div class="catalogo-layout">
@@ -206,7 +231,7 @@
   </section>
 
   <section id="vista-producto" class="producto-detalle oculto">
-    <button id="btn-volver-coleccion" class="btn-volver" type="button">← Volver</button>
+    <button id="btn-volver-coleccion" class="btn-volver" type="button">â† Volver</button>
 
     <div class="detalle-layout">
       <div class="detalle-galeria">
@@ -232,7 +257,7 @@
         <div class="detalle-opcion">
           <p>Cantidad</p>
           <div class="quantity-control">
-            <button type="button" id="qty-minus">−</button>
+            <button type="button" id="qty-minus">âˆ’</button>
             <span id="qty-value">1</span>
             <button type="button" id="qty-plus">+</button>
           </div>
@@ -273,7 +298,7 @@
 <footer class="footer">
   <div class="footer-newsletter">
     <div>
-      <h2>Suscríbete a nuestras novedades</h2>
+      <h2>Suscri­bete a nuestras novedades</h2>
       <p>Recibe lanzamientos, promociones y piezas seleccionadas para rider y caballo.</p>
     </div>
 
@@ -296,18 +321,18 @@
     <p>© 2026 Tienda Ecuestre</p>
 
     <div class="footer-links">
-      <a href="#">Política de privacidad</a>
-      <a href="#">Política de reembolso</a>
-      <a href="#">Política de envío</a>
+      <a href="#">Pol­tica de privacidad</a>
+      <a href="#">Pol­tica de reembolso</a>
+      <a href="#">Pol­tica de envio</a>
       <a href="#">Información de contacto</a>
-      <a href="#">Términos del servicio</a>
+      <a href="#">Terminos del servicio</a>
     </div>
   </div>
 </footer>
 
 <div id="auth-modal" class="auth-modal oculto">
   <div class="auth-box">
-    <button id="cerrar-auth" class="cerrar-auth" type="button">×</button>
+    <button id="cerrar-auth" class="cerrar-auth" type="button">Ã—</button>
 
     <h2 id="auth-titulo">Iniciar sesión</h2>
 
@@ -324,7 +349,7 @@
     </button>
 
     <p id="auth-cambiar">
-      ¿No tienes cuenta? <button id="btn-cambiar-auth" type="button">Regístrate</button>
+      No tienes cuenta? <button id="btn-cambiar-auth" type="button">Regí­strate</button>
     </p>
 
     <p id="auth-mensaje"></p>
@@ -335,3 +360,4 @@
 <script src="operaciones.js"></script>
 </body>
 </html>
+
