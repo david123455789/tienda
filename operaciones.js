@@ -842,8 +842,8 @@ function renderizarFiltros(lista) {
     <div class="filtro-grupo">
       <h4>Precio</h4>
       <div class="precio-inputs">
-        <input type="number" id="precio-min" placeholder="MÃ­n">
-        <input type="number" id="precio-max" placeholder="MÃ¡x">
+        <input type="number" id="precio-min" placeholder="Min">
+        <input type="number" id="precio-max" placeholder="Máx">
       </div>
     </div>
 
