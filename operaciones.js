@@ -830,7 +830,7 @@ function renderizarFiltros(lista) {
     <h3>Filtrar</h3>
 
     <div class="filtro-grupo">
-      <h4>SubcategorÃ­a</h4>
+      <h4>Subcategoría</h4>
       ${subcategorias.map(subcategoria => `
         <label class="filtro-opcion">
           <input type="checkbox" value="${subcategoria}" class="filtro-subcategoria">

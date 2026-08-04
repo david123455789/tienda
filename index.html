@@ -65,7 +65,13 @@
 
         <div class="menu-category">
           <button class="category-btn" type="button">Accesorios <span>⌄</span></button>
-          <div class="subcategory-list"></div>
+          <div class="subcategory-list">
+           <a href="#" data-categoria="Accesorios" data-subcategoria="Bolsas">Bolsas</a>
+            <a href="#" data-categoria="Accesorios" data-subcategoria="Socks">Socks</a>
+            <a href="#" data-categoria="Accesorios" data-subcategoria="Caps">Caps</a>
+            <a href="#" data-categoria="Accesorios" data-subcategoria="Head Bands">Head Bands</a>
+            <a href="#" data-categoria="Accesorios" data-subcategoria="Guantes">Guantes</a>
+            </div>
         </div>
 
         <div class="menu-category">
@@ -114,22 +120,13 @@
   <section id="vista-inicio">
     <section class="home-hero premium-hero">
       <div class="home-hero-content">
-        <p class="eyebrow">Maximilian Collection</p>
-        <h1>Elegancia ecuestre para moverse con seguridad</h1>
+      
+        <h1>Elegancia ecuestre sin límites.</h1>
         <p>
-          Prendas, accesorios y equipo para riders que buscan presencia,
-          comodidad y rendimiento dentro y fuera de la pista.
+        Prendas, accesorios y equipo seleccionados para riders que buscan calidad, innovación y estilo dentro y fuera de la pista.
         </p>
-
-        <div class="hero-actions">
-          <button class="hero-btn primary" type="button" data-categoria-home="Mujer">Ver mujer</button>
-          <button class="hero-btn" type="button" data-categoria-home="Caballos">Ver caballos</button>
-        </div>
       </div>
 
-      <div class="hero-photo">
-        <img src="imagenes/imagen1.png" alt="Rider ecuestre">
-      </div>
     </section>
 
     <section class="video-section">
@@ -140,11 +137,10 @@
       <div class="video-overlay"></div>
 
       <div class="video-content">
-        <p class="section-kicker">Diseño ecuestre</p>
+       
         <h2>Una tienda pensada para entrenamiento, competencia y estilo diario</h2>
         <p>
-          Seleccionamos piezas con colores sobrios, cortes limpios y detalles funcionales
-          para acompañarte en cada salida a la pista.
+         Seleccionamos prendas, accesorios y equipo de las mejores marcas para acompañarte dentro y fuera de la pista.
         </p>
       </div>
     </section>
@@ -166,13 +162,18 @@
         </button>
 
         <button type="button" data-categoria-home="Young Rider" class="category-tile">
-          <img src="imagenes/imagen5.png" alt="Young Riders">
+          <img src="imagenes/young.png" alt="Young Riders">
           <span>Young Riders</span>
         </button>
 
         <button type="button" data-categoria-home="Caballos" class="category-tile">
           <img src="imagenes/imagen6.png" alt="Caballos">
           <span>Caballos</span>
+        </button>
+
+        <button type="button" data-categoria-home="Accesorios" class="category-tile">
+          <img src="imagenes/accesorios.png" alt="Accesorios">
+          <span>Accesorios</span>
         </button>
       </div>
     </section>
@@ -181,7 +182,7 @@
       <div class="featured-header">
         <p class="section-kicker">Productos destacados</p>
         <h2>Selección para hoy</h2>
-        <p>Tres productos aleatorios cada vez que abras la página.</p>
+      
       </div>
 
       <div id="productos-destacados" class="productos-grid"></div>
