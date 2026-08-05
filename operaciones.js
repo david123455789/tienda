@@ -1,4 +1,4 @@
-﻿const contenedorProductos = document.getElementById('productos');
+const contenedorProductos = document.getElementById('productos');
 const productosDestacados = document.getElementById('productos-destacados');
 
 const tituloCatalogo = document.getElementById('titulo-catalogo');
@@ -18,6 +18,8 @@ const busquedaPanel = document.getElementById('busqueda-panel');
 const inputBusqueda = document.getElementById('input-busqueda');
 const cerrarBusqueda = document.getElementById('cerrar-busqueda');
 const resultadosBusqueda = document.getElementById('resultados-busqueda');
+const btnToggleFiltros = document.getElementById('btn-toggle-filtros');
+const filtrosPanel = document.getElementById('filtros-panel');
 
 const detalleImagen = document.getElementById('detalle-imagen');
 const detalleNombre = document.getElementById('detalle-nombre');
@@ -55,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
   configurarDetalleProducto();
   configurarCarrito();
   configurarBusqueda();
+  configurarPanelFiltros();
   actualizarContadorCarrito();
   cargarProductos();
 });
@@ -816,6 +819,42 @@ function resetearFiltros() {
   };
 }
 
+function configurarPanelFiltros() {
+  if (!btnToggleFiltros || !filtrosPanel) return;
+
+  btnToggleFiltros.addEventListener('click', () => {
+    const abierto = !filtrosPanel.classList.contains('open');
+    if (abierto) {
+      abrirFiltros();
+    } else {
+      cerrarFiltros();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') cerrarFiltros();
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!filtrosPanel.classList.contains('open')) return;
+    if (filtrosPanel.contains(event.target) || btnToggleFiltros.contains(event.target)) return;
+    cerrarFiltros();
+  });
+}
+
+function abrirFiltros() {
+  if (!btnToggleFiltros || !filtrosPanel) return;
+  filtrosPanel.classList.add('open');
+  btnToggleFiltros.classList.add('is-open');
+  btnToggleFiltros.setAttribute('aria-expanded', 'true');
+}
+
+function cerrarFiltros() {
+  if (!btnToggleFiltros || !filtrosPanel) return;
+  filtrosPanel.classList.remove('open');
+  btnToggleFiltros.classList.remove('is-open');
+  btnToggleFiltros.setAttribute('aria-expanded', 'false');
+}
 function renderizarFiltros(lista) {
   const panel = document.getElementById('filtros-panel');
   if (!panel) return;
@@ -827,7 +866,10 @@ function renderizarFiltros(lista) {
   )];
 
   panel.innerHTML = `
-    <h3>Filtrar</h3>
+    <div class="filtros-head">
+      <h3>Filtrar</h3>
+      <button class="cerrar-filtros" type="button" aria-label="Cerrar filtros">×</button>
+    </div>
 
     <div class="filtro-grupo">
       <h4>Subcategoría</h4>

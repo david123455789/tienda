@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --ivory: #f6f4f1;
   --pearl: #ece8e2;
   --khaki: #ddd6ca;
@@ -2094,5 +2094,105 @@ header {
 
   .premium-hero .home-hero-content > p:not(.eyebrow) {
     font-size: 18px;
+  }
+}
+
+/* FILTROS COMO PANEL DESPLEGABLE */
+.catalogo-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 34px;
+}
+
+.btn-toggle-filtros {
+  min-height: 48px;
+  padding: 0 24px;
+  border: 1px solid var(--black);
+  background: transparent;
+  color: var(--black);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-toggle-filtros:hover,
+.btn-toggle-filtros.is-open {
+  background: var(--black);
+  color: var(--ivory);
+  border-color: var(--black);
+}
+
+.catalogo-layout {
+  display: block;
+}
+
+.filtros-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 300;
+  width: min(390px, calc(100% - 28px));
+  height: 100vh;
+  padding: 34px 28px;
+  background: var(--ivory);
+  border-left: 1px solid var(--border);
+  box-shadow: -22px 0 45px rgba(31, 31, 31, 0.16);
+  overflow-y: auto;
+  transform: translateX(105%);
+  pointer-events: none;
+  transition: transform 0.28s ease;
+}
+
+.filtros-panel.open {
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.filtros-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.filtros-head h3 {
+  margin: 0;
+}
+
+.cerrar-filtros {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--black);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cerrar-filtros:hover {
+  background: var(--black);
+  color: var(--ivory);
+  border-color: var(--black);
+}
+
+@media (max-width: 900px) {
+  .catalogo-actions {
+    justify-content: stretch;
+  }
+
+  .btn-toggle-filtros {
+    width: 100%;
+  }
+
+  .filtros-panel {
+    width: 100%;
+    max-width: none;
+    padding: 28px 22px;
   }
 }
