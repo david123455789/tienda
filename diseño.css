@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --ivory: #f6f4f1;
   --pearl: #ece8e2;
   --khaki: #ddd6ca;
@@ -2194,5 +2194,85 @@ header {
     width: 100%;
     max-width: none;
     padding: 28px 22px;
+  }
+}
+
+/* Marca tipografica del header */
+.site-header .brand-link {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  flex: 0 0 auto;
+  min-width: clamp(160px, 17vw, 260px);
+  color: var(--black);
+  text-decoration: none;
+  text-transform: uppercase;
+  line-height: 0.92;
+}
+
+.site-header .brand-kicker {
+  margin-left: 3px;
+  color: var(--saddle);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.48em;
+}
+
+.site-header .brand-main {
+  margin-top: 3px;
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--black);
+  font-size: clamp(1.55rem, 2.25vw, 2.45rem);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.site-header .brand-sub {
+  align-self: flex-end;
+  margin-top: 3px;
+  color: var(--charcoal);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.46em;
+}
+
+.site-header .brand-link:hover .brand-main {
+  color: var(--saddle);
+}
+
+@media (max-width: 900px) {
+  .site-header .brand-link {
+    min-width: 140px;
+  }
+
+  .site-header .brand-main {
+    font-size: 1.35rem;
+    letter-spacing: 0.06em;
+  }
+
+  .site-header .brand-kicker,
+  .site-header .brand-sub {
+    font-size: 0.6rem;
+    letter-spacing: 0.26em;
+  }
+}
+
+@media (max-width: 560px) {
+  .site-header .brand-link {
+    min-width: 102px;
+  }
+
+  .site-header .brand-main {
+    font-size: 0.98rem;
+    letter-spacing: 0.035em;
+  }
+
+  .site-header .brand-kicker,
+  .site-header .brand-sub {
+    font-size: 0.5rem;
+    letter-spacing: 0.14em;
   }
 }
