@@ -9,6 +9,7 @@ const vistaInicio = document.getElementById('vista-inicio');
 const vistaColeccion = document.getElementById('vista-coleccion');
 const vistaProducto = document.getElementById('vista-producto');
 const vistaCarrito = document.getElementById('vista-carrito');
+const btnComprarAhora = document.getElementById('btn-comprar-ahora');
 
 const btnVolverColeccion = document.getElementById('btn-volver-coleccion');
 const btnCarrito = document.getElementById('btn-carrito');
@@ -797,7 +798,25 @@ function renderizarTallas(tallasTexto) {
     sizeGrid.appendChild(boton);
   });
 }
+if (btnComprarAhora) {
+  btnComprarAhora.addEventListener('click', async () => {
+    if (!productoActual) return;
 
+    const tallaSeleccionada = document.querySelector('.size-grid button.selected');
+
+    const productoParaPagar = {
+      nombre: productoActual.name || productoActual.nombre || 'Producto',
+      precio: varianteActual
+        ? Number(varianteActual.precio || varianteActual.price)
+        : Number(productoActual.price || productoActual.precio),
+      cantidad: Math.max(1, Number(document.getElementById('cantidad-producto')?.textContent || 1)),
+      talla: tallaSeleccionada ? tallaSeleccionada.textContent.trim() : '',
+      color: varianteActual ? varianteActual.color : 'Único'
+    };
+
+    await iniciarPago([productoParaPagar]);
+  });
+}
 function obtenerPrecio(producto) {
   return Number(producto.precio || producto.price || 0);
 }
