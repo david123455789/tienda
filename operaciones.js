@@ -1,4 +1,4 @@
-const contenedorProductos = document.getElementById('productos');
+﻿const contenedorProductos = document.getElementById('productos');
 const productosDestacados = document.getElementById('productos-destacados');
 
 const tituloCatalogo = document.getElementById('titulo-catalogo');
@@ -1101,4 +1101,26 @@ function mostrarBusquedaComoColeccion(resultados, termino) {
   renderizarFiltros(productosColeccionActual);
   mostrarProductos(productosColeccionActual);
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function iniciarPago(productosParaPagar) {
+  try {
+    const respuesta = await fetch('/api/crear-pago', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ productos: productosParaPagar })
+    });
+
+    const data = await respuesta.json();
+
+    if (!respuesta.ok) {
+      throw new Error(data.message || data.error || 'No se pudo iniciar el pago');
+    }
+
+    window.location.href = data.init_point;
+  } catch (error) {
+    alert('No se pudo iniciar el pago: ' + error.message);
+  }
 }
