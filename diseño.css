@@ -2276,3 +2276,29 @@ header {
     letter-spacing: 0.14em;
   }
 }
+
+.color-image-wrap {
+  position: relative;
+}
+
+.color-card.sold-out {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.color-card.sold-out img {
+  filter: grayscale(1);
+}
+
+.sold-out-badge {
+  position: absolute;
+  inset: 0;
+  background: rgba(31, 31, 31, 0.68);
+  color: #f6f4f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}

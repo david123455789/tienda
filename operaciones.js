@@ -551,21 +551,30 @@ function renderizarVariantes(product) {
     return;
   }
 
-  varianteActual = variantes[0];
+  varianteActual = variantes.find(variant => Number(variant.stock) > 0) || variantes[0];
   aplicarVariante(varianteActual);
 
   variantes.forEach((variant, index) => {
+    const agotado = Number(variant.stock) <= 0;
+
     const button = document.createElement('button');
     button.classList.add('color-card');
 
-    if (index === 0) {
+    if (agotado) {
+      button.classList.add('sold-out');
+    }
+
+    if (variant === varianteActual) {
       button.classList.add('selected');
     }
 
     button.type = 'button';
 
     button.innerHTML = `
-      <img src="${variant.image_url}" alt="${variant.color}">
+      <div class="color-image-wrap">
+        <img src="${variant.image_url}" alt="${variant.color}">
+        ${agotado ? '<span class="sold-out-badge">Agotado</span>' : ''}
+      </div>
       <span>${variant.color}</span>
       <small>$${variant.precio}</small>
     `;
@@ -592,6 +601,17 @@ function aplicarVariante(variant) {
 
   if (detallePrecio) {
     detallePrecio.textContent = `$${variant.precio}`;
+  }
+
+  const sinStock = Number(variant.stock) <= 0;
+
+  if (btnAgregarCarrito) {
+    btnAgregarCarrito.disabled = sinStock;
+    btnAgregarCarrito.textContent = sinStock ? 'Agotado' : 'Agregar al carrito';
+  }
+
+  if (btnComprarAhora) {
+    btnComprarAhora.disabled = sinStock;
   }
 
   renderizarTallas(variant.tallas);
