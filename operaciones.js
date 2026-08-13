@@ -24,6 +24,7 @@ const btnToggleFiltros = document.getElementById('btn-toggle-filtros');
 const filtrosPanel = document.getElementById('filtros-panel');
 
 const detalleImagen = document.getElementById('detalle-imagen');
+const detalleGaleriaLista = document.getElementById('detalle-galeria-lista');
 const detalleNombre = document.getElementById('detalle-nombre');
 const detallePrecio = document.getElementById('detalle-precio');
 const detalleDescripcion = document.getElementById('detalle-descripcion');
@@ -326,6 +327,10 @@ function crearProductosDesdeSheets(productosRows, variantesRows) {
         stock: primeraVariante ? primeraVariante.stock : Number(producto.stock),
         tallas: primeraVariante ? primeraVariante.tallas : producto.tallas,
         image_url: primeraVariante ? primeraVariante.image_url : producto.imagen_url,
+        galeria: (producto.fotos_extra || '')
+          .split(',')
+          .map(url => url.trim())
+          .filter(Boolean),
         variantes
       };
     });
@@ -518,6 +523,8 @@ function mostrarDetalleProducto(product) {
     detalleDescripcion.textContent = descripcion;
   }
 
+  renderizarGaleriaExtra(product);
+
   renderizarVariantes(product);
 
   if (vistaInicio) vistaInicio.classList.add('oculto');
@@ -529,6 +536,23 @@ function mostrarDetalleProducto(product) {
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
+  });
+}
+
+function renderizarGaleriaExtra(product) {
+  if (!detalleGaleriaLista) return;
+
+  detalleGaleriaLista.querySelectorAll('.galeria-extra').forEach(img => img.remove());
+
+  const nombre = product.name || product.nombre;
+  const galeria = product.galeria || [];
+
+  galeria.forEach(url => {
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = nombre;
+    img.classList.add('galeria-extra');
+    detalleGaleriaLista.appendChild(img);
   });
 }
 
@@ -741,6 +765,10 @@ function configurarCuenta() {
 
       const panel = document.getElementById(`cuenta-panel-${tab.dataset.tab}`);
       if (panel) panel.classList.remove('oculto');
+
+      if (tab.dataset.tab === 'direcciones') {
+        inicializarMapaDireccion();
+      }
     });
   });
 
@@ -751,8 +779,28 @@ function configurarCuenta() {
       event.preventDefault();
       guardarNuevaDireccion();
       formDireccion.reset();
+
+      const estadoTexto = document.getElementById('dir-cp-estado');
+      if (estadoTexto) estadoTexto.textContent = '';
     });
   }
+
+  const inputCp = document.getElementById('dir-cp');
+
+  if (inputCp) {
+    inputCp.addEventListener('input', () => {
+      inputCp.value = inputCp.value.replace(/\D/g, '').slice(0, 5);
+
+      if (inputCp.value.length === 5) {
+        buscarDatosPorCP();
+      }
+    });
+  }
+
+  ['dir-calle', 'dir-colonia', 'dir-ciudad', 'dir-estado'].forEach(id => {
+    const campo = document.getElementById(id);
+    if (campo) campo.addEventListener('blur', buscarUbicacionEnMapa);
+  });
 
   document.addEventListener('abrir-mi-cuenta', mostrarCuenta);
 
@@ -776,6 +824,123 @@ function renderizarInformacionCuenta() {
   if (infoCorreo) infoCorreo.textContent = usuario.email || '-';
 }
 
+/* CODIGO POSTAL Y MAPA DE DIRECCIONES */
+
+let mapaDireccion = null;
+let marcadorDireccion = null;
+let temporizadorGeocodificacion = null;
+
+async function buscarDatosPorCP() {
+  const inputCp = document.getElementById('dir-cp');
+  const estadoTexto = document.getElementById('dir-cp-estado');
+  const cp = inputCp ? inputCp.value.trim() : '';
+
+  if (cp.length !== 5) return;
+
+  try {
+    const respuesta = await fetch(`https://postali.app/api/v1/mx/cp/${cp}`);
+
+    if (!respuesta.ok) {
+      throw new Error('CP no encontrado');
+    }
+
+    const datos = await respuesta.json();
+
+    const inputCiudad = document.getElementById('dir-ciudad');
+    const inputEstado = document.getElementById('dir-estado');
+    const listaColonias = document.getElementById('dir-colonias-lista');
+
+    if (inputCiudad) inputCiudad.value = datos.municipio || '';
+    if (inputEstado) inputEstado.value = datos.estado || '';
+
+    if (listaColonias) {
+      listaColonias.innerHTML = (datos.asentamientos || [])
+        .map(asentamiento => `<option value="${asentamiento.nombre}"></option>`)
+        .join('');
+    }
+
+    if (estadoTexto) {
+      estadoTexto.textContent = datos.municipio ? `${datos.municipio}, ${datos.estado}` : '';
+    }
+
+    buscarUbicacionEnMapa();
+  } catch (error) {
+    if (estadoTexto) estadoTexto.textContent = 'No se encontró ese código postal.';
+    console.error('Error consultando el codigo postal:', error);
+  }
+}
+
+function inicializarMapaDireccion() {
+  const contenedorMapa = document.getElementById('mapa-direccion');
+  if (!contenedorMapa || typeof L === 'undefined') return;
+
+  if (!mapaDireccion) {
+    mapaDireccion = L.map(contenedorMapa).setView([19.4326, -99.1332], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap',
+      maxZoom: 19
+    }).addTo(mapaDireccion);
+
+    marcadorDireccion = L.marker([19.4326, -99.1332], { draggable: true }).addTo(mapaDireccion);
+
+    marcadorDireccion.on('dragend', () => {
+      const posicion = marcadorDireccion.getLatLng();
+      guardarCoordenadasEnFormulario(posicion.lat, posicion.lng);
+    });
+  }
+
+  setTimeout(() => {
+    if (mapaDireccion) mapaDireccion.invalidateSize();
+  }, 200);
+}
+
+function guardarCoordenadasEnFormulario(lat, lng) {
+  const inputLat = document.getElementById('dir-lat');
+  const inputLng = document.getElementById('dir-lng');
+
+  if (inputLat) inputLat.value = lat;
+  if (inputLng) inputLng.value = lng;
+}
+
+function moverMapaA(lat, lng) {
+  if (!mapaDireccion || !marcadorDireccion) return;
+
+  mapaDireccion.setView([lat, lng], 17);
+  marcadorDireccion.setLatLng([lat, lng]);
+  guardarCoordenadasEnFormulario(lat, lng);
+}
+
+function buscarUbicacionEnMapa() {
+  clearTimeout(temporizadorGeocodificacion);
+
+  temporizadorGeocodificacion = setTimeout(async () => {
+    const calle = document.getElementById('dir-calle')?.value.trim();
+    const colonia = document.getElementById('dir-colonia')?.value.trim();
+    const ciudad = document.getElementById('dir-ciudad')?.value.trim();
+    const estado = document.getElementById('dir-estado')?.value.trim();
+    const cp = document.getElementById('dir-cp')?.value.trim();
+
+    if (!calle || !ciudad || !estado || !mapaDireccion) return;
+
+    const direccionTexto = [calle, colonia, ciudad, estado, cp, 'México'].filter(Boolean).join(', ');
+
+    try {
+      const respuesta = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&q=${encodeURIComponent(direccionTexto)}`
+      );
+
+      const resultados = await respuesta.json();
+
+      if (resultados && resultados[0]) {
+        moverMapaA(Number(resultados[0].lat), Number(resultados[0].lon));
+      }
+    } catch (error) {
+      console.error('No se pudo ubicar la direccion en el mapa:', error);
+    }
+  }, 900);
+}
+
 function claveDirecciones() {
   const usuario = window.usuarioActual;
   return usuario ? `direcciones_${usuario.uid}` : null;
@@ -792,6 +957,9 @@ function guardarNuevaDireccion() {
   const clave = claveDirecciones();
   if (!clave) return;
 
+  const lat = document.getElementById('dir-lat').value;
+  const lng = document.getElementById('dir-lng').value;
+
   const direccion = {
     id: Date.now(),
     nombre: document.getElementById('dir-nombre').value.trim(),
@@ -800,7 +968,9 @@ function guardarNuevaDireccion() {
     ciudad: document.getElementById('dir-ciudad').value.trim(),
     estado: document.getElementById('dir-estado').value.trim(),
     cp: document.getElementById('dir-cp').value.trim(),
-    telefono: document.getElementById('dir-telefono').value.trim()
+    telefono: document.getElementById('dir-telefono').value.trim(),
+    lat: lat ? Number(lat) : null,
+    lng: lng ? Number(lng) : null
   };
 
   const direcciones = obtenerDirecciones();
@@ -837,6 +1007,7 @@ function renderizarDirecciones() {
       <p>${dir.calle}${dir.colonia ? ', ' + dir.colonia : ''}</p>
       <p>${dir.ciudad}, ${dir.estado}, CP ${dir.cp}</p>
       ${dir.telefono ? `<p>Tel: ${dir.telefono}</p>` : ''}
+      ${dir.lat && dir.lng ? `<a class="direccion-ver-mapa" href="https://www.openstreetmap.org/?mlat=${dir.lat}&mlon=${dir.lng}#map=17/${dir.lat}/${dir.lng}" target="_blank" rel="noopener">Ver ubicación en el mapa</a>` : ''}
       <button type="button" class="btn-eliminar-direccion" data-id="${dir.id}">Eliminar</button>
     </div>
   `).join('');

@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>In Equestrian Shop</title>
   <link rel="stylesheet" href="diseño.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 
@@ -39,7 +41,7 @@
             <a href="#" data-categoria="Mujer" data-subcategoria="Blusas">Tops</a>
             <a href="#" data-categoria="Mujer" data-subcategoria="Pantalones de montar">Pantalones de montar</a>
             <a href="#" data-categoria="Mujer" data-subcategoria="Leggings">Leggings</a>
-            <a href="#" data-categoria="Mujer" data-subcategoria="Enterizos">Jumpsuits</a>
+            <a href="#" data-categoria="Mujer" data-subcategoria="Jumpsuits">Jumpsuits</a>
             <a href="#" data-categoria="Mujer" data-subcategoria="Competencia">Competencia</a>
           </div>
         </div>
@@ -48,7 +50,7 @@
           <button class="category-btn" type="button">Hombre <span>⌄</span></button>
           <div class="subcategory-list">
             <a href="#" data-categoria="Hombre" data-subcategoria="Chamarras y sudaderas">Chamarras y sudaderas</a>
-            <a href="#" data-categoria="Hombre" data-subcategoria="Blusas">Playeras</a>
+            <a href="#" data-categoria="Hombre" data-subcategoria="Blusas">Blusas</a>
             <a href="#" data-categoria="Hombre" data-subcategoria="Pantalones de montar">Pantalones de montar</a>
             <a href="#" data-categoria="Hombre" data-subcategoria="Competencia">Competencia</a>
           </div>
@@ -251,7 +253,9 @@
 
     <div class="detalle-layout">
       <div class="detalle-galeria">
-        <img id="detalle-imagen" src="" alt="">
+        <div id="detalle-galeria-lista" class="detalle-galeria-lista">
+          <img id="detalle-imagen" src="" alt="">
+        </div>
       </div>
 
       <div class="detalle-info">
@@ -349,12 +353,26 @@
           <form id="form-direccion" class="form-direccion">
             <h3>Agregar dirección</h3>
             <input type="text" id="dir-nombre" placeholder="Nombre completo" required>
+
+            <input type="text" id="dir-cp" placeholder="Código postal" inputmode="numeric" maxlength="5" required>
+            <p id="dir-cp-estado" class="dir-cp-estado"></p>
+
             <input type="text" id="dir-calle" placeholder="Calle y número" required>
-            <input type="text" id="dir-colonia" placeholder="Colonia">
+            <input type="text" id="dir-colonia" list="dir-colonias-lista" placeholder="Colonia" autocomplete="off">
+            <datalist id="dir-colonias-lista"></datalist>
             <input type="text" id="dir-ciudad" placeholder="Ciudad" required>
             <input type="text" id="dir-estado" placeholder="Estado" required>
-            <input type="text" id="dir-cp" placeholder="Código postal" required>
             <input type="tel" id="dir-telefono" placeholder="Teléfono">
+
+            <div class="mapa-direccion-wrap">
+              <p class="mapa-direccion-label">Ubica tu dirección exacta en el mapa</p>
+              <div id="mapa-direccion" class="mapa-direccion"></div>
+              <p class="mapa-direccion-hint">Arrastra el pin al punto exacto de tu domicilio.</p>
+            </div>
+
+            <input type="hidden" id="dir-lat">
+            <input type="hidden" id="dir-lng">
+
             <button type="submit" class="auth-principal">Guardar dirección</button>
           </form>
         </div>
