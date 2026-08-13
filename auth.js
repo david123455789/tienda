@@ -25,6 +25,9 @@ const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
 const btnCuenta = document.getElementById('btn-cuenta');
+const cuentaDropdown = document.getElementById('cuenta-dropdown');
+const btnIrCuenta = document.getElementById('btn-ir-cuenta');
+const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
 const modal = document.getElementById('auth-modal');
 const cerrarAuth = document.getElementById('cerrar-auth');
 const titulo = document.getElementById('auth-titulo');
@@ -42,14 +45,17 @@ let usuarioActual = null;
 
 function abrirModal() {
   if (usuarioActual) {
-    const salir = confirm(`Sesión iniciada como ${usuarioActual.displayName || usuarioActual.email}. ¿Quieres cerrar sesión?`);
-    if (salir) {
-      signOut(auth);
-    }
+    cuentaDropdown.classList.toggle('open');
+    btnCuenta.setAttribute('aria-expanded', cuentaDropdown.classList.contains('open'));
     return;
   }
 
   modal.classList.remove('oculto');
+}
+
+function cerrarDropdownCuenta() {
+  cuentaDropdown.classList.remove('open');
+  btnCuenta.setAttribute('aria-expanded', 'false');
 }
 
 function cerrarModal() {
@@ -136,6 +142,7 @@ async function loginConGoogle() {
 
 onAuthStateChanged(auth, usuario => {
   usuarioActual = usuario;
+  window.usuarioActual = usuario;
 
   if (usuario) {
     const nombre = usuario.displayName || usuario.email;
@@ -144,7 +151,10 @@ onAuthStateChanged(auth, usuario => {
   } else {
     btnCuenta.textContent = 'Cuenta';
     btnCuenta.classList.remove('sesion-activa');
+    cerrarDropdownCuenta();
   }
+
+  document.dispatchEvent(new CustomEvent('usuario-actualizado', { detail: usuario }));
 });
 
 btnCuenta.addEventListener('click', abrirModal);
@@ -152,6 +162,22 @@ cerrarAuth.addEventListener('click', cerrarModal);
 btnPrincipal.addEventListener('click', loginORegistro);
 btnGoogle.addEventListener('click', loginConGoogle);
 btnCambiar.addEventListener('click', cambiarModo);
+
+btnIrCuenta.addEventListener('click', () => {
+  cerrarDropdownCuenta();
+  document.dispatchEvent(new CustomEvent('abrir-mi-cuenta'));
+});
+
+btnCerrarSesion.addEventListener('click', () => {
+  cerrarDropdownCuenta();
+  signOut(auth);
+});
+
+document.addEventListener('click', evento => {
+  if (!cuentaDropdown.contains(evento.target)) {
+    cerrarDropdownCuenta();
+  }
+});
 
 modal.addEventListener('click', evento => {
   if (evento.target === modal) {

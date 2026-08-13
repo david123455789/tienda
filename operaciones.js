@@ -9,6 +9,7 @@ const vistaInicio = document.getElementById('vista-inicio');
 const vistaColeccion = document.getElementById('vista-coleccion');
 const vistaProducto = document.getElementById('vista-producto');
 const vistaCarrito = document.getElementById('vista-carrito');
+const vistaCuenta = document.getElementById('vista-cuenta');
 const btnComprarAhora = document.getElementById('btn-comprar-ahora');
 
 const btnVolverColeccion = document.getElementById('btn-volver-coleccion');
@@ -59,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
   configurarCarrito();
   configurarBusqueda();
   configurarPanelFiltros();
+  configurarCuenta();
   actualizarContadorCarrito();
   cargarProductos();
 });
@@ -334,6 +336,7 @@ function mostrarInicio() {
   if (vistaColeccion) vistaColeccion.classList.add('oculto');
   if (vistaProducto) vistaProducto.classList.add('oculto');
   if (vistaCarrito) vistaCarrito.classList.add('oculto');
+  if (vistaCuenta) vistaCuenta.classList.add('oculto');
 
   mostrarProductosAleatorios();
 
@@ -348,6 +351,7 @@ function mostrarColeccionActual() {
   if (vistaColeccion) vistaColeccion.classList.remove('oculto');
   if (vistaProducto) vistaProducto.classList.add('oculto');
   if (vistaCarrito) vistaCarrito.classList.add('oculto');
+  if (vistaCuenta) vistaCuenta.classList.add('oculto');
 
   window.scrollTo({
     top: 0,
@@ -519,6 +523,7 @@ function mostrarDetalleProducto(product) {
   if (vistaInicio) vistaInicio.classList.add('oculto');
   if (vistaColeccion) vistaColeccion.classList.add('oculto');
   if (vistaCarrito) vistaCarrito.classList.add('oculto');
+  if (vistaCuenta) vistaCuenta.classList.add('oculto');
   if (vistaProducto) vistaProducto.classList.remove('oculto');
 
   window.scrollTo({
@@ -695,6 +700,7 @@ function mostrarCarrito() {
   if (vistaInicio) vistaInicio.classList.add('oculto');
   if (vistaColeccion) vistaColeccion.classList.add('oculto');
   if (vistaProducto) vistaProducto.classList.add('oculto');
+  if (vistaCuenta) vistaCuenta.classList.add('oculto');
   if (vistaCarrito) vistaCarrito.classList.remove('oculto');
 
   renderizarCarrito();
@@ -702,6 +708,143 @@ function mostrarCarrito() {
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
+  });
+}
+
+/* MI CUENTA */
+
+function mostrarCuenta() {
+  if (!window.usuarioActual) return;
+
+  if (vistaInicio) vistaInicio.classList.add('oculto');
+  if (vistaColeccion) vistaColeccion.classList.add('oculto');
+  if (vistaProducto) vistaProducto.classList.add('oculto');
+  if (vistaCarrito) vistaCarrito.classList.add('oculto');
+  if (vistaCuenta) vistaCuenta.classList.remove('oculto');
+
+  renderizarInformacionCuenta();
+  renderizarDirecciones();
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
+
+function configurarCuenta() {
+  document.querySelectorAll('.cuenta-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.cuenta-tab').forEach(item => item.classList.remove('active'));
+      tab.classList.add('active');
+
+      document.querySelectorAll('.cuenta-panel').forEach(panel => panel.classList.add('oculto'));
+
+      const panel = document.getElementById(`cuenta-panel-${tab.dataset.tab}`);
+      if (panel) panel.classList.remove('oculto');
+    });
+  });
+
+  const formDireccion = document.getElementById('form-direccion');
+
+  if (formDireccion) {
+    formDireccion.addEventListener('submit', event => {
+      event.preventDefault();
+      guardarNuevaDireccion();
+      formDireccion.reset();
+    });
+  }
+
+  document.addEventListener('abrir-mi-cuenta', mostrarCuenta);
+
+  document.addEventListener('usuario-actualizado', () => {
+    if (window.usuarioActual) {
+      renderizarInformacionCuenta();
+    } else if (vistaCuenta && !vistaCuenta.classList.contains('oculto')) {
+      mostrarInicio();
+    }
+  });
+}
+
+function renderizarInformacionCuenta() {
+  const usuario = window.usuarioActual;
+  if (!usuario) return;
+
+  const infoNombre = document.getElementById('cuenta-info-nombre');
+  const infoCorreo = document.getElementById('cuenta-info-correo');
+
+  if (infoNombre) infoNombre.textContent = usuario.displayName || 'Sin nombre registrado';
+  if (infoCorreo) infoCorreo.textContent = usuario.email || '-';
+}
+
+function claveDirecciones() {
+  const usuario = window.usuarioActual;
+  return usuario ? `direcciones_${usuario.uid}` : null;
+}
+
+function obtenerDirecciones() {
+  const clave = claveDirecciones();
+  if (!clave) return [];
+
+  return JSON.parse(localStorage.getItem(clave)) || [];
+}
+
+function guardarNuevaDireccion() {
+  const clave = claveDirecciones();
+  if (!clave) return;
+
+  const direccion = {
+    id: Date.now(),
+    nombre: document.getElementById('dir-nombre').value.trim(),
+    calle: document.getElementById('dir-calle').value.trim(),
+    colonia: document.getElementById('dir-colonia').value.trim(),
+    ciudad: document.getElementById('dir-ciudad').value.trim(),
+    estado: document.getElementById('dir-estado').value.trim(),
+    cp: document.getElementById('dir-cp').value.trim(),
+    telefono: document.getElementById('dir-telefono').value.trim()
+  };
+
+  const direcciones = obtenerDirecciones();
+  direcciones.push(direccion);
+  localStorage.setItem(clave, JSON.stringify(direcciones));
+
+  renderizarDirecciones();
+}
+
+function eliminarDireccion(id) {
+  const clave = claveDirecciones();
+  if (!clave) return;
+
+  const direcciones = obtenerDirecciones().filter(dir => dir.id !== id);
+  localStorage.setItem(clave, JSON.stringify(direcciones));
+
+  renderizarDirecciones();
+}
+
+function renderizarDirecciones() {
+  const contenedor = document.getElementById('cuenta-direcciones-lista');
+  if (!contenedor) return;
+
+  const direcciones = obtenerDirecciones();
+
+  if (direcciones.length === 0) {
+    contenedor.innerHTML = '<p class="cuenta-vacio-texto">Aún no tienes direcciones guardadas.</p>';
+    return;
+  }
+
+  contenedor.innerHTML = direcciones.map(dir => `
+    <div class="direccion-card" data-id="${dir.id}">
+      <p><strong>${dir.nombre}</strong></p>
+      <p>${dir.calle}${dir.colonia ? ', ' + dir.colonia : ''}</p>
+      <p>${dir.ciudad}, ${dir.estado}, CP ${dir.cp}</p>
+      ${dir.telefono ? `<p>Tel: ${dir.telefono}</p>` : ''}
+      <button type="button" class="btn-eliminar-direccion" data-id="${dir.id}">Eliminar</button>
+    </div>
+  `).join('');
+
+  contenedor.querySelectorAll('.btn-eliminar-direccion').forEach(boton => {
+    boton.addEventListener('click', () => {
+      eliminarDireccion(Number(boton.dataset.id));
+    });
   });
 }
 
@@ -1131,6 +1274,7 @@ function mostrarBusquedaComoColeccion(resultados, termino) {
   vistaInicio?.classList.add('oculto');
   vistaProducto?.classList.add('oculto');
   vistaCarrito?.classList.add('oculto');
+  vistaCuenta?.classList.add('oculto');
   vistaColeccion?.classList.remove('oculto');
 
   if (tituloCatalogo) tituloCatalogo.textContent = `Busqueda: ${termino}`;

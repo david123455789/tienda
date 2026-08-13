@@ -2302,3 +2302,174 @@ header {
   font-weight: 700;
   letter-spacing: 0.12em;
 }
+
+/* MENU DE CUENTA */
+
+.site-header .cuenta-dropdown {
+  margin-left: auto;
+  position: relative;
+  order: 0;
+}
+
+.site-header .cuenta-dropdown .cuenta-btn {
+  margin-left: 0;
+}
+
+.cuenta-menu {
+  width: 200px;
+  right: 0;
+  left: auto;
+}
+
+.site-header .cuenta-menu {
+  top: calc(100% + 12px);
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.cuenta-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 18px;
+  background: transparent;
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.cuenta-menu-item:hover {
+  background: var(--pearl);
+}
+
+/* VISTA MI CUENTA */
+
+.cuenta-section {
+  min-height: 70vh;
+  padding: 70px 60px;
+  background: var(--ivory);
+}
+
+.cuenta-header {
+  max-width: 720px;
+  margin-bottom: 34px;
+}
+
+.cuenta-header h1 {
+  margin: 0 0 12px;
+  font-size: 48px;
+}
+
+.cuenta-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 40px;
+  max-width: 1050px;
+}
+
+.cuenta-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-right: 1px solid var(--border);
+  padding-right: 20px;
+}
+
+.cuenta-tab {
+  text-align: left;
+  padding: 12px 10px;
+  background: transparent;
+  border: none;
+  color: var(--saddle);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.cuenta-tab.active {
+  color: var(--black);
+  font-weight: 700;
+  border-left: 2px solid var(--black);
+}
+
+.cuenta-panel.oculto {
+  display: none;
+}
+
+.cuenta-campo {
+  margin-bottom: 22px;
+}
+
+.cuenta-campo p {
+  margin: 0 0 6px;
+  color: var(--saddle);
+  font-size: 14px;
+}
+
+.cuenta-campo strong {
+  font-size: 18px;
+}
+
+.cuenta-vacio-texto {
+  color: var(--saddle);
+}
+
+.cuenta-direcciones-lista {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.direccion-card {
+  padding: 18px;
+  border: 1px solid var(--border);
+  background: var(--pearl);
+}
+
+.direccion-card p {
+  margin: 3px 0;
+}
+
+.btn-eliminar-direccion {
+  margin-top: 10px;
+  border: 1px solid var(--black);
+  background: transparent;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+.form-direccion {
+  display: grid;
+  gap: 12px;
+  max-width: 420px;
+}
+
+.form-direccion h3 {
+  margin: 0 0 4px;
+}
+
+.form-direccion input {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  background: var(--ivory);
+  font-size: 15px;
+}
+
+@media (max-width: 720px) {
+  .cuenta-section {
+    padding: 40px 20px;
+  }
+
+  .cuenta-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cuenta-tabs {
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding-right: 0;
+    padding-bottom: 12px;
+  }
+}

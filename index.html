@@ -39,7 +39,7 @@
             <a href="#" data-categoria="Mujer" data-subcategoria="Blusas">Tops</a>
             <a href="#" data-categoria="Mujer" data-subcategoria="Pantalones de montar">Pantalones de montar</a>
             <a href="#" data-categoria="Mujer" data-subcategoria="Leggings">Leggings</a>
-            <a href="#" data-categoria="Mujer" data-subcategoria="Jumpsuits">Jumpsuits</a>
+            <a href="#" data-categoria="Mujer" data-subcategoria="Enterizos">Jumpsuits</a>
             <a href="#" data-categoria="Mujer" data-subcategoria="Competencia">Competencia</a>
           </div>
         </div>
@@ -48,7 +48,7 @@
           <button class="category-btn" type="button">Hombre <span>⌄</span></button>
           <div class="subcategory-list">
             <a href="#" data-categoria="Hombre" data-subcategoria="Chamarras y sudaderas">Chamarras y sudaderas</a>
-            <a href="#" data-categoria="Hombre" data-subcategoria="Blusas">Blusas</a>
+            <a href="#" data-categoria="Hombre" data-subcategoria="Blusas">Playeras</a>
             <a href="#" data-categoria="Hombre" data-subcategoria="Pantalones de montar">Pantalones de montar</a>
             <a href="#" data-categoria="Hombre" data-subcategoria="Competencia">Competencia</a>
           </div>
@@ -97,7 +97,14 @@
       <span class="nav-text">Buscar</span>
     </button>
 
-    <button id="btn-cuenta" class="nav-link cuenta-btn" type="button">Cuenta</button>
+    <div class="dropdown cuenta-dropdown" id="cuenta-dropdown">
+      <button id="btn-cuenta" class="nav-link cuenta-btn" type="button" aria-expanded="false">Cuenta</button>
+
+      <div class="dropdown-menu cuenta-menu">
+        <button id="btn-ir-cuenta" class="cuenta-menu-item" type="button">Mi cuenta</button>
+        <button id="btn-cerrar-sesion" class="cuenta-menu-item" type="button">Cerrar sesión</button>
+      </div>
+    </div>
 
     <button id="btn-carrito" class="nav-link cart-btn" type="button" aria-label="Carrito">
       <svg class="header-icon cart-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -304,6 +311,56 @@
       <button class="buy-now-btn" type="button">Finalizar compra</button>
     </div>
   </section>
+
+  <section id="vista-cuenta" class="cuenta-section oculto">
+    <div class="cuenta-header">
+      <p class="eyebrow">Tu perfil</p>
+      <h1>Mi cuenta</h1>
+    </div>
+
+    <div class="cuenta-layout">
+      <nav class="cuenta-tabs" aria-label="Secciones de la cuenta">
+        <button type="button" class="cuenta-tab active" data-tab="informacion">Información de cuenta</button>
+        <button type="button" class="cuenta-tab" data-tab="pedidos">Pedidos</button>
+        <button type="button" class="cuenta-tab" data-tab="direcciones">Direcciones</button>
+      </nav>
+
+      <div class="cuenta-contenido">
+        <div id="cuenta-panel-informacion" class="cuenta-panel">
+          <div class="cuenta-campo">
+            <p>Nombre</p>
+            <strong id="cuenta-info-nombre">-</strong>
+          </div>
+          <div class="cuenta-campo">
+            <p>Correo electrónico</p>
+            <strong id="cuenta-info-correo">-</strong>
+          </div>
+        </div>
+
+        <div id="cuenta-panel-pedidos" class="cuenta-panel oculto">
+          <div id="cuenta-pedidos-lista" class="cuenta-vacio">
+            <p>Aún no tienes pedidos.</p>
+          </div>
+        </div>
+
+        <div id="cuenta-panel-direcciones" class="cuenta-panel oculto">
+          <div id="cuenta-direcciones-lista" class="cuenta-direcciones-lista"></div>
+
+          <form id="form-direccion" class="form-direccion">
+            <h3>Agregar dirección</h3>
+            <input type="text" id="dir-nombre" placeholder="Nombre completo" required>
+            <input type="text" id="dir-calle" placeholder="Calle y número" required>
+            <input type="text" id="dir-colonia" placeholder="Colonia">
+            <input type="text" id="dir-ciudad" placeholder="Ciudad" required>
+            <input type="text" id="dir-estado" placeholder="Estado" required>
+            <input type="text" id="dir-cp" placeholder="Código postal" required>
+            <input type="tel" id="dir-telefono" placeholder="Teléfono">
+            <button type="submit" class="auth-principal">Guardar dirección</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
 
 <footer class="footer">
@@ -371,4 +428,3 @@
 <script src="operaciones.js"></script>
 </body>
 </html>
-
