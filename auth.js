@@ -9,6 +9,14 @@ import {
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  doc,
+  deleteDoc,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBANyNBW_Pkn1vwYJeaiWZ6g2_-NW6HYHo",
@@ -22,7 +30,32 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
+
+window.guardarDireccionFirestore = async function (direccion) {
+  if (!auth.currentUser) return null;
+
+  const referencia = collection(db, 'usuarios', auth.currentUser.uid, 'direcciones');
+  const documento = await addDoc(referencia, direccion);
+
+  return documento.id;
+};
+
+window.obtenerDireccionesFirestore = async function () {
+  if (!auth.currentUser) return [];
+
+  const referencia = collection(db, 'usuarios', auth.currentUser.uid, 'direcciones');
+  const snapshot = await getDocs(referencia);
+
+  return snapshot.docs.map(documento => ({ id: documento.id, ...documento.data() }));
+};
+
+window.eliminarDireccionFirestore = async function (id) {
+  if (!auth.currentUser) return;
+
+  await deleteDoc(doc(db, 'usuarios', auth.currentUser.uid, 'direcciones', id));
+};
 
 const btnCuenta = document.getElementById('btn-cuenta');
 const cuentaDropdown = document.getElementById('cuenta-dropdown');

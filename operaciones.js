@@ -765,10 +765,6 @@ function configurarCuenta() {
 
       const panel = document.getElementById(`cuenta-panel-${tab.dataset.tab}`);
       if (panel) panel.classList.remove('oculto');
-
-      if (tab.dataset.tab === 'direcciones') {
-        inicializarMapaDireccion();
-      }
     });
   });
 
@@ -797,11 +793,6 @@ function configurarCuenta() {
     });
   }
 
-  ['dir-calle', 'dir-colonia', 'dir-ciudad', 'dir-estado'].forEach(id => {
-    const campo = document.getElementById(id);
-    if (campo) campo.addEventListener('blur', buscarUbicacionEnMapa);
-  });
-
   document.addEventListener('abrir-mi-cuenta', mostrarCuenta);
 
   document.addEventListener('usuario-actualizado', () => {
@@ -824,11 +815,7 @@ function renderizarInformacionCuenta() {
   if (infoCorreo) infoCorreo.textContent = usuario.email || '-';
 }
 
-/* CODIGO POSTAL Y MAPA DE DIRECCIONES */
-
-let mapaDireccion = null;
-let marcadorDireccion = null;
-let temporizadorGeocodificacion = null;
+/* CODIGO POSTAL */
 
 async function buscarDatosPorCP() {
   const inputCp = document.getElementById('dir-cp');
@@ -862,139 +849,63 @@ async function buscarDatosPorCP() {
     if (estadoTexto) {
       estadoTexto.textContent = datos.municipio ? `${datos.municipio}, ${datos.estado}` : '';
     }
-
-    buscarUbicacionEnMapa();
   } catch (error) {
     if (estadoTexto) estadoTexto.textContent = 'No se encontró ese código postal.';
     console.error('Error consultando el codigo postal:', error);
   }
 }
 
-function inicializarMapaDireccion() {
-  const contenedorMapa = document.getElementById('mapa-direccion');
-  if (!contenedorMapa || typeof L === 'undefined') return;
+async function obtenerDirecciones() {
+  if (!window.usuarioActual || typeof window.obtenerDireccionesFirestore !== 'function') return [];
 
-  if (!mapaDireccion) {
-    mapaDireccion = L.map(contenedorMapa).setView([19.4326, -99.1332], 12);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap',
-      maxZoom: 19
-    }).addTo(mapaDireccion);
-
-    marcadorDireccion = L.marker([19.4326, -99.1332], { draggable: true }).addTo(mapaDireccion);
-
-    marcadorDireccion.on('dragend', () => {
-      const posicion = marcadorDireccion.getLatLng();
-      guardarCoordenadasEnFormulario(posicion.lat, posicion.lng);
-    });
+  try {
+    return await window.obtenerDireccionesFirestore();
+  } catch (error) {
+    console.error('No se pudieron cargar las direcciones:', error);
+    return [];
   }
-
-  setTimeout(() => {
-    if (mapaDireccion) mapaDireccion.invalidateSize();
-  }, 200);
 }
 
-function guardarCoordenadasEnFormulario(lat, lng) {
-  const inputLat = document.getElementById('dir-lat');
-  const inputLng = document.getElementById('dir-lng');
-
-  if (inputLat) inputLat.value = lat;
-  if (inputLng) inputLng.value = lng;
-}
-
-function moverMapaA(lat, lng) {
-  if (!mapaDireccion || !marcadorDireccion) return;
-
-  mapaDireccion.setView([lat, lng], 17);
-  marcadorDireccion.setLatLng([lat, lng]);
-  guardarCoordenadasEnFormulario(lat, lng);
-}
-
-function buscarUbicacionEnMapa() {
-  clearTimeout(temporizadorGeocodificacion);
-
-  temporizadorGeocodificacion = setTimeout(async () => {
-    const calle = document.getElementById('dir-calle')?.value.trim();
-    const colonia = document.getElementById('dir-colonia')?.value.trim();
-    const ciudad = document.getElementById('dir-ciudad')?.value.trim();
-    const estado = document.getElementById('dir-estado')?.value.trim();
-    const cp = document.getElementById('dir-cp')?.value.trim();
-
-    if (!calle || !ciudad || !estado || !mapaDireccion) return;
-
-    const direccionTexto = [calle, colonia, ciudad, estado, cp, 'México'].filter(Boolean).join(', ');
-
-    try {
-      const respuesta = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&q=${encodeURIComponent(direccionTexto)}`
-      );
-
-      const resultados = await respuesta.json();
-
-      if (resultados && resultados[0]) {
-        moverMapaA(Number(resultados[0].lat), Number(resultados[0].lon));
-      }
-    } catch (error) {
-      console.error('No se pudo ubicar la direccion en el mapa:', error);
-    }
-  }, 900);
-}
-
-function claveDirecciones() {
-  const usuario = window.usuarioActual;
-  return usuario ? `direcciones_${usuario.uid}` : null;
-}
-
-function obtenerDirecciones() {
-  const clave = claveDirecciones();
-  if (!clave) return [];
-
-  return JSON.parse(localStorage.getItem(clave)) || [];
-}
-
-function guardarNuevaDireccion() {
-  const clave = claveDirecciones();
-  if (!clave) return;
-
-  const lat = document.getElementById('dir-lat').value;
-  const lng = document.getElementById('dir-lng').value;
+async function guardarNuevaDireccion() {
+  if (!window.usuarioActual || typeof window.guardarDireccionFirestore !== 'function') return;
 
   const direccion = {
-    id: Date.now(),
     nombre: document.getElementById('dir-nombre').value.trim(),
     calle: document.getElementById('dir-calle').value.trim(),
     colonia: document.getElementById('dir-colonia').value.trim(),
     ciudad: document.getElementById('dir-ciudad').value.trim(),
     estado: document.getElementById('dir-estado').value.trim(),
     cp: document.getElementById('dir-cp').value.trim(),
-    telefono: document.getElementById('dir-telefono').value.trim(),
-    lat: lat ? Number(lat) : null,
-    lng: lng ? Number(lng) : null
+    telefono: document.getElementById('dir-telefono').value.trim()
   };
 
-  const direcciones = obtenerDirecciones();
-  direcciones.push(direccion);
-  localStorage.setItem(clave, JSON.stringify(direcciones));
-
-  renderizarDirecciones();
+  try {
+    await window.guardarDireccionFirestore(direccion);
+    await renderizarDirecciones();
+  } catch (error) {
+    console.error('No se pudo guardar la direccion:', error);
+    alert('No se pudo guardar la dirección. Intenta de nuevo.');
+  }
 }
 
-function eliminarDireccion(id) {
-  const clave = claveDirecciones();
-  if (!clave) return;
+async function eliminarDireccion(id) {
+  if (!window.usuarioActual || typeof window.eliminarDireccionFirestore !== 'function') return;
 
-  const direcciones = obtenerDirecciones().filter(dir => dir.id !== id);
-  localStorage.setItem(clave, JSON.stringify(direcciones));
-
-  renderizarDirecciones();
+  try {
+    await window.eliminarDireccionFirestore(id);
+    await renderizarDirecciones();
+  } catch (error) {
+    console.error('No se pudo eliminar la direccion:', error);
+  }
 }
 
-function renderizarDirecciones() {
+async function renderizarDirecciones() {
   const contenedor = document.getElementById('cuenta-direcciones-lista');
   if (!contenedor) return;
 
-  const direcciones = obtenerDirecciones();
+  contenedor.innerHTML = '<p class="cuenta-vacio-texto">Cargando direcciones...</p>';
+
+  const direcciones = await obtenerDirecciones();
 
   if (direcciones.length === 0) {
     contenedor.innerHTML = '<p class="cuenta-vacio-texto">Aún no tienes direcciones guardadas.</p>';
@@ -1007,14 +918,13 @@ function renderizarDirecciones() {
       <p>${dir.calle}${dir.colonia ? ', ' + dir.colonia : ''}</p>
       <p>${dir.ciudad}, ${dir.estado}, CP ${dir.cp}</p>
       ${dir.telefono ? `<p>Tel: ${dir.telefono}</p>` : ''}
-      ${dir.lat && dir.lng ? `<a class="direccion-ver-mapa" href="https://www.openstreetmap.org/?mlat=${dir.lat}&mlon=${dir.lng}#map=17/${dir.lat}/${dir.lng}" target="_blank" rel="noopener">Ver ubicación en el mapa</a>` : ''}
       <button type="button" class="btn-eliminar-direccion" data-id="${dir.id}">Eliminar</button>
     </div>
   `).join('');
 
   contenedor.querySelectorAll('.btn-eliminar-direccion').forEach(boton => {
     boton.addEventListener('click', () => {
-      eliminarDireccion(Number(boton.dataset.id));
+      eliminarDireccion(boton.dataset.id);
     });
   });
 }
