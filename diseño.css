@@ -2012,7 +2012,7 @@ header {
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: url("imagenes/todos.png") center / cover no-repeat;
+  background: url("imagenes/todos.png") center top / cover no-repeat;
   border-top: 1px solid rgba(31, 31, 31, 0.12);
   border-bottom: 1px solid rgba(31, 31, 31, 0.12);
 }
@@ -2219,80 +2219,72 @@ header {
 /* Marca tipografica del header */
 .site-header .brand-link {
   display: inline-flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: clamp(12px, 1.6vw, 22px);
   flex: 0 0 auto;
   min-width: clamp(160px, 17vw, 260px);
   color: var(--black);
   text-decoration: none;
-  text-transform: uppercase;
-  line-height: 0.92;
 }
 
-.site-header .brand-kicker {
-  margin-left: 3px;
-  color: var(--saddle);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.48em;
+.site-header .brand-logo-img {
+  height: clamp(30px, 3.4vw, 42px);
+  width: auto;
+  display: block;
 }
 
-.site-header .brand-main {
-  margin-top: 3px;
+.site-header .brand-divider {
+  width: 1px;
+  height: clamp(22px, 2.6vw, 30px);
+  background: var(--charcoal);
+  opacity: 0.55;
+}
+
+.site-header .brand-wordmark {
   font-family: Georgia, "Times New Roman", serif;
   color: var(--black);
-  font-size: clamp(1.55rem, 2.25vw, 2.45rem);
+  font-size: clamp(1.05rem, 1.7vw, 1.55rem);
   font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: none;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
-.site-header .brand-sub {
-  align-self: flex-end;
-  margin-top: 3px;
-  color: var(--charcoal);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.46em;
-}
-
-.site-header .brand-link:hover .brand-main {
+.site-header .brand-link:hover .brand-wordmark {
   color: var(--saddle);
 }
 
 @media (max-width: 900px) {
   .site-header .brand-link {
     min-width: 140px;
+    gap: 10px;
   }
 
-  .site-header .brand-main {
-    font-size: 1.35rem;
+  .site-header .brand-logo-img {
+    height: 26px;
+  }
+
+  .site-header .brand-wordmark {
+    font-size: 0.95rem;
     letter-spacing: 0.06em;
-  }
-
-  .site-header .brand-kicker,
-  .site-header .brand-sub {
-    font-size: 0.6rem;
-    letter-spacing: 0.26em;
   }
 }
 
 @media (max-width: 560px) {
   .site-header .brand-link {
     min-width: 102px;
+    gap: 8px;
   }
 
-  .site-header .brand-main {
-    font-size: 0.98rem;
-    letter-spacing: 0.035em;
+  .site-header .brand-logo-img {
+    height: 22px;
   }
 
-  .site-header .brand-kicker,
-  .site-header .brand-sub {
-    font-size: 0.5rem;
-    letter-spacing: 0.14em;
+  .site-header .brand-wordmark {
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
   }
 }
 
