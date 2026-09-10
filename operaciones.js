@@ -3,7 +3,7 @@ const productosDestacados = document.getElementById('productos-destacados');
 
 const tituloCatalogo = document.getElementById('titulo-catalogo');
 const descripcionCatalogo = document.getElementById('descripcion-catalogo');
-const tallas = ['XXS', 'XS', 'S', 'M', 'L', 'XL','2XS','3XS', '4XS', '5XS','Cob','Full'];
+const tallas = ['XXS', 'XS', 'S', 'M', 'L', 'XL','2XS','3XS', '4XS', '5XS','One Size','Cob','Full'];
 
 const vistaInicio = document.getElementById('vista-inicio');
 const vistaColeccion = document.getElementById('vista-coleccion');
@@ -28,6 +28,7 @@ const detalleGaleriaLista = document.getElementById('detalle-galeria-lista');
 const detalleNombre = document.getElementById('detalle-nombre');
 const detallePrecio = document.getElementById('detalle-precio');
 const detalleDescripcion = document.getElementById('detalle-descripcion');
+const detalleCaracteristicas = document.getElementById('detalle-caracteristicas');
 
 const colorOptions = document.getElementById('color-options');
 
@@ -322,6 +323,10 @@ function crearProductosDesdeSheets(productosRows, variantesRows) {
         subcategoria: producto.subcategoria,
         description: producto.descripcion,
         descripcion: producto.descripcion,
+        caracteristicas: (producto.Caracteristicas || producto.caracteristicas || '')
+          .split('\n')
+          .map(linea => linea.trim())
+          .filter(Boolean),
         precio: primeraVariante ? primeraVariante.precio : Number(producto.precio),
         price: primeraVariante ? primeraVariante.precio : Number(producto.precio),
         stock: primeraVariante ? primeraVariante.stock : Number(producto.stock),
@@ -523,6 +528,16 @@ function mostrarDetalleProducto(product) {
     detalleDescripcion.textContent = descripcion;
   }
 
+  if (detalleCaracteristicas) {
+    const caracteristicas = product.caracteristicas || [];
+
+    detalleCaracteristicas.innerHTML = caracteristicas
+      .map(punto => `<li>${punto}</li>`)
+      .join('');
+
+    detalleCaracteristicas.classList.toggle('oculto', caracteristicas.length === 0);
+  }
+
   renderizarGaleriaExtra(product);
 
   renderizarVariantes(product);
@@ -572,7 +587,7 @@ function renderizarVariantes(product) {
     colorOptions.innerHTML = `
       <button class="color-card selected" type="button">
         <img src="${imagen}" alt="${nombre}">
-        <span>Ãšnico</span>
+        <span>Único</span>
       </button>
     `;
 
