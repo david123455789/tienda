@@ -2357,6 +2357,36 @@ header {
   transform: none;
 }
 
+/* PRODUCT GRID ON MOBILE */
+
+@media (max-width: 700px) {
+  .productos-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 2px;
+  }
+
+  .producto-imagen {
+    height: auto;
+    aspect-ratio: 3 / 4;
+  }
+
+  .producto-info {
+    padding: 12px 8px 0;
+  }
+
+  .producto-info h2 {
+    margin-bottom: 6px;
+    font-size: 14px;
+    line-height: 1.32;
+    letter-spacing: 0;
+  }
+
+  .producto-precio {
+    font-size: 15px;
+    letter-spacing: 0;
+  }
+}
+
 .cuenta-menu-item {
   display: block;
   width: 100%;

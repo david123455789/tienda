@@ -705,7 +705,7 @@ function agregarAlCarrito(product) {
   const tallaSeleccionada = document.querySelector('.size-grid button.selected');
   const talla = tallaSeleccionada ? tallaSeleccionada.textContent.trim() : 'Sin talla';
 
-  const color = varianteActual ? varianteActual.color : 'Ãšnico';
+  const color = varianteActual ? varianteActual.color : 'Agotado';
   const precio = varianteActual ? Number(varianteActual.precio) : Number(product.price || product.precio);
   const imagen = varianteActual ? varianteActual.image_url : product.image_url;
   const idVariante = varianteActual ? varianteActual.id_variante : null;
@@ -968,7 +968,7 @@ function renderizarCarrito() {
       <img src="${item.imagen}" alt="${item.nombre}">
       <div>
         <h3>${item.nombre}</h3>
-        <p>Color: ${item.color || 'Ãšnico'}</p>
+        <p>Color: ${item.color || 'Agotado'}</p>
         <p>Talla: ${item.talla || 'Sin talla'}</p>
         <p>Precio: $${item.precio.toFixed(2)}</p>
         <p>Cantidad: ${item.cantidad}</p>
