@@ -410,7 +410,7 @@ function mostrarProductos(lista) {
   contenedorProductos.innerHTML = '';
 
   if (!lista || lista.length === 0) {
-    contenedorProductos.innerHTML = '<p class="mensaje-vacio">No hay productos en esta categorÃ­a.</p>';
+    contenedorProductos.innerHTML = '<p class="mensaje-vacio">No hay productos en esta categoria.</p>';
     return;
   }
 
