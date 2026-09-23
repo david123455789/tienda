@@ -68,10 +68,8 @@
         <div class="menu-category">
           <button class="category-btn" type="button">Accesorios <span>⌄</span></button>
           <div class="subcategory-list">
-           <a href="#" data-categoria="Accesorios" data-subcategoria="Bolsas">Bolsas</a>
             <a href="#" data-categoria="Accesorios" data-subcategoria="Socks">Socks</a>
             <a href="#" data-categoria="Accesorios" data-subcategoria="Caps">Caps</a>
-            <a href="#" data-categoria="Accesorios" data-subcategoria="Head Bands">Head Bands</a>
             <a href="#" data-categoria="Accesorios" data-subcategoria="Guantes">Guantes</a>
             </div>
         </div>
@@ -79,11 +77,11 @@
         <div class="menu-category">
           <button class="category-btn" type="button">Caballos <span>⌄</span></button>
           <div class="subcategory-list">
-            <a href="#" data-categoria="Caballos" data-subcategoria="Saddle Pads">Saddle Pads</a>
-            <a href="#" data-categoria="Caballos" data-subcategoria="Bandages">Bandages</a>
-            <a href="#" data-categoria="Caballos" data-subcategoria="Ear Bonnets">Ear Bonnets</a>
-            <a href="#" data-categoria="Caballos" data-subcategoria="Brushing Boots">Brushing Boots</a>
-            <a href="#" data-categoria="Caballos" data-subcategoria="Bell Boots">Bell Boots</a>
+            <a href="#" data-categoria="Caballos" data-subcategoria="Mantillas">Saddle Pads</a>
+            <a href="#" data-categoria="Caballos" data-subcategoria="Vendas">Bandages</a>
+            <a href="#" data-categoria="Caballos" data-subcategoria="Orejeras">Ear Bonnets</a>
+            <a href="#" data-categoria="Caballos" data-subcategoria="Protectores de manos">Brushing Boots</a>
+            <a href="#" data-categoria="Caballos" data-subcategoria="Campanas">Bell Boots</a>
           </div>
         </div>
 
@@ -295,9 +293,18 @@
         </div>
 
         <button id="btn-agregar-carrito" class="add-cart-btn" type="button">Agregar al carrito</button>
-        <button id="btn-comprar-ahora" type="button" class="buy-now-btn">
-  Comprar ahora
-</button>
+
+        <div class="metodos-pago">
+          <p class="metodos-pago-label">Comprar ahora con</p>
+          <div class="metodos-pago-botones">
+            <button id="btn-pagar-mercadopago" type="button" class="pago-btn pago-btn-mercadopago">
+              Mercado Pago
+            </button>
+            <button id="btn-pagar-paypal" type="button" class="pago-btn pago-btn-paypal">
+              PayPal
+            </button>
+          </div>
+        </div>
 
         <div class="detalle-descripcion">
           <p id="detalle-descripcion"></p>
@@ -380,16 +387,45 @@
 </main>
 
 <footer class="footer">
-  <div class="footer-newsletter">
-    <div>
-      <h2>Suscri­bete a nuestras novedades</h2>
-      <p>Recibe lanzamientos, promociones y piezas seleccionadas para rider y caballo.</p>
+  <div class="footer-ubicacion">
+    <div class="ubicacion-texto">
+      <h2>Visítanos</h2>
+      <p class="ubicacion-nombre">THE POINT SANTA FE</p>
+      <p>
+        LOCAL C1-14, Primer piso<br>
+        Prol. Paseo de la Reforma 413, Santa Fe, Lomas de Santa Fe, Zedec,<br>
+        01219 Ciudad de México, CDMX
+      </p>
+      <a href="https://share.google/AZdkMQHzgvM5cMWYf" target="_blank" rel="noopener" class="ubicacion-link-maps">Ver en Google Maps →</a>
     </div>
 
-    <form class="newsletter-form">
-      <input type="email" placeholder="Correo electrónico">
-      <button type="submit">→</button>
-    </form>
+    <div class="ubicacion-visual">
+      <a
+        href="https://share.google/AZdkMQHzgvM5cMWYf"
+        target="_blank"
+        rel="noopener"
+        class="ubicacion-mapa-link"
+        aria-label="Abrir ubicación en Google Maps"
+      >
+        <iframe
+          class="ubicacion-mapa"
+          src="https://www.google.com/maps?q=THE+POINT+SANTA+FE+Prol.+Paseo+de+la+Reforma+413+Santa+Fe+Lomas+de+Santa+Fe+01219+Ciudad+de+Mexico&output=embed"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          aria-hidden="true"
+          tabindex="-1"
+        ></iframe>
+      </a>
+
+      <div class="ubicacion-galeria" id="ubicacion-galeria">
+        <img id="ubicacion-imagen-actual" src="imagenes/lugar.png" alt="THE POINT SANTA FE">
+
+        <button type="button" class="ubicacion-flecha ubicacion-prev" aria-label="Foto anterior">‹</button>
+        <button type="button" class="ubicacion-flecha ubicacion-next" aria-label="Foto siguiente">›</button>
+
+        <div class="ubicacion-puntos" id="ubicacion-puntos"></div>
+      </div>
+    </div>
   </div>
 
   <div class="footer-social">

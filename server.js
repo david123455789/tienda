@@ -1,5 +1,3 @@
-
-
 const express = require('express');
 const cors = require('cors');
 const { parse } = require('csv-parse/sync');
@@ -84,6 +82,18 @@ app.get('/api/products', async (req, res) => {
     });
   }
 });
+
+/* ======================= PAGOS (Mercado Pago + PayPal) ======================= */
+/* Estas rutas existen para que /api/crear-pago y /api/crear-pago-paypal        */
+/* también funcionen en local con "node server.js". En Vercel, los archivos     */
+/* crear-pago.js y crear-pago-paypal.js dentro de /api funcionan solos y estas  */
+/* rutas de aquí simplemente no se usan (Vercel no ejecuta server.js).          */
+
+const crearPagoMercadoPago = require('./crear-pago');
+const crearPagoPaypal = require('./crear-pago-paypal');
+
+app.post('/api/crear-pago', crearPagoMercadoPago);
+app.post('/api/crear-pago-paypal', crearPagoPaypal);
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);

@@ -3,14 +3,15 @@ const productosDestacados = document.getElementById('productos-destacados');
 
 const tituloCatalogo = document.getElementById('titulo-catalogo');
 const descripcionCatalogo = document.getElementById('descripcion-catalogo');
-const tallas = ['XXS', 'XS', 'S', 'M', 'L', 'XL','2XS','3XS', '4XS', '5XS','One Size','Cob','Full'];
+const tallas = ['XXS', 'XS', 'S', 'M', 'L', 'XL','2XS','3XS', '4XS', '5XS'];
 
 const vistaInicio = document.getElementById('vista-inicio');
 const vistaColeccion = document.getElementById('vista-coleccion');
 const vistaProducto = document.getElementById('vista-producto');
 const vistaCarrito = document.getElementById('vista-carrito');
 const vistaCuenta = document.getElementById('vista-cuenta');
-const btnComprarAhora = document.getElementById('btn-comprar-ahora');
+const btnPagarMercadoPago = document.getElementById('btn-pagar-mercadopago');
+const btnPagarPaypal = document.getElementById('btn-pagar-paypal');
 
 const btnVolverColeccion = document.getElementById('btn-volver-coleccion');
 const btnCarrito = document.getElementById('btn-carrito');
@@ -63,14 +64,82 @@ document.addEventListener('DOMContentLoaded', () => {
   configurarBusqueda();
   configurarPanelFiltros();
   configurarCuenta();
+  configurarGaleriaUbicacion();
   actualizarContadorCarrito();
   cargarProductos();
 });
+
+function configurarGaleriaUbicacion() {
+  const imagenes = [
+    'imagenes/lugar.png',
+    'imagenes/lugar1.png',
+    'imagenes/lugar2.png',
+    'imagenes/lugar3.png',
+    'imagenes/lugar4.png'
+  ];
+
+  const imagenActual = document.getElementById('ubicacion-imagen-actual');
+  const puntosContenedor = document.getElementById('ubicacion-puntos');
+  const btnPrev = document.querySelector('.ubicacion-prev');
+  const btnNext = document.querySelector('.ubicacion-next');
+
+  if (!imagenActual || !puntosContenedor) return;
+
+  let indice = 0;
+
+  function render() {
+    imagenActual.src = imagenes[indice];
+    puntosContenedor.querySelectorAll('button').forEach((punto, i) => {
+      punto.classList.toggle('activo', i === indice);
+    });
+  }
+
+  imagenes.forEach((_, i) => {
+    const punto = document.createElement('button');
+    punto.type = 'button';
+    punto.setAttribute('aria-label', `Ver foto ${i + 1}`);
+
+    punto.addEventListener('click', () => {
+      indice = i;
+      render();
+    });
+
+    puntosContenedor.appendChild(punto);
+  });
+
+  if (btnPrev) {
+    btnPrev.addEventListener('click', () => {
+      indice = (indice - 1 + imagenes.length) % imagenes.length;
+      render();
+    });
+  }
+
+  if (btnNext) {
+    btnNext.addEventListener('click', () => {
+      indice = (indice + 1) % imagenes.length;
+      render();
+    });
+  }
+
+  render();
+}
 
 function configurarMenu() {
   const dropdown = document.querySelector('.dropdown');
   const btnMaximilian = document.getElementById('btn-maximilian');
   const btnInicio = document.getElementById('btn-inicio');
+  const logoInicio = document.getElementById('logo-inicio');
+
+  if (logoInicio) {
+    logoInicio.addEventListener('click', event => {
+      event.preventDefault();
+      mostrarInicio();
+
+      if (dropdown) {
+        dropdown.classList.remove('open');
+      }
+    });
+  }
 
   if (btnMaximilian && dropdown) {
     btnMaximilian.addEventListener('click', event => {
@@ -410,7 +479,7 @@ function mostrarProductos(lista) {
   contenedorProductos.innerHTML = '';
 
   if (!lista || lista.length === 0) {
-    contenedorProductos.innerHTML = '<p class="mensaje-vacio">No hay productos en esta categoria.</p>';
+    contenedorProductos.innerHTML = '<p class="mensaje-vacio">No hay productos en esta categorÃ­a.</p>';
     return;
   }
 
@@ -587,7 +656,7 @@ function renderizarVariantes(product) {
     colorOptions.innerHTML = `
       <button class="color-card selected" type="button">
         <img src="${imagen}" alt="${nombre}">
-        <span>Único</span>
+        <span>Ãšnico</span>
       </button>
     `;
 
@@ -654,8 +723,12 @@ function aplicarVariante(variant) {
     btnAgregarCarrito.textContent = sinStock ? 'Agotado' : 'Agregar al carrito';
   }
 
-  if (btnComprarAhora) {
-    btnComprarAhora.disabled = sinStock;
+  if (btnPagarMercadoPago) {
+    btnPagarMercadoPago.disabled = sinStock;
+  }
+
+  if (btnPagarPaypal) {
+    btnPagarPaypal.disabled = sinStock;
   }
 
   renderizarTallas(variant.tallas);
@@ -705,7 +778,7 @@ function agregarAlCarrito(product) {
   const tallaSeleccionada = document.querySelector('.size-grid button.selected');
   const talla = tallaSeleccionada ? tallaSeleccionada.textContent.trim() : 'Sin talla';
 
-  const color = varianteActual ? varianteActual.color : 'Agotado';
+  const color = varianteActual ? varianteActual.color : 'Ãšnico';
   const precio = varianteActual ? Number(varianteActual.precio) : Number(product.price || product.precio);
   const imagen = varianteActual ? varianteActual.image_url : product.image_url;
   const idVariante = varianteActual ? varianteActual.id_variante : null;
@@ -968,7 +1041,7 @@ function renderizarCarrito() {
       <img src="${item.imagen}" alt="${item.nombre}">
       <div>
         <h3>${item.nombre}</h3>
-        <p>Color: ${item.color || 'Agotado'}</p>
+        <p>Color: ${item.color || 'Ãšnico'}</p>
         <p>Talla: ${item.talla || 'Sin talla'}</p>
         <p>Precio: $${item.precio.toFixed(2)}</p>
         <p>Cantidad: ${item.cantidad}</p>
@@ -1057,23 +1130,31 @@ function renderizarTallas(tallasTexto) {
     sizeGrid.appendChild(boton);
   });
 }
-if (btnComprarAhora) {
-  btnComprarAhora.addEventListener('click', async () => {
+function armarProductoParaPagar() {
+  const tallaSeleccionada = document.querySelector('.size-grid button.selected');
+
+  return {
+    nombre: productoActual.name || productoActual.nombre || 'Producto',
+    precio: varianteActual
+      ? Number(varianteActual.precio || varianteActual.price)
+      : Number(productoActual.price || productoActual.precio),
+    cantidad: Math.max(1, Number(cantidadProducto) || 1),
+    talla: tallaSeleccionada ? tallaSeleccionada.textContent.trim() : '',
+    color: varianteActual ? varianteActual.color : 'Único'
+  };
+}
+
+if (btnPagarMercadoPago) {
+  btnPagarMercadoPago.addEventListener('click', async () => {
     if (!productoActual) return;
+    await iniciarPago([armarProductoParaPagar()], 'mercadopago');
+  });
+}
 
-    const tallaSeleccionada = document.querySelector('.size-grid button.selected');
-
-    const productoParaPagar = {
-      nombre: productoActual.name || productoActual.nombre || 'Producto',
-      precio: varianteActual
-        ? Number(varianteActual.precio || varianteActual.price)
-        : Number(productoActual.price || productoActual.precio),
-      cantidad: Math.max(1, Number(document.getElementById('cantidad-producto')?.textContent || 1)),
-      talla: tallaSeleccionada ? tallaSeleccionada.textContent.trim() : '',
-      color: varianteActual ? varianteActual.color : 'Único'
-    };
-
-    await iniciarPago([productoParaPagar]);
+if (btnPagarPaypal) {
+  btnPagarPaypal.addEventListener('click', async () => {
+    if (!productoActual) return;
+    await iniciarPago([armarProductoParaPagar()], 'paypal');
   });
 }
 function obtenerPrecio(producto) {
@@ -1382,9 +1463,11 @@ function mostrarBusquedaComoColeccion(resultados, termino) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-async function iniciarPago(productosParaPagar) {
+async function iniciarPago(productosParaPagar, metodo = 'mercadopago') {
+  const endpoint = metodo === 'paypal' ? '/api/crear-pago-paypal' : '/api/crear-pago';
+
   try {
-    const respuesta = await fetch('/api/crear-pago', {
+    const respuesta = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
