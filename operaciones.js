@@ -10,6 +10,9 @@ const vistaColeccion = document.getElementById('vista-coleccion');
 const vistaProducto = document.getElementById('vista-producto');
 const vistaCarrito = document.getElementById('vista-carrito');
 const vistaCuenta = document.getElementById('vista-cuenta');
+const vistaCheckout = document.getElementById('vista-checkout');
+const btnComprarAhora = document.getElementById('btn-comprar-ahora');
+const btnFinalizarCompra = document.getElementById('btn-finalizar-compra');
 const btnPagarMercadoPago = document.getElementById('btn-pagar-mercadopago');
 const btnPagarPaypal = document.getElementById('btn-pagar-paypal');
 
@@ -49,6 +52,7 @@ let cantidadProducto = 1;
 let productoActual = null;
 let varianteActual = null;
 let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+let itemsCheckout = [];
 let productosColeccionActual = [];
 let filtrosActivos = {
   subcategorias: [],
@@ -64,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
   configurarBusqueda();
   configurarPanelFiltros();
   configurarCuenta();
+  configurarCheckout();
   configurarGaleriaUbicacion();
   actualizarContadorCarrito();
   cargarProductos();
@@ -416,6 +421,7 @@ function mostrarInicio() {
   if (vistaProducto) vistaProducto.classList.add('oculto');
   if (vistaCarrito) vistaCarrito.classList.add('oculto');
   if (vistaCuenta) vistaCuenta.classList.add('oculto');
+  if (vistaCheckout) vistaCheckout.classList.add('oculto');
 
   mostrarProductosAleatorios();
 
@@ -431,6 +437,7 @@ function mostrarColeccionActual() {
   if (vistaProducto) vistaProducto.classList.add('oculto');
   if (vistaCarrito) vistaCarrito.classList.add('oculto');
   if (vistaCuenta) vistaCuenta.classList.add('oculto');
+  if (vistaCheckout) vistaCheckout.classList.add('oculto');
 
   window.scrollTo({
     top: 0,
@@ -615,6 +622,7 @@ function mostrarDetalleProducto(product) {
   if (vistaColeccion) vistaColeccion.classList.add('oculto');
   if (vistaCarrito) vistaCarrito.classList.add('oculto');
   if (vistaCuenta) vistaCuenta.classList.add('oculto');
+  if (vistaCheckout) vistaCheckout.classList.add('oculto');
   if (vistaProducto) vistaProducto.classList.remove('oculto');
 
   window.scrollTo({
@@ -723,12 +731,9 @@ function aplicarVariante(variant) {
     btnAgregarCarrito.textContent = sinStock ? 'Agotado' : 'Agregar al carrito';
   }
 
-  if (btnPagarMercadoPago) {
-    btnPagarMercadoPago.disabled = sinStock;
-  }
-
-  if (btnPagarPaypal) {
-    btnPagarPaypal.disabled = sinStock;
+  if (btnComprarAhora) {
+    btnComprarAhora.disabled = sinStock;
+    btnComprarAhora.textContent = sinStock ? 'Agotado' : 'Comprar';
   }
 
   renderizarTallas(variant.tallas);
@@ -813,6 +818,7 @@ function mostrarCarrito() {
   if (vistaColeccion) vistaColeccion.classList.add('oculto');
   if (vistaProducto) vistaProducto.classList.add('oculto');
   if (vistaCuenta) vistaCuenta.classList.add('oculto');
+  if (vistaCheckout) vistaCheckout.classList.add('oculto');
   if (vistaCarrito) vistaCarrito.classList.remove('oculto');
 
   renderizarCarrito();
@@ -823,7 +829,150 @@ function mostrarCarrito() {
   });
 }
 
-/* MI CUENTA */
+/* CHECKOUT */
+
+function mostrarCheckout(items) {
+  itemsCheckout = items;
+
+  if (vistaInicio) vistaInicio.classList.add('oculto');
+  if (vistaColeccion) vistaColeccion.classList.add('oculto');
+  if (vistaProducto) vistaProducto.classList.add('oculto');
+  if (vistaCarrito) vistaCarrito.classList.add('oculto');
+  if (vistaCuenta) vistaCuenta.classList.add('oculto');
+  if (vistaCheckout) vistaCheckout.classList.remove('oculto');
+
+  renderizarResumenCheckout();
+
+  const mensaje = document.getElementById('checkout-mensaje');
+  if (mensaje) mensaje.textContent = '';
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
+
+function renderizarResumenCheckout() {
+  const lista = document.getElementById('checkout-resumen-lista');
+  const totalEl = document.getElementById('checkout-total');
+  if (!lista || !totalEl) return;
+
+  let total = 0;
+
+  lista.innerHTML = itemsCheckout.map(item => {
+    const subtotal = Number(item.precio) * Number(item.cantidad);
+    total += subtotal;
+
+    return `
+      <div class="checkout-item">
+        <span>${item.nombre}${item.talla ? ' - Talla ' + item.talla : ''}${item.color ? ' - ' + item.color : ''} × ${item.cantidad}</span>
+        <strong>$${subtotal.toFixed(2)}</strong>
+      </div>
+    `;
+  }).join('');
+
+  totalEl.textContent = `$${total.toFixed(2)}`;
+}
+
+function configurarCheckout() {
+  const inputCp = document.getElementById('checkout-cp');
+
+  if (inputCp) {
+    inputCp.addEventListener('input', () => {
+      inputCp.value = inputCp.value.replace(/\D/g, '').slice(0, 5);
+
+      if (inputCp.value.length === 5) {
+        buscarDatosPorCPCheckout();
+      }
+    });
+  }
+}
+
+async function buscarDatosPorCPCheckout() {
+  const inputCp = document.getElementById('checkout-cp');
+  const estadoTexto = document.getElementById('checkout-cp-estado');
+  const cp = inputCp ? inputCp.value.trim() : '';
+
+  if (cp.length !== 5) return;
+
+  try {
+    const respuesta = await fetch(`https://postali.app/api/v1/mx/cp/${cp}`);
+
+    if (!respuesta.ok) {
+      throw new Error('CP no encontrado');
+    }
+
+    const datos = await respuesta.json();
+
+    const inputCiudad = document.getElementById('checkout-ciudad');
+    const inputEstado = document.getElementById('checkout-estado');
+    const listaColonias = document.getElementById('checkout-colonias-lista');
+
+    if (inputCiudad) inputCiudad.value = datos.municipio || '';
+    if (inputEstado) inputEstado.value = datos.estado || '';
+
+    if (listaColonias) {
+      listaColonias.innerHTML = (datos.asentamientos || [])
+        .map(asentamiento => `<option value="${asentamiento.nombre}"></option>`)
+        .join('');
+    }
+
+    if (estadoTexto) {
+      estadoTexto.textContent = datos.municipio ? `${datos.municipio}, ${datos.estado}` : '';
+    }
+  } catch (error) {
+    if (estadoTexto) estadoTexto.textContent = 'No se encontró ese código postal.';
+    console.error('Error consultando el codigo postal:', error);
+  }
+}
+
+function obtenerDireccionCheckout() {
+  const campos = {
+    nombre: document.getElementById('checkout-nombre'),
+    cp: document.getElementById('checkout-cp'),
+    calle: document.getElementById('checkout-calle'),
+    colonia: document.getElementById('checkout-colonia'),
+    ciudad: document.getElementById('checkout-ciudad'),
+    estado: document.getElementById('checkout-estado'),
+    telefono: document.getElementById('checkout-telefono')
+  };
+
+  const direccion = {};
+  let faltante = null;
+
+  Object.entries(campos).forEach(([clave, input]) => {
+    const valor = input ? input.value.trim() : '';
+    direccion[clave] = valor;
+
+    if (input && input.required && !valor && !faltante) {
+      faltante = input;
+    }
+  });
+
+  if (faltante) {
+    faltante.focus();
+    return null;
+  }
+
+  return direccion;
+}
+
+async function procesarPagoCheckout(metodo) {
+  const mensaje = document.getElementById('checkout-mensaje');
+
+  if (!itemsCheckout.length) return;
+
+  const direccion = obtenerDireccionCheckout();
+
+  if (!direccion) {
+    if (mensaje) mensaje.textContent = 'Completa tu dirección de entrega antes de pagar.';
+    return;
+  }
+
+  if (mensaje) mensaje.textContent = '';
+
+  await iniciarPago(itemsCheckout, metodo, direccion);
+}
 
 function mostrarCuenta() {
   if (!window.usuarioActual) return;
@@ -832,6 +981,7 @@ function mostrarCuenta() {
   if (vistaColeccion) vistaColeccion.classList.add('oculto');
   if (vistaProducto) vistaProducto.classList.add('oculto');
   if (vistaCarrito) vistaCarrito.classList.add('oculto');
+  if (vistaCheckout) vistaCheckout.classList.add('oculto');
   if (vistaCuenta) vistaCuenta.classList.remove('oculto');
 
   renderizarInformacionCuenta();
@@ -1144,17 +1294,36 @@ function armarProductoParaPagar() {
   };
 }
 
-if (btnPagarMercadoPago) {
-  btnPagarMercadoPago.addEventListener('click', async () => {
+if (btnComprarAhora) {
+  btnComprarAhora.addEventListener('click', () => {
     if (!productoActual) return;
-    await iniciarPago([armarProductoParaPagar()], 'mercadopago');
+    mostrarCheckout([armarProductoParaPagar()]);
+  });
+}
+
+if (btnFinalizarCompra) {
+  btnFinalizarCompra.addEventListener('click', () => {
+    if (!carrito.length) return;
+
+    const itemsCarrito = carrito.map(item => ({
+      nombre: item.nombre,
+      precio: Number(item.precio),
+      cantidad: item.cantidad
+    }));
+
+    mostrarCheckout(itemsCarrito);
+  });
+}
+
+if (btnPagarMercadoPago) {
+  btnPagarMercadoPago.addEventListener('click', () => {
+    procesarPagoCheckout('mercadopago');
   });
 }
 
 if (btnPagarPaypal) {
-  btnPagarPaypal.addEventListener('click', async () => {
-    if (!productoActual) return;
-    await iniciarPago([armarProductoParaPagar()], 'paypal');
+  btnPagarPaypal.addEventListener('click', () => {
+    procesarPagoCheckout('paypal');
   });
 }
 function obtenerPrecio(producto) {
@@ -1452,6 +1621,7 @@ function mostrarBusquedaComoColeccion(resultados, termino) {
   vistaProducto?.classList.add('oculto');
   vistaCarrito?.classList.add('oculto');
   vistaCuenta?.classList.add('oculto');
+  vistaCheckout?.classList.add('oculto');
   vistaColeccion?.classList.remove('oculto');
 
   if (tituloCatalogo) tituloCatalogo.textContent = `Busqueda: ${termino}`;
@@ -1463,7 +1633,7 @@ function mostrarBusquedaComoColeccion(resultados, termino) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-async function iniciarPago(productosParaPagar, metodo = 'mercadopago') {
+async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion = null) {
   const endpoint = metodo === 'paypal' ? '/api/crear-pago-paypal' : '/api/crear-pago';
 
   try {
@@ -1472,7 +1642,7 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago') {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ productos: productosParaPagar })
+      body: JSON.stringify({ productos: productosParaPagar, direccion })
     });
 
     const data = await respuesta.json();

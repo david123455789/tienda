@@ -89,8 +89,8 @@ app.get('/api/products', async (req, res) => {
 /* crear-pago.js y crear-pago-paypal.js dentro de /api funcionan solos y estas  */
 /* rutas de aquí simplemente no se usan (Vercel no ejecuta server.js).          */
 
-const crearPagoMercadoPago = require('./crear-pago');
-const crearPagoPaypal = require('./crear-pago-paypal');
+const crearPagoMercadoPago = require('./api/crear-pago');
+const crearPagoPaypal = require('./api/crear-pago-paypal');
 
 app.post('/api/crear-pago', crearPagoMercadoPago);
 app.post('/api/crear-pago-paypal', crearPagoPaypal);

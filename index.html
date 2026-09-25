@@ -293,18 +293,7 @@
         </div>
 
         <button id="btn-agregar-carrito" class="add-cart-btn" type="button">Agregar al carrito</button>
-
-        <div class="metodos-pago">
-          <p class="metodos-pago-label">Comprar ahora con</p>
-          <div class="metodos-pago-botones">
-            <button id="btn-pagar-mercadopago" type="button" class="pago-btn pago-btn-mercadopago">
-              Mercado Pago
-            </button>
-            <button id="btn-pagar-paypal" type="button" class="pago-btn pago-btn-paypal">
-              PayPal
-            </button>
-          </div>
-        </div>
+        <button id="btn-comprar-ahora" type="button" class="buy-now-btn">Comprar</button>
 
         <div class="detalle-descripcion">
           <p id="detalle-descripcion"></p>
@@ -326,7 +315,55 @@
     <div class="cart-summary">
       <p>Total</p>
       <strong id="carrito-total">$0.00</strong>
-      <button class="buy-now-btn" type="button">Finalizar compra</button>
+      <button id="btn-finalizar-compra" class="buy-now-btn" type="button">Finalizar compra</button>
+    </div>
+  </section>
+
+  <section id="vista-checkout" class="checkout-section oculto">
+    <div class="cart-header">
+      <p class="eyebrow">Un paso más</p>
+      <h1>Finalizar compra</h1>
+      <p>Confirma tu dirección de entrega y elige cómo quieres pagar.</p>
+    </div>
+
+    <div class="checkout-layout">
+      <div class="checkout-resumen">
+        <h3>Resumen del pedido</h3>
+        <div id="checkout-resumen-lista" class="checkout-resumen-lista"></div>
+        <div class="checkout-resumen-total">
+          <p>Total</p>
+          <strong id="checkout-total">$0.00</strong>
+        </div>
+      </div>
+
+      <div class="checkout-direccion">
+        <h3>Dirección de entrega</h3>
+
+        <form id="form-checkout-direccion" class="form-direccion">
+          <input type="text" id="checkout-nombre" placeholder="Nombre completo" required>
+          <input type="text" id="checkout-cp" placeholder="Código postal" inputmode="numeric" maxlength="5" required>
+          <p id="checkout-cp-estado" class="dir-cp-estado"></p>
+          <input type="text" id="checkout-calle" placeholder="Calle y número" required>
+          <input type="text" id="checkout-colonia" list="checkout-colonias-lista" placeholder="Colonia" autocomplete="off">
+          <datalist id="checkout-colonias-lista"></datalist>
+          <input type="text" id="checkout-ciudad" placeholder="Ciudad" required>
+          <input type="text" id="checkout-estado" placeholder="Estado" required>
+          <input type="tel" id="checkout-telefono" placeholder="Teléfono" required>
+        </form>
+
+        <div class="metodos-pago">
+          <p class="metodos-pago-label">Pagar con</p>
+          <div class="metodos-pago-botones">
+            <button id="btn-pagar-mercadopago" type="button" class="pago-btn pago-btn-mercadopago">
+              Mercado Pago
+            </button>
+            <button id="btn-pagar-paypal" type="button" class="pago-btn pago-btn-paypal">
+              PayPal
+            </button>
+          </div>
+          <p id="checkout-mensaje" class="checkout-mensaje"></p>
+        </div>
+      </div>
     </div>
   </section>
 

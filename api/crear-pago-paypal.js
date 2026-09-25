@@ -34,7 +34,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { productos } = req.body;
+    const { productos, direccion } = req.body;
 
     if (!Array.isArray(productos) || productos.length === 0) {
       return res.status(400).json({ error: 'Carrito vacio' });
@@ -62,6 +62,33 @@ module.exports = async function handler(req, res) {
 
     const token = await obtenerTokenPaypal();
 
+    const purchaseUnit = {
+      amount: {
+        currency_code: 'MXN',
+        value: totalItems.toFixed(2),
+        breakdown: {
+          item_total: {
+            currency_code: 'MXN',
+            value: totalItems.toFixed(2)
+          }
+        }
+      },
+      items
+    };
+
+    if (direccion && direccion.calle) {
+      purchaseUnit.shipping = {
+        name: { full_name: direccion.nombre || undefined },
+        address: {
+          address_line_1: direccion.calle,
+          admin_area_2: direccion.ciudad || undefined,
+          admin_area_1: direccion.estado || undefined,
+          postal_code: direccion.cp || undefined,
+          country_code: 'MX'
+        }
+      };
+    }
+
     const respuestaOrden = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders`, {
       method: 'POST',
       headers: {
@@ -70,21 +97,7 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         intent: 'CAPTURE',
-        purchase_units: [
-          {
-            amount: {
-              currency_code: 'MXN',
-              value: totalItems.toFixed(2),
-              breakdown: {
-                item_total: {
-                  currency_code: 'MXN',
-                  value: totalItems.toFixed(2)
-                }
-              }
-            },
-            items
-          }
-        ],
+        purchase_units: [purchaseUnit],
         application_context: {
           brand_name: 'In Equestrian Shop',
           return_url: 'https://tienda-alpha-red.vercel.app/?pago=aprobado',

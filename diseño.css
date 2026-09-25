@@ -718,6 +718,91 @@ header {
   color: #003087;
 }
 
+.checkout-mensaje {
+  margin: 12px 0 0;
+  color: #8a2c2c;
+  font-size: 14px;
+  min-height: 18px;
+}
+
+/* CHECKOUT */
+
+.checkout-section {
+  min-height: 70vh;
+  padding: 70px 60px;
+  background: var(--ivory);
+}
+
+.checkout-layout {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 50px;
+  max-width: 1100px;
+  align-items: start;
+}
+
+.checkout-resumen,
+.checkout-direccion {
+  background: var(--pearl);
+  border: 1px solid var(--border);
+  padding: 28px;
+}
+
+.checkout-resumen h3,
+.checkout-direccion h3 {
+  margin: 0 0 20px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.checkout-resumen-lista {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.checkout-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--charcoal);
+  font-size: 15px;
+}
+
+.checkout-resumen-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.checkout-resumen-total p {
+  margin: 0;
+  color: var(--saddle);
+}
+
+.checkout-resumen-total strong {
+  font-size: 24px;
+}
+
+.checkout-direccion .form-direccion {
+  max-width: none;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 900px) {
+  .checkout-section {
+    padding: 40px 20px;
+  }
+
+  .checkout-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 480px) {
   .metodos-pago-botones {
     grid-template-columns: 1fr;
