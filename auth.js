@@ -239,6 +239,12 @@ document.addEventListener('click', evento => {
   }
 });
 
+document.addEventListener('pedir-login', evento => {
+  cerrarDropdownCuenta();
+  modal.classList.remove('oculto');
+  mensaje.textContent = (evento.detail && evento.detail.mensaje) || '';
+});
+
 modal.addEventListener('click', evento => {
   if (evento.target === modal) {
     cerrarModal();

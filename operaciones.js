@@ -51,7 +51,48 @@ let ultimaSubcategoria = '';
 let cantidadProducto = 1;
 let productoActual = null;
 let varianteActual = null;
-let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+let carrito = [];
+
+/* CARRITO POR CUENTA: cada usuario tiene su propio carrito */
+
+function claveCarritoUsuario() {
+  const usuario = window.usuarioActual;
+  return usuario ? `carrito_${usuario.uid}` : null;
+}
+
+function cargarCarritoUsuario() {
+  const clave = claveCarritoUsuario();
+
+  if (clave) {
+    try {
+      carrito = JSON.parse(localStorage.getItem(clave)) || [];
+    } catch (error) {
+      carrito = [];
+    }
+  } else {
+    carrito = [];
+  }
+
+  actualizarContadorCarrito();
+
+  if (vistaCarrito && !vistaCarrito.classList.contains('oculto')) {
+    if (clave) {
+      renderizarCarrito();
+    } else {
+      mostrarInicio();
+    }
+  }
+}
+
+function pedirInicioSesion(mensaje) {
+  document.dispatchEvent(new CustomEvent('pedir-login', { detail: { mensaje } }));
+}
+
+// El carrito antiguo (compartido por todos) ya no se usa
+localStorage.removeItem('carrito');
+
+// Cada vez que alguien inicia o cierra sesión, se carga SU carrito
+document.addEventListener('usuario-actualizado', cargarCarritoUsuario);
 let itemsCheckout = [];
 let productosColeccionActual = [];
 let filtrosActivos = {
@@ -69,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
   configurarPanelFiltros();
   configurarCuenta();
   configurarCheckout();
-  actualizarContadorCarrito();
+  cargarCarritoUsuario();
   cargarProductos();
 });
 
@@ -185,6 +226,12 @@ function configurarCarrito() {
   if (btnCarrito) {
     btnCarrito.addEventListener('click', event => {
       event.preventDefault();
+
+      if (!window.usuarioActual) {
+        pedirInicioSesion('Inicia sesión para ver tu carrito.');
+        return;
+      }
+
       mostrarCarrito();
     });
   }
@@ -192,6 +239,11 @@ function configurarCarrito() {
   if (btnAgregarCarrito) {
     btnAgregarCarrito.addEventListener('click', () => {
       if (!productoActual) return;
+
+      if (!window.usuarioActual) {
+        pedirInicioSesion('Inicia sesión para agregar productos a tu carrito.');
+        return;
+      }
 
       agregarAlCarrito(productoActual);
       mostrarCarrito();
@@ -1167,7 +1219,10 @@ function renderizarCarrito() {
 }
 
 function guardarCarrito() {
-  localStorage.setItem('carrito', JSON.stringify(carrito));
+  const clave = claveCarritoUsuario();
+  if (!clave) return;
+
+  localStorage.setItem(clave, JSON.stringify(carrito));
 }
 
 function actualizarContadorCarrito() {
