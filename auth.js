@@ -4,6 +4,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider,
   updateProfile,
   onAuthStateChanged,
@@ -150,8 +151,14 @@ async function loginORegistro() {
   } catch (error) {
     if (error.code === 'auth/email-already-in-use') {
       mensaje.textContent = 'Ese correo ya está registrado.';
-    } else if (error.code === 'auth/invalid-credential') {
-      mensaje.textContent = 'Correo o contraseña incorrectos.';
+    } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+      mensaje.textContent = 'Correo o contraseña incorrectos. Si creaste tu cuenta con Google, usa "Continuar con Google".';
+    } else if (error.code === 'auth/invalid-email') {
+      mensaje.textContent = 'Escribe un correo válido.';
+    } else if (error.code === 'auth/too-many-requests') {
+      mensaje.textContent = 'Demasiados intentos. Espera unos minutos e intenta de nuevo.';
+    } else if (error.code === 'auth/network-request-failed') {
+      mensaje.textContent = 'Sin conexión. Revisa tu internet e intenta de nuevo.';
     } else if (error.code === 'auth/weak-password') {
       mensaje.textContent = 'La contraseña debe tener mínimo 6 caracteres.';
     } else {
@@ -168,8 +175,28 @@ async function loginConGoogle() {
     await signInWithPopup(auth, googleProvider);
     cerrarModal();
   } catch (error) {
-    mensaje.textContent = 'No se pudo iniciar sesión con Google.';
     console.error(error);
+
+    if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+      return;
+    }
+
+    if (error.code === 'auth/popup-blocked') {
+      try {
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      } catch (errorRedirect) {
+        console.error(errorRedirect);
+      }
+    }
+
+    if (error.code === 'auth/unauthorized-domain') {
+      mensaje.textContent = 'Este sitio aún no está autorizado para iniciar sesión con Google. Avisa al administrador.';
+    } else if (error.code === 'auth/network-request-failed') {
+      mensaje.textContent = 'Sin conexión. Revisa tu internet e intenta de nuevo.';
+    } else {
+      mensaje.textContent = 'No se pudo iniciar sesión con Google.';
+    }
   }
 }
 

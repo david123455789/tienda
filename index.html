@@ -195,6 +195,11 @@
           <img src="imagenes/accesorios.png" alt="Accesorios">
           <span>Accesorios</span>
         </button>
+
+        <button type="button" data-categoria-home="Nuestra Marca" class="category-tile">
+          <img src="imagenes/cuadro6.jpeg" alt="In Equestrian Shop">
+          <span>In Equestrian Shop</span>
+        </button>
       </div>
     </section>
 
@@ -208,32 +213,6 @@
       <div id="productos-destacados" class="productos-grid"></div>
     </section>
 
-    <section class="store-notes">
-      <div class="store-notes-intro">
-        <p class="section-kicker">Nuestra esencia</p>
-        <h2>Equipo ecuestre con presencia, comodidad y carácter.</h2>
-      </div>
-
-      <div class="store-notes-grid">
-        <article class="store-note">
-          <span>01</span>
-          <h3>Selección cuidada</h3>
-          <p>Piezas pensadas para entrenar, competir y usar en el día a día.</p>
-        </article>
-
-        <article class="store-note">
-          <span>02</span>
-          <h3>Colores sobrios</h3>
-          <p>Una paleta limpia inspirada en ivory, taupe, saddle brown y black.</p>
-        </article>
-
-        <article class="store-note">
-          <span>03</span>
-          <h3>Para rider y caballo</h3>
-          <p>Ropa, accesorios y equipo para acompañar todo el conjunto ecuestre.</p>
-        </article>
-      </div>
-    </section>
   </section>
 
   <section id="vista-coleccion" class="catalogo oculto">
@@ -426,43 +405,49 @@
 <footer class="footer">
   <div class="footer-ubicacion">
     <div class="ubicacion-texto">
-      <h2>Visítanos</h2>
-      <p class="ubicacion-nombre">THE POINT SANTA FE</p>
-      <p>
-        LOCAL C1-14, Primer piso<br>
-        Prol. Paseo de la Reforma 413, Santa Fe, Lomas de Santa Fe, Zedec,<br>
-        01219 Ciudad de México, CDMX
-      </p>
-      <a href="https://share.google/AZdkMQHzgvM5cMWYf" target="_blank" rel="noopener" class="ubicacion-link-maps">Ver en Google Maps →</a>
-    </div>
+      <p class="ubicacion-eyebrow">Nuestra boutique</p>
+      <h2>Encuéntranos en Santa Fe</h2>
+      <p class="ubicacion-nombre">The Point Santa Fe</p>
 
-    <div class="ubicacion-visual">
-      <a
-        href="https://share.google/AZdkMQHzgvM5cMWYf"
-        target="_blank"
-        rel="noopener"
-        class="ubicacion-mapa-link"
-        aria-label="Abrir ubicación en Google Maps"
-      >
-        <iframe
-          class="ubicacion-mapa"
-          src="https://www.google.com/maps?q=THE+POINT+SANTA+FE+Prol.+Paseo+de+la+Reforma+413+Santa+Fe+Lomas+de+Santa+Fe+01219+Ciudad+de+Mexico&output=embed"
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
-          aria-hidden="true"
-          tabindex="-1"
-        ></iframe>
-      </a>
-
-      <div class="ubicacion-galeria" id="ubicacion-galeria">
-        <img id="ubicacion-imagen-actual" src="imagenes/lugar.png" alt="THE POINT SANTA FE">
-
-        <button type="button" class="ubicacion-flecha ubicacion-prev" aria-label="Foto anterior">‹</button>
-        <button type="button" class="ubicacion-flecha ubicacion-next" aria-label="Foto siguiente">›</button>
-
-        <div class="ubicacion-puntos" id="ubicacion-puntos"></div>
+      <div class="ubicacion-dato">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <circle cx="12" cy="10" r="2.4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+        <p>Local C1-14<span>Primer piso</span></p>
       </div>
+
+      <div class="ubicacion-dato">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="6" y="3.5" width="12" height="17" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M9.5 8h1M13.5 8h1M9.5 12h1M13.5 12h1M10.5 20.5v-4h3v4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p>Prol. Paseo de la Reforma 413<span>Santa Fe, 01219 CDMX</span></p>
+      </div>
+
+      <a href="https://share.google/AZdkMQHzgvM5cMWYf" target="_blank" rel="noopener" class="ubicacion-boton">Cómo llegar <span aria-hidden="true">→</span></a>
     </div>
+
+    <div class="ubicacion-foto">
+      <img src="imagenes/lugar.png" alt="Boutique In Equestrian Shop en The Point Santa Fe">
+    </div>
+
+    <a
+      href="https://share.google/AZdkMQHzgvM5cMWYf"
+      target="_blank"
+      rel="noopener"
+      class="ubicacion-mapa-link"
+      aria-label="Abrir ubicación en Google Maps"
+    >
+      <iframe
+        class="ubicacion-mapa"
+        src="https://www.google.com/maps?q=THE+POINT+SANTA+FE+Prol.+Paseo+de+la+Reforma+413+Santa+Fe+Lomas+de+Santa+Fe+01219+Ciudad+de+Mexico&output=embed"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        aria-hidden="true"
+        tabindex="-1"
+      ></iframe>
+    </a>
   </div>
 
   <div class="footer-social">
@@ -490,7 +475,7 @@
 
 <div id="auth-modal" class="auth-modal oculto">
   <div class="auth-box">
-    <button id="cerrar-auth" class="cerrar-auth" type="button">Ã—</button>
+    <button id="cerrar-auth" class="cerrar-auth" type="button" aria-label="Cerrar">&times;</button>
 
     <h2 id="auth-titulo">Iniciar sesión</h2>
 
@@ -507,7 +492,7 @@
     </button>
 
     <p id="auth-cambiar">
-      No tienes cuenta? <button id="btn-cambiar-auth" type="button">Regí­strate</button>
+      ¿No tienes cuenta? <button id="btn-cambiar-auth" type="button">Regístrate</button>
     </p>
 
     <p id="auth-mensaje"></p>

@@ -28,13 +28,54 @@ async function obtenerTokenPaypal() {
   return datos.access_token;
 }
 
+const ORIGENES_PERMITIDOS = [
+  'https://david123455789.github.io',
+  'https://tienda-alpha-red.vercel.app',
+  'http://localhost:3000'
+];
+
+const URL_RETORNO_POR_DEFECTO = 'https://tienda-alpha-red.vercel.app/';
+
+function aplicarCors(req, res) {
+  const origen = req.headers.origin;
+
+  if (origen && ORIGENES_PERMITIDOS.includes(origen)) {
+    res.setHeader('Access-Control-Allow-Origin', origen);
+    res.setHeader('Vary', 'Origin');
+  }
+
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
+function obtenerUrlRetorno(urlRetorno) {
+  try {
+    const url = new URL(urlRetorno);
+
+    if (ORIGENES_PERMITIDOS.includes(url.origin)) {
+      return url.origin + url.pathname;
+    }
+  } catch (error) {
+    // se usa la URL por defecto
+  }
+
+  return URL_RETORNO_POR_DEFECTO;
+}
+
 module.exports = async function handler(req, res) {
+  aplicarCors(req, res);
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Metodo no permitido' });
   }
 
   try {
-    const { productos, direccion } = req.body;
+    const { productos, direccion, urlRetorno } = req.body;
+    const base = obtenerUrlRetorno(urlRetorno);
 
     if (!Array.isArray(productos) || productos.length === 0) {
       return res.status(400).json({ error: 'Carrito vacio' });
@@ -100,8 +141,8 @@ module.exports = async function handler(req, res) {
         purchase_units: [purchaseUnit],
         application_context: {
           brand_name: 'In Equestrian Shop',
-          return_url: 'https://tienda-alpha-red.vercel.app/?pago=aprobado',
-          cancel_url: 'https://tienda-alpha-red.vercel.app/?pago=cancelado',
+          return_url: `${base}?pago=aprobado`,
+          cancel_url: `${base}?pago=cancelado`,
           user_action: 'PAY_NOW'
         }
       })

@@ -69,65 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
   configurarPanelFiltros();
   configurarCuenta();
   configurarCheckout();
-  configurarGaleriaUbicacion();
   actualizarContadorCarrito();
   cargarProductos();
 });
-
-function configurarGaleriaUbicacion() {
-  const imagenes = [
-    'imagenes/lugar.png',
-    'imagenes/lugar1.png',
-    'imagenes/lugar2.png',
-    'imagenes/lugar3.png',
-    'imagenes/lugar4.png'
-  ];
-
-  const imagenActual = document.getElementById('ubicacion-imagen-actual');
-  const puntosContenedor = document.getElementById('ubicacion-puntos');
-  const btnPrev = document.querySelector('.ubicacion-prev');
-  const btnNext = document.querySelector('.ubicacion-next');
-
-  if (!imagenActual || !puntosContenedor) return;
-
-  let indice = 0;
-
-  function render() {
-    imagenActual.src = imagenes[indice];
-    puntosContenedor.querySelectorAll('button').forEach((punto, i) => {
-      punto.classList.toggle('activo', i === indice);
-    });
-  }
-
-  imagenes.forEach((_, i) => {
-    const punto = document.createElement('button');
-    punto.type = 'button';
-    punto.setAttribute('aria-label', `Ver foto ${i + 1}`);
-
-    punto.addEventListener('click', () => {
-      indice = i;
-      render();
-    });
-
-    puntosContenedor.appendChild(punto);
-  });
-
-  if (btnPrev) {
-    btnPrev.addEventListener('click', () => {
-      indice = (indice - 1 + imagenes.length) % imagenes.length;
-      render();
-    });
-  }
-
-  if (btnNext) {
-    btnNext.addEventListener('click', () => {
-      indice = (indice + 1) % imagenes.length;
-      render();
-    });
-  }
-
-  render();
-}
 
 function configurarMenu() {
   const dropdown = document.querySelector('.dropdown');
@@ -1633,8 +1577,23 @@ function mostrarBusquedaComoColeccion(resultados, termino) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+const URL_BACKEND_VERCEL = 'https://tienda-alpha-red.vercel.app';
+
+function obtenerBaseApi() {
+  const host = window.location.hostname;
+
+  // En localhost (server.js) y en Vercel, la API vive en el mismo dominio.
+  if (host === 'localhost' || host === '127.0.0.1' || host.endsWith('vercel.app')) {
+    return '';
+  }
+
+  // En GitHub Pages (u otro hosting estatico) se usa el backend de Vercel.
+  return URL_BACKEND_VERCEL;
+}
+
 async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion = null) {
-  const endpoint = metodo === 'paypal' ? '/api/crear-pago-paypal' : '/api/crear-pago';
+  const ruta = metodo === 'paypal' ? '/api/crear-pago-paypal' : '/api/crear-pago';
+  const endpoint = obtenerBaseApi() + ruta;
 
   try {
     const respuesta = await fetch(endpoint, {
@@ -1642,7 +1601,11 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ productos: productosParaPagar, direccion })
+      body: JSON.stringify({
+        productos: productosParaPagar,
+        direccion,
+        urlRetorno: window.location.origin + window.location.pathname
+      })
     });
 
     const data = await respuesta.json();
