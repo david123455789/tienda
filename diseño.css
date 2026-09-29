@@ -727,6 +727,95 @@ header {
   min-height: 18px;
 }
 
+.checkout-mensaje-ok {
+  color: #1b6b3a;
+}
+
+/* TARJETAS */
+
+.tarjeta-aviso {
+  margin: -4px 0 4px;
+  color: var(--saddle);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.campo-tarjeta-label {
+  margin: 2px 0 -4px;
+  color: var(--saddle);
+  font-size: 13px;
+}
+
+.campo-tarjeta-seguro {
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  background: var(--ivory);
+  display: flex;
+  align-items: center;
+}
+
+.tarjeta-fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.pago-btn-tarjeta-guardada {
+  width: 100%;
+  min-height: 50px;
+  margin-top: 12px;
+  border: 1px solid var(--black);
+  background: transparent;
+  color: var(--black);
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.pago-btn-tarjeta-guardada:hover {
+  background: var(--pearl);
+}
+
+.panel-tarjetas-guardadas {
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  background: var(--pearl);
+}
+
+.checkout-tarjetas-lista {
+  display: grid;
+  gap: 10px;
+}
+
+.checkout-tarjeta-opcion {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  background: var(--ivory);
+  text-align: left;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.checkout-tarjeta-opcion.selected {
+  border-color: var(--black);
+  font-weight: 700;
+}
+
+.checkout-cvv-bloque {
+  margin-top: 18px;
+  max-width: 220px;
+}
+
+.checkout-cvv-bloque .pago-btn {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 14px;
+  border-radius: 999px;
+}
+
 /* CHECKOUT */
 
 .checkout-section {
@@ -1179,7 +1268,6 @@ header {
     min-height: auto;
     padding: 16px 20px;
     gap: 22px;
-    flex-wrap: wrap;
   }
 
   #logo {
@@ -1188,11 +1276,8 @@ header {
   }
 
   .navbar {
-    width: 100%;
-    flex: 1 1 100%;
     gap: 22px;
     overflow-x: auto;
-    padding-bottom: 10px;
     padding-right: 0;
   }
 
@@ -1470,9 +1555,10 @@ header {
   min-height: 720px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   overflow: hidden;
   background: var(--black);
+  padding: 0 clamp(24px, 8vw, 110px);
 }
 
 .video-bg {
@@ -1488,16 +1574,18 @@ header {
   inset: 0;
   background:
     linear-gradient(
-      rgba(31, 31, 31, 0.38),
-      rgba(31, 31, 31, 0.52)
+      90deg,
+      rgba(31, 31, 31, 0.62) 0%,
+      rgba(31, 31, 31, 0.4) 45%,
+      rgba(31, 31, 31, 0.2) 100%
     );
 }
 
 .video-content {
   position: relative;
   z-index: 2;
-  width: min(920px, calc(100% - 40px));
-  text-align: center;
+  width: min(620px, 100%);
+  text-align: left;
   color: var(--ivory);
 }
 
@@ -1505,16 +1593,24 @@ header {
   color: var(--khaki);
 }
 
-.video-content h2 {
+.video-content h1 {
   margin: 0;
-  font-size: clamp(42px, 6vw, 88px);
+  font-size: clamp(46px, 6.5vw, 92px);
   line-height: 1.02;
   letter-spacing: 0;
+  font-weight: 400;
+}
+
+.video-content h1 .video-destacado {
+  font-family: "Brush Script MT", "Segoe Script", cursive;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--khaki);
 }
 
 .video-content p:not(.section-kicker) {
   max-width: 720px;
-  margin: 28px auto 0;
+  margin: 28px 0 0;
   color: var(--pearl);
   font-size: 21px;
   line-height: 1.7;
@@ -1523,11 +1619,16 @@ header {
 @media (max-width: 700px) {
   .video-section {
     min-height: 560px;
-    padding: 80px 20px;
+    padding: 0 22px;
+    justify-content: center;
   }
 
-  .video-content h2 {
-    font-size: 42px;
+  .video-content {
+    text-align: center;
+  }
+
+  .video-content h1 {
+    font-size: 44px;
   }
 
   .video-content p:not(.section-kicker) {
@@ -1858,16 +1959,12 @@ header {
     min-height: auto;
     padding: 16px 20px;
     gap: 22px;
-    flex-wrap: wrap;
   }
 
   .navbar {
-    width: 100%;
-    flex: 1 1 100%;
     gap: 22px;
     overflow-x: auto;
     padding-right: 0;
-    padding-bottom: 10px;
   }
 
   #btn-cuenta,
@@ -1935,6 +2032,7 @@ header {
   padding: 18px clamp(22px, 12vw, 260px);
   gap: clamp(38px, 6vw, 90px);
   align-items: center;
+  flex-wrap: nowrap;
   background: rgba(246, 244, 241, 0.96);
 }
 
@@ -2205,27 +2303,42 @@ header {
 @media (max-width: 560px) {
   .site-header {
     min-height: 78px;
-    padding: 10px 12px;
+    padding: 10px 6px;
+    gap: 6px;
   }
 
   .site-header #logo {
-    width: 50px;
-    height: 50px;
+    width: 46px;
+    height: 46px;
+  }
+
+  .site-header .brand-link {
+    min-width: auto;
+    gap: 0;
+  }
+
+  .site-header .brand-divider,
+  .site-header .brand-wordmark {
+    display: none;
   }
 
   .site-header .navbar {
-    gap: 10px;
+    gap: 6px;
   }
 
   .site-header .menu-label,
   .site-header .cuenta-btn {
-    font-size: 0.78rem;
-    letter-spacing: 0.8px;
+    font-size: 0.68rem;
+    letter-spacing: 0.3px;
   }
 
   .site-header .header-icon {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
+  }
+
+  .site-header .chevron {
+    font-size: 0.68rem;
   }
 
   .site-header #cart-count {

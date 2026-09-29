@@ -58,6 +58,13 @@ window.eliminarDireccionFirestore = async function (id) {
   await deleteDoc(doc(db, 'usuarios', auth.currentUser.uid, 'direcciones', id));
 };
 
+// El backend usa este token para confirmar quién eres antes de tocar tus
+// tarjetas guardadas — nadie puede ver ni borrar las de otra persona.
+window.obtenerTokenSesion = async function () {
+  if (!auth.currentUser) return null;
+  return auth.currentUser.getIdToken();
+};
+
 const btnCuenta = document.getElementById('btn-cuenta');
 const cuentaDropdown = document.getElementById('cuenta-dropdown');
 const btnIrCuenta = document.getElementById('btn-ir-cuenta');

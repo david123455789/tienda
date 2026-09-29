@@ -110,6 +110,8 @@ document.addEventListener('DOMContentLoaded', () => {
   configurarPanelFiltros();
   configurarCuenta();
   configurarCheckout();
+  configurarFormularioTarjeta();
+  configurarPagoTarjetaGuardada();
   cargarCarritoUsuario();
   cargarProductos();
 });
@@ -989,6 +991,282 @@ function mostrarCuenta() {
   });
 }
 
+/* TARJETAS GUARDADAS (Mercado Pago) */
+
+
+const MERCADO_PAGO_PUBLIC_KEY = 'TEST-c05cf62f-ad9e-43ac-ac20-513670289d93';
+
+let instanciaMP = null;
+let camposTarjetaCuentaMontados = false;
+let camposCvvCheckoutMontados = false;
+let tarjetaSeleccionadaCheckoutId = null;
+
+function obtenerInstanciaMP() {
+  if (!instanciaMP && window.MercadoPago) {
+    instanciaMP = new window.MercadoPago(MERCADO_PAGO_PUBLIC_KEY, { locale: 'es-MX' });
+  }
+
+  return instanciaMP;
+}
+
+function montarCamposTarjetaCuenta() {
+  if (camposTarjetaCuentaMontados) return;
+
+  const mp = obtenerInstanciaMP();
+  if (!mp) return;
+
+  mp.fields.create('cardNumber', { placeholder: '•••• •••• •••• ••••' }).mount('tarjeta-numero');
+  mp.fields.create('expirationDate', { placeholder: 'MM/AA' }).mount('tarjeta-vencimiento');
+  mp.fields.create('securityCode', { placeholder: 'CVV' }).mount('tarjeta-cvv');
+
+  camposTarjetaCuentaMontados = true;
+}
+
+function configurarFormularioTarjeta() {
+  const formTarjeta = document.getElementById('form-tarjeta');
+  if (!formTarjeta) return;
+
+  formTarjeta.addEventListener('submit', async evento => {
+    evento.preventDefault();
+
+    if (!window.usuarioActual) {
+      pedirInicioSesion('Inicia sesión para guardar una tarjeta.');
+      return;
+    }
+
+    const mensaje = document.getElementById('tarjeta-mensaje');
+    const boton = document.getElementById('btn-guardar-tarjeta');
+    const nombreInput = document.getElementById('tarjeta-nombre');
+
+    if (mensaje) mensaje.textContent = '';
+    if (boton) boton.disabled = true;
+
+    try {
+      const mp = obtenerInstanciaMP();
+      if (!mp) throw new Error('No se pudo cargar Mercado Pago. Intenta de nuevo.');
+
+      const token = await mp.fields.createCardToken({
+        cardholderName: nombreInput ? nombreInput.value.trim() : ''
+      });
+
+      const idToken = await window.obtenerTokenSesion();
+
+      const respuesta = await fetch(obtenerBaseApi() + '/api/tarjetas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ token: token.id })
+      });
+
+      const datos = await respuesta.json();
+
+      if (!respuesta.ok) {
+        throw new Error(datos.message || datos.error || 'No se pudo guardar la tarjeta.');
+      }
+
+      formTarjeta.reset();
+      if (mensaje) {
+        mensaje.className = 'checkout-mensaje checkout-mensaje-ok';
+        mensaje.textContent = 'Tarjeta guardada correctamente.';
+      }
+
+      renderizarTarjetasGuardadas();
+    } catch (error) {
+      console.error('No se pudo guardar la tarjeta:', error);
+      if (mensaje) {
+        mensaje.className = 'checkout-mensaje';
+        mensaje.textContent = error.message || 'No se pudo guardar la tarjeta. Revisa los datos.';
+      }
+    } finally {
+      if (boton) boton.disabled = false;
+    }
+  });
+}
+
+async function obtenerTarjetasGuardadas() {
+  if (!window.usuarioActual) return [];
+
+  const idToken = await window.obtenerTokenSesion();
+
+  const respuesta = await fetch(obtenerBaseApi() + '/api/tarjetas', {
+    headers: { Authorization: `Bearer ${idToken}` }
+  });
+
+  if (!respuesta.ok) return [];
+
+  return respuesta.json();
+}
+
+async function renderizarTarjetasGuardadas() {
+  const contenedor = document.getElementById('cuenta-tarjetas-lista');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = '<p class="cuenta-vacio-texto">Cargando tarjetas...</p>';
+
+  const tarjetas = await obtenerTarjetasGuardadas();
+
+  if (!tarjetas.length) {
+    contenedor.innerHTML = '<p class="cuenta-vacio-texto">Aún no tienes tarjetas guardadas.</p>';
+    return;
+  }
+
+  contenedor.innerHTML = tarjetas.map(tarjeta => `
+    <div class="direccion-card" data-id="${tarjeta.id}">
+      <p><strong>${tarjeta.marca || 'Tarjeta'} terminada en ${tarjeta.ultimosDigitos}</strong></p>
+      <p>Vence ${String(tarjeta.mesVencimiento).padStart(2, '0')}/${tarjeta.anioVencimiento}</p>
+      ${tarjeta.titular ? `<p>${tarjeta.titular}</p>` : ''}
+      <button type="button" class="btn-eliminar-direccion" data-id="${tarjeta.id}">Eliminar</button>
+    </div>
+  `).join('');
+
+  contenedor.querySelectorAll('.btn-eliminar-direccion').forEach(boton => {
+    boton.addEventListener('click', () => eliminarTarjetaGuardada(boton.dataset.id));
+  });
+}
+
+async function eliminarTarjetaGuardada(id) {
+  if (!window.usuarioActual) return;
+
+  try {
+    const idToken = await window.obtenerTokenSesion();
+
+    await fetch(obtenerBaseApi() + '/api/tarjetas', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`
+      },
+      body: JSON.stringify({ cardId: id })
+    });
+
+    renderizarTarjetasGuardadas();
+  } catch (error) {
+    console.error('No se pudo eliminar la tarjeta:', error);
+  }
+}
+
+/* PAGAR CON TARJETA GUARDADA (desde el checkout) */
+
+function configurarPagoTarjetaGuardada() {
+  const btnMostrar = document.getElementById('btn-mostrar-tarjetas-guardadas');
+  const panel = document.getElementById('panel-tarjetas-guardadas');
+  const btnConfirmar = document.getElementById('btn-confirmar-pago-tarjeta');
+
+  if (btnMostrar && panel) {
+    btnMostrar.addEventListener('click', async () => {
+      if (!window.usuarioActual) {
+        pedirInicioSesion('Inicia sesión para pagar con una tarjeta guardada.');
+        return;
+      }
+
+      panel.classList.toggle('oculto');
+
+      if (!panel.classList.contains('oculto')) {
+        await cargarTarjetasCheckout();
+      }
+    });
+  }
+
+  if (btnConfirmar) {
+    btnConfirmar.addEventListener('click', confirmarPagoTarjetaGuardada);
+  }
+}
+
+async function cargarTarjetasCheckout() {
+  const lista = document.getElementById('checkout-tarjetas-lista');
+  if (!lista) return;
+
+  lista.innerHTML = '<p class="cuenta-vacio-texto">Cargando tus tarjetas...</p>';
+
+  const tarjetas = await obtenerTarjetasGuardadas();
+
+  if (!tarjetas.length) {
+    lista.innerHTML = '<p class="cuenta-vacio-texto">No tienes tarjetas guardadas. Agrega una desde "Mi cuenta".</p>';
+    return;
+  }
+
+  lista.innerHTML = tarjetas.map(tarjeta => `
+    <button type="button" class="checkout-tarjeta-opcion" data-id="${tarjeta.id}">
+      ${tarjeta.marca || 'Tarjeta'} •••• ${tarjeta.ultimosDigitos} — vence ${String(tarjeta.mesVencimiento).padStart(2, '0')}/${tarjeta.anioVencimiento}
+    </button>
+  `).join('');
+
+  lista.querySelectorAll('.checkout-tarjeta-opcion').forEach(boton => {
+    boton.addEventListener('click', () => {
+      lista.querySelectorAll('.checkout-tarjeta-opcion').forEach(item => item.classList.remove('selected'));
+      boton.classList.add('selected');
+      tarjetaSeleccionadaCheckoutId = boton.dataset.id;
+
+      const bloqueCvv = document.getElementById('checkout-cvv-bloque');
+      if (bloqueCvv) bloqueCvv.classList.remove('oculto');
+
+      if (!camposCvvCheckoutMontados) {
+        const mp = obtenerInstanciaMP();
+        if (mp) {
+          mp.fields.create('securityCode', { placeholder: 'CVV' }).mount('checkout-cvv');
+          camposCvvCheckoutMontados = true;
+        }
+      }
+    });
+  });
+}
+
+async function confirmarPagoTarjetaGuardada() {
+  const mensaje = document.getElementById('checkout-mensaje');
+  const boton = document.getElementById('btn-confirmar-pago-tarjeta');
+
+  if (!tarjetaSeleccionadaCheckoutId) {
+    if (mensaje) mensaje.textContent = 'Selecciona una tarjeta.';
+    return;
+  }
+
+  const direccion = obtenerDireccionCheckout();
+
+  if (!direccion) {
+    if (mensaje) mensaje.textContent = 'Completa tu dirección de entrega antes de pagar.';
+    return;
+  }
+
+  if (boton) boton.disabled = true;
+  if (mensaje) mensaje.textContent = '';
+
+  try {
+    const mp = obtenerInstanciaMP();
+    if (!mp) throw new Error('No se pudo cargar Mercado Pago.');
+
+    const token = await mp.fields.createCardToken({ cardId: tarjetaSeleccionadaCheckoutId });
+    const idToken = await window.obtenerTokenSesion();
+
+    const respuesta = await fetch(obtenerBaseApi() + '/api/pagar-con-tarjeta', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`
+      },
+      body: JSON.stringify({ token: token.id, productos: itemsCheckout, direccion })
+    });
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok || datos.ok === false) {
+      throw new Error(datos.mensaje || datos.message || datos.error || 'No se pudo procesar el pago.');
+    }
+
+    carrito = [];
+    guardarCarrito();
+    actualizarContadorCarrito();
+
+    window.location.href = `${window.location.origin}${window.location.pathname}?pago=aprobado`;
+  } catch (error) {
+    console.error('No se pudo pagar con la tarjeta guardada:', error);
+    if (mensaje) mensaje.textContent = error.message || 'No se pudo procesar el pago.';
+  } finally {
+    if (boton) boton.disabled = false;
+  }
+}
+
 function configurarCuenta() {
   document.querySelectorAll('.cuenta-tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -999,6 +1277,11 @@ function configurarCuenta() {
 
       const panel = document.getElementById(`cuenta-panel-${tab.dataset.tab}`);
       if (panel) panel.classList.remove('oculto');
+
+      if (tab.dataset.tab === 'tarjetas') {
+        montarCamposTarjetaCuenta();
+        renderizarTarjetasGuardadas();
+      }
     });
   });
 

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>In Equestrian Shop</title>
   <link rel="stylesheet" href="diseño.css">
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
 </head>
 <body>
 
@@ -138,17 +139,6 @@
 </div>
 <main>
   <section id="vista-inicio">
-    <section class="home-hero premium-hero">
-      <div class="home-hero-content">
-      
-        <h1>Elegancia ecuestre sin límites.</h1>
-        <p>
-        Prendas, accesorios y equipo seleccionados para riders que buscan calidad, innovación y estilo dentro y fuera de la pista.
-        </p>
-      </div>
-
-    </section>
-
     <section class="video-section">
       <video class="video-bg" autoplay muted loop playsinline>
         <source src="imagenes/video.mp4" type="video/mp4">
@@ -157,11 +147,7 @@
       <div class="video-overlay"></div>
 
       <div class="video-content">
-       
-        <h2>Una tienda pensada para entrenamiento, competencia y estilo diario</h2>
-        <p>
-         Seleccionamos prendas, accesorios y equipo de las mejores marcas para acompañarte dentro y fuera de la pista.
-        </p>
+        <h1>Elegancia Ecuestre.<br><span class="video-destacado">Sin límites</span></h1>
       </div>
     </section>
 
@@ -340,6 +326,23 @@
               PayPal
             </button>
           </div>
+
+          <button id="btn-mostrar-tarjetas-guardadas" type="button" class="pago-btn-tarjeta-guardada">
+            Pagar con una tarjeta guardada
+          </button>
+
+          <div id="panel-tarjetas-guardadas" class="panel-tarjetas-guardadas oculto">
+            <div id="checkout-tarjetas-lista" class="checkout-tarjetas-lista"></div>
+
+            <div id="checkout-cvv-bloque" class="checkout-cvv-bloque oculto">
+              <label class="campo-tarjeta-label" for="checkout-cvv">Confirma el código de seguridad (CVV)</label>
+              <div id="checkout-cvv" class="campo-tarjeta-seguro"></div>
+              <button id="btn-confirmar-pago-tarjeta" type="button" class="pago-btn pago-btn-mercadopago">
+                Confirmar pago
+              </button>
+            </div>
+          </div>
+
           <p id="checkout-mensaje" class="checkout-mensaje"></p>
         </div>
       </div>
@@ -357,6 +360,7 @@
         <button type="button" class="cuenta-tab active" data-tab="informacion">Información de cuenta</button>
         <button type="button" class="cuenta-tab" data-tab="pedidos">Pedidos</button>
         <button type="button" class="cuenta-tab" data-tab="direcciones">Direcciones</button>
+        <button type="button" class="cuenta-tab" data-tab="tarjetas">Tarjetas</button>
       </nav>
 
       <div class="cuenta-contenido">
@@ -395,6 +399,35 @@
             <input type="tel" id="dir-telefono" placeholder="Teléfono">
 
             <button type="submit" class="auth-principal">Guardar dirección</button>
+          </form>
+        </div>
+
+        <div id="cuenta-panel-tarjetas" class="cuenta-panel oculto">
+          <div id="cuenta-tarjetas-lista" class="cuenta-direcciones-lista"></div>
+
+          <form id="form-tarjeta" class="form-direccion">
+            <h3>Agregar tarjeta</h3>
+            <p class="tarjeta-aviso">Tu tarjeta se guarda directo en Mercado Pago. Nosotros nunca vemos ni guardamos el número completo.</p>
+
+            <input type="text" id="tarjeta-nombre" placeholder="Nombre como aparece en la tarjeta" required>
+
+            <label class="campo-tarjeta-label" for="tarjeta-numero">Número de tarjeta</label>
+            <div id="tarjeta-numero" class="campo-tarjeta-seguro"></div>
+
+            <div class="tarjeta-fila">
+              <div>
+                <label class="campo-tarjeta-label" for="tarjeta-vencimiento">Vencimiento</label>
+                <div id="tarjeta-vencimiento" class="campo-tarjeta-seguro"></div>
+              </div>
+              <div>
+                <label class="campo-tarjeta-label" for="tarjeta-cvv">CVV</label>
+                <div id="tarjeta-cvv" class="campo-tarjeta-seguro"></div>
+              </div>
+            </div>
+
+            <p id="tarjeta-mensaje" class="checkout-mensaje"></p>
+
+            <button type="submit" id="btn-guardar-tarjeta" class="auth-principal">Guardar tarjeta</button>
           </form>
         </div>
       </div>

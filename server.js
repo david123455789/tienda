@@ -91,9 +91,13 @@ app.get('/api/products', async (req, res) => {
 
 const crearPagoMercadoPago = require('./api/crear-pago');
 const crearPagoPaypal = require('./api/crear-pago-paypal');
+const tarjetas = require('./api/tarjetas');
+const pagarConTarjeta = require('./api/pagar-con-tarjeta');
 
 app.post('/api/crear-pago', crearPagoMercadoPago);
 app.post('/api/crear-pago-paypal', crearPagoPaypal);
+app.all('/api/tarjetas', tarjetas);
+app.post('/api/pagar-con-tarjeta', pagarConTarjeta);
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
