@@ -840,6 +840,7 @@ function mostrarCheckout(items) {
   if (vistaCheckout) vistaCheckout.classList.remove('oculto');
 
   renderizarResumenCheckout();
+  cargarDireccionesGuardadasCheckout();
 
   const mensaje = document.getElementById('checkout-mensaje');
   if (mensaje) mensaje.textContent = '';
@@ -883,6 +884,96 @@ function configurarCheckout() {
         buscarDatosPorCPCheckout();
       }
     });
+  }
+
+  const selectorDirecciones = document.getElementById('checkout-direccion-guardada');
+
+  if (selectorDirecciones) {
+    selectorDirecciones.addEventListener('change', () => {
+      aplicarDireccionGuardadaCheckout(selectorDirecciones.value);
+    });
+  }
+}
+
+let direccionesGuardadasCheckout = [];
+
+async function cargarDireccionesGuardadasCheckout() {
+  const wrap = document.getElementById('checkout-direcciones-guardadas-wrap');
+  const selector = document.getElementById('checkout-direccion-guardada');
+  if (!wrap || !selector) return;
+
+  if (!window.usuarioActual) {
+    wrap.classList.add('oculto');
+    return;
+  }
+
+  direccionesGuardadasCheckout = await obtenerDirecciones();
+
+  if (!direccionesGuardadasCheckout.length) {
+    wrap.classList.add('oculto');
+    return;
+  }
+
+  selector.innerHTML = '<option value="">+ Escribir una dirección nueva</option>' +
+    direccionesGuardadasCheckout.map(dir => `
+      <option value="${dir.id}">${dir.nombre} — ${dir.calle}, ${dir.ciudad}</option>
+    `).join('');
+
+  wrap.classList.remove('oculto');
+
+  // Si solo tiene una dirección guardada, se la proponemos de una vez.
+  if (direccionesGuardadasCheckout.length === 1) {
+    selector.value = direccionesGuardadasCheckout[0].id;
+    aplicarDireccionGuardadaCheckout(direccionesGuardadasCheckout[0].id);
+  }
+}
+
+function aplicarDireccionGuardadaCheckout(id) {
+  const campoGuardar = document.getElementById('checkout-guardar-direccion');
+
+  if (!id) {
+    if (campoGuardar) campoGuardar.closest('label').classList.remove('oculto');
+    return;
+  }
+
+  const direccion = direccionesGuardadasCheckout.find(dir => dir.id === id);
+  if (!direccion) return;
+
+  const campos = {
+    'checkout-nombre': direccion.nombre,
+    'checkout-cp': direccion.cp,
+    'checkout-calle': direccion.calle,
+    'checkout-colonia': direccion.colonia,
+    'checkout-ciudad': direccion.ciudad,
+    'checkout-estado': direccion.estado,
+    'checkout-telefono': direccion.telefono
+  };
+
+  Object.entries(campos).forEach(([idCampo, valor]) => {
+    const input = document.getElementById(idCampo);
+    if (input) input.value = valor || '';
+  });
+
+  const estadoTexto = document.getElementById('checkout-cp-estado');
+  if (estadoTexto) estadoTexto.textContent = '';
+
+  // Ya es una dirección guardada, no hace falta volver a guardarla.
+  if (campoGuardar) {
+    campoGuardar.checked = false;
+    campoGuardar.closest('label').classList.add('oculto');
+  }
+}
+
+async function guardarDireccionDesdeCheckout() {
+  if (!window.usuarioActual || typeof window.guardarDireccionFirestore !== 'function') return;
+
+  const direccion = obtenerDireccionCheckout();
+  if (!direccion) return;
+
+  try {
+    await window.guardarDireccionFirestore(direccion);
+  } catch (error) {
+    console.error('No se pudo guardar la dirección desde el checkout:', error);
   }
 }
 
@@ -969,6 +1060,11 @@ async function procesarPagoCheckout(metodo) {
 
   if (mensaje) mensaje.textContent = '';
 
+  const campoGuardar = document.getElementById('checkout-guardar-direccion');
+  if (campoGuardar && campoGuardar.checked) {
+    await guardarDireccionDesdeCheckout();
+  }
+
   await iniciarPago(itemsCheckout, metodo, direccion);
 }
 
@@ -993,8 +1089,10 @@ function mostrarCuenta() {
 
 /* TARJETAS GUARDADAS (Mercado Pago) */
 
-
-const MERCADO_PAGO_PUBLIC_KEY = 'TEST-c05cf62f-ad9e-43ac-ac20-513670289d93';
+// Esta es la llave PÚBLICA de Mercado Pago (no es secreta, está pensada para
+// vivir en el navegador). Reemplázala por la tuya desde tu panel de
+// Mercado Pago → Credenciales → Llave pública.
+const MERCADO_PAGO_PUBLIC_KEY = 'TU_LLAVE_PUBLICA_DE_MERCADO_PAGO';
 
 let instanciaMP = null;
 let camposTarjetaCuentaMontados = false;
@@ -1231,6 +1329,11 @@ async function confirmarPagoTarjetaGuardada() {
 
   if (boton) boton.disabled = true;
   if (mensaje) mensaje.textContent = '';
+
+  const campoGuardar = document.getElementById('checkout-guardar-direccion');
+  if (campoGuardar && campoGuardar.checked) {
+    await guardarDireccionDesdeCheckout();
+  }
 
   try {
     const mp = obtenerInstanciaMP();

@@ -78,7 +78,7 @@
         <div class="menu-category">
           <button class="category-btn" type="button">Caballos <span>⌄</span></button>
           <div class="subcategory-list">
-            <a href="#" data-categoria="Caballos" data-subcategoria="Mantillas">Saddle Pads</a>
+            <a href="#" data-categoria="Caballos" data-subcategoria="Saddle Pads">Saddle Pads</a>
             <a href="#" data-categoria="Caballos" data-subcategoria="Vendas">Bandages</a>
             <a href="#" data-categoria="Caballos" data-subcategoria="Orejeras">Ear Bonnets</a>
             <a href="#" data-categoria="Caballos" data-subcategoria="Protectores de manos">Brushing Boots</a>
@@ -304,6 +304,13 @@
       <div class="checkout-direccion">
         <h3>Dirección de entrega</h3>
 
+        <div id="checkout-direcciones-guardadas-wrap" class="oculto">
+          <label class="campo-tarjeta-label" for="checkout-direccion-guardada">Usar una dirección guardada</label>
+          <select id="checkout-direccion-guardada" class="filtro-select">
+            <option value="">+ Escribir una dirección nueva</option>
+          </select>
+        </div>
+
         <form id="form-checkout-direccion" class="form-direccion">
           <input type="text" id="checkout-nombre" placeholder="Nombre completo" required>
           <input type="text" id="checkout-cp" placeholder="Código postal" inputmode="numeric" maxlength="5" required>
@@ -314,6 +321,11 @@
           <input type="text" id="checkout-ciudad" placeholder="Ciudad" required>
           <input type="text" id="checkout-estado" placeholder="Estado" required>
           <input type="tel" id="checkout-telefono" placeholder="Teléfono" required>
+
+          <label class="checkout-guardar-direccion">
+            <input type="checkbox" id="checkout-guardar-direccion">
+            Guardar esta dirección en mi cuenta
+          </label>
         </form>
 
         <div class="metodos-pago">
