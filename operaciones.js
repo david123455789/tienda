@@ -114,6 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
   configurarPagoTarjetaGuardada();
   cargarCarritoUsuario();
   cargarProductos();
+  confirmarPedidoSiAplica();
 });
 
 function configurarMenu() {
@@ -923,7 +924,7 @@ async function cargarDireccionesGuardadasCheckout() {
 
   selector.innerHTML = '<option value="">+ Escribir una dirección nueva</option>' +
     direccionesGuardadasCheckout.map(dir => `
-      <option value="${dir.id}">${dir.nombre} — ${dir.calle}, ${dir.ciudad}</option>
+      <option value="${dir.id}">${dir.nombre} — ${dir.calle}${dir.numero ? ' ' + dir.numero : ''}, ${dir.ciudad}</option>
     `).join('');
 
   wrap.classList.remove('oculto');
@@ -950,6 +951,7 @@ function aplicarDireccionGuardadaCheckout(id) {
     'checkout-nombre': direccion.nombre,
     'checkout-cp': direccion.cp,
     'checkout-calle': direccion.calle,
+    'checkout-numero': direccion.numero,
     'checkout-colonia': direccion.colonia,
     'checkout-ciudad': direccion.ciudad,
     'checkout-estado': direccion.estado,
@@ -1027,6 +1029,7 @@ function obtenerDireccionCheckout() {
     nombre: document.getElementById('checkout-nombre'),
     cp: document.getElementById('checkout-cp'),
     calle: document.getElementById('checkout-calle'),
+    numero: document.getElementById('checkout-numero'),
     colonia: document.getElementById('checkout-colonia'),
     ciudad: document.getElementById('checkout-ciudad'),
     estado: document.getElementById('checkout-estado'),
@@ -1092,6 +1095,120 @@ function mostrarCuenta() {
     top: 0,
     behavior: 'smooth'
   });
+}
+
+/* MIS PEDIDOS */
+
+const PASOS_ESTATUS = ['Aceptado', 'En proceso', 'Pedido Aceptado', 'Enviado', 'Entregado'];
+
+function armarBarraEstatus(estatusActual) {
+  const indiceActual = PASOS_ESTATUS.indexOf(estatusActual);
+
+  if (indiceActual === -1) {
+    return `<p class="pedido-estatus-libre">${estatusActual}</p>`;
+  }
+
+  return `
+    <div class="pedido-pasos">
+      ${PASOS_ESTATUS.map((paso, index) => `
+        <div class="pedido-paso ${index <= indiceActual ? 'completado' : ''} ${index === indiceActual ? 'actual' : ''}">
+          <span class="pedido-paso-punto"></span>
+          <span class="pedido-paso-texto">${paso}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+async function renderizarPedidos() {
+  const contenedor = document.getElementById('cuenta-pedidos-lista');
+  if (!contenedor || !window.usuarioActual) return;
+
+  contenedor.className = '';
+  contenedor.innerHTML = '<p class="cuenta-vacio-texto">Cargando tus pedidos...</p>';
+
+  try {
+    const idToken = await window.obtenerTokenSesion();
+
+    const respuesta = await fetch(obtenerBaseApi() + '/api/pedidos', {
+      headers: { Authorization: `Bearer ${idToken}` }
+    });
+
+    const pedidos = await respuesta.json();
+
+    if (!respuesta.ok) {
+      throw new Error(pedidos.message || pedidos.error || 'No se pudieron cargar tus pedidos.');
+    }
+
+    if (!pedidos.length) {
+      contenedor.className = 'cuenta-vacio';
+      contenedor.innerHTML = '<p>Aún no tienes pedidos.</p>';
+      return;
+    }
+
+    contenedor.innerHTML = pedidos.map(pedido => `
+      <div class="pedido-card">
+        <div class="pedido-card-header">
+          <p class="pedido-id">Pedido ${pedido.idEnvio}</p>
+        </div>
+
+        ${armarBarraEstatus(pedido.estatus)}
+
+        <div class="pedido-productos">
+          ${pedido.productos.map(producto => `
+            <p>${producto.nombre}${producto.talla ? ' - Talla ' + producto.talla : ''}${producto.color ? ' - ' + producto.color : ''}${producto.grip ? ' - ' + producto.grip : ''} × ${producto.cantidad}</p>
+          `).join('')}
+        </div>
+
+        <p class="pedido-direccion">
+          Entrega: ${pedido.direccion.calle} ${pedido.direccion.numero}, ${pedido.direccion.colonia}, ${pedido.direccion.ciudad}, ${pedido.direccion.estado}, CP ${pedido.direccion.cp}
+        </p>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.error('No se pudieron cargar los pedidos:', error);
+    contenedor.className = 'cuenta-vacio';
+    contenedor.innerHTML = '<p>No se pudieron cargar tus pedidos. Intenta de nuevo más tarde.</p>';
+  }
+}
+
+/* CONFIRMAR PEDIDO AL VOLVER DE PAGAR (Mercado Pago / PayPal) */
+
+async function confirmarPedidoSiAplica() {
+  const parametros = new URLSearchParams(window.location.search);
+
+  if (parametros.get('pago') !== 'aprobado') return;
+
+  const paymentId = parametros.get('payment_id') || parametros.get('collection_id');
+  const orderId = parametros.get('token');
+
+  if (!paymentId && !orderId) return;
+
+  const cuerpo = paymentId
+    ? { proveedor: 'mercadopago', paymentId }
+    : { proveedor: 'paypal', orderId };
+
+  try {
+    const respuesta = await fetch(obtenerBaseApi() + '/api/confirmar-pedido', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cuerpo)
+    });
+
+    const datos = await respuesta.json();
+
+    if (respuesta.ok && datos.ok) {
+      carrito = [];
+      guardarCarrito();
+      actualizarContadorCarrito();
+      alert('¡Gracias por tu compra! Tu pedido ya quedó registrado y lo puedes ver en "Mi cuenta → Pedidos".');
+    }
+  } catch (error) {
+    console.error('No se pudo confirmar el pedido:', error);
+  } finally {
+    const urlLimpia = window.location.origin + window.location.pathname;
+    window.history.replaceState({}, document.title, urlLimpia);
+  }
 }
 
 /* TARJETAS GUARDADAS (Mercado Pago) */
@@ -1392,6 +1509,10 @@ function configurarCuenta() {
         montarCamposTarjetaCuenta();
         renderizarTarjetasGuardadas();
       }
+
+      if (tab.dataset.tab === 'pedidos') {
+        renderizarPedidos();
+      }
     });
   });
 
@@ -1499,6 +1620,7 @@ async function guardarNuevaDireccion() {
   const direccion = {
     nombre: document.getElementById('dir-nombre').value.trim(),
     calle: document.getElementById('dir-calle').value.trim(),
+    numero: document.getElementById('dir-numero').value.trim(),
     colonia: document.getElementById('dir-colonia').value.trim(),
     ciudad: document.getElementById('dir-ciudad').value.trim(),
     estado: document.getElementById('dir-estado').value.trim(),
@@ -1542,7 +1664,7 @@ async function renderizarDirecciones() {
   contenedor.innerHTML = direcciones.map(dir => `
     <div class="direccion-card" data-id="${dir.id}">
       <p><strong>${dir.nombre}</strong></p>
-      <p>${dir.calle}${dir.colonia ? ', ' + dir.colonia : ''}</p>
+      <p>${dir.calle}${dir.numero ? ' ' + dir.numero : ''}${dir.colonia ? ', ' + dir.colonia : ''}</p>
       <p>${dir.ciudad}, ${dir.estado}, CP ${dir.cp}</p>
       ${dir.telefono ? `<p>Tel: ${dir.telefono}</p>` : ''}
       <button type="button" class="btn-eliminar-direccion" data-id="${dir.id}">Eliminar</button>
@@ -1744,7 +1866,10 @@ if (btnFinalizarCompra) {
     const itemsCarrito = carrito.map(item => ({
       nombre: item.nombre,
       precio: Number(item.precio),
-      cantidad: item.cantidad
+      cantidad: item.cantidad,
+      talla: item.talla && item.talla !== 'Sin talla' ? item.talla : '',
+      color: item.color,
+      grip: item.grip || ''
     }));
 
     mostrarCheckout(itemsCarrito);
@@ -2088,10 +2213,13 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion
   const endpoint = obtenerBaseApi() + ruta;
 
   try {
+    const idToken = window.usuarioActual ? await window.obtenerTokenSesion() : null;
+
     const respuesta = await fetch(endpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...(idToken ? { Authorization: `Bearer ${idToken}` } : {})
       },
       body: JSON.stringify({
         productos: productosParaPagar,

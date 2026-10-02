@@ -320,7 +320,10 @@
           <input type="text" id="checkout-nombre" placeholder="Nombre completo" required>
           <input type="text" id="checkout-cp" placeholder="Código postal" inputmode="numeric" maxlength="5" required>
           <p id="checkout-cp-estado" class="dir-cp-estado"></p>
-          <input type="text" id="checkout-calle" placeholder="Calle y número" required>
+          <div class="tarjeta-fila">
+            <input type="text" id="checkout-calle" placeholder="Calle" required>
+            <input type="text" id="checkout-numero" placeholder="Número">
+          </div>
           <input type="text" id="checkout-colonia" list="checkout-colonias-lista" placeholder="Colonia" autocomplete="off">
           <datalist id="checkout-colonias-lista"></datalist>
           <input type="text" id="checkout-ciudad" placeholder="Ciudad" required>
@@ -408,7 +411,10 @@
             <input type="text" id="dir-cp" placeholder="Código postal" inputmode="numeric" maxlength="5" required>
             <p id="dir-cp-estado" class="dir-cp-estado"></p>
 
-            <input type="text" id="dir-calle" placeholder="Calle y número" required>
+            <div class="tarjeta-fila">
+              <input type="text" id="dir-calle" placeholder="Calle" required>
+              <input type="text" id="dir-numero" placeholder="Número">
+            </div>
             <input type="text" id="dir-colonia" list="dir-colonias-lista" placeholder="Colonia" autocomplete="off">
             <datalist id="dir-colonias-lista"></datalist>
             <input type="text" id="dir-ciudad" placeholder="Ciudad" required>

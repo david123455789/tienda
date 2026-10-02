@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const { obtenerUsuarioDesdeToken, obtenerFirestoreAdmin } = require('./_firebaseAdmin');
+const { crearPedidoEnSheets } = require('./_sheetsPedidos');
 
 /*
  * Cobra usando una tarjeta ya guardada en Mercado Pago. El navegador vuelve a
@@ -127,7 +128,15 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    return res.status(200).json({ ok: true, estatus: pago.status, idPago: pago.id });
+    const idEnvio = await crearPedidoEnSheets({
+      nombre: usuario.nombre,
+      correo: usuario.email,
+      telefono: direccion ? direccion.telefono : '',
+      direccion,
+      productos
+    });
+
+    return res.status(200).json({ ok: true, estatus: pago.status, idPago: pago.id, idEnvio });
   } catch (error) {
     console.error('Error en /api/pagar-con-tarjeta:', error);
     return res.status(error.status || 500).json({

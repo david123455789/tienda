@@ -44,7 +44,7 @@ async function obtenerUsuarioDesdeToken(req) {
 
   try {
     const datos = await admin.auth(app).verifyIdToken(idToken);
-    return { uid: datos.uid, email: datos.email || '' };
+    return { uid: datos.uid, email: datos.email || '', nombre: datos.name || '' };
   } catch (error) {
     const errorAuth = new Error('Tu sesión no es válida o ya expiró.');
     errorAuth.status = 401;

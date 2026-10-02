@@ -1,4 +1,5 @@
 const { MercadoPagoConfig, Preference } = require('mercadopago');
+const { obtenerUsuarioDesdeToken } = require('./_firebaseAdmin');
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN
@@ -21,7 +22,7 @@ function aplicarCors(req, res) {
   }
 
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
 function obtenerUrlRetorno(urlRetorno) {
@@ -90,6 +91,23 @@ module.exports = async function handler(req, res) {
           : undefined
       };
     }
+
+    // Guardamos aquí quién compró y qué compró (talla/color/grip incluidos)
+    // para poder crear el pedido en Sheets cuando confirmemos que sí se pagó.
+    let usuario = null;
+    try {
+      usuario = await obtenerUsuarioDesdeToken(req);
+    } catch (error) {
+      usuario = null;
+    }
+
+    cuerpoPreferencia.metadata = {
+      uid: usuario ? usuario.uid : '',
+      nombre_cuenta: usuario ? usuario.nombre : '',
+      correo_cuenta: usuario ? usuario.email : '',
+      productos_json: JSON.stringify(productos),
+      direccion_json: JSON.stringify(direccion || {})
+    };
 
     const respuesta = await preference.create({ body: cuerpoPreferencia });
 

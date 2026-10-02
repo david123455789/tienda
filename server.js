@@ -93,11 +93,15 @@ const crearPagoMercadoPago = require('./api/crear-pago');
 const crearPagoPaypal = require('./api/crear-pago-paypal');
 const tarjetas = require('./api/tarjetas');
 const pagarConTarjeta = require('./api/pagar-con-tarjeta');
+const confirmarPedido = require('./api/confirmar-pedido');
+const pedidos = require('./api/pedidos');
 
 app.post('/api/crear-pago', crearPagoMercadoPago);
 app.post('/api/crear-pago-paypal', crearPagoPaypal);
 app.all('/api/tarjetas', tarjetas);
 app.post('/api/pagar-con-tarjeta', pagarConTarjeta);
+app.post('/api/confirmar-pedido', confirmarPedido);
+app.get('/api/pedidos', pedidos);
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);

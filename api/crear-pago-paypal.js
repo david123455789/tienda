@@ -1,3 +1,5 @@
+const { obtenerUsuarioDesdeToken, obtenerFirestoreAdmin } = require('./_firebaseAdmin');
+
 const PAYPAL_API_BASE = process.env.PAYPAL_API_BASE || 'https://api-m.paypal.com';
 
 async function obtenerTokenPaypal() {
@@ -45,7 +47,7 @@ function aplicarCors(req, res) {
   }
 
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
 function obtenerUrlRetorno(urlRetorno) {
@@ -159,6 +161,26 @@ module.exports = async function handler(req, res) {
     if (!linkAprobacion) {
       throw new Error('PayPal no devolvió un link de aprobación.');
     }
+
+    // PayPal no tiene un campo de metadata grande como Mercado Pago, así que
+    // guardamos aquí qué se compró y a quién pertenece, para poder crear el
+    // pedido en Sheets cuando confirmemos que el pago sí se completó.
+    let usuario = null;
+    try {
+      usuario = await obtenerUsuarioDesdeToken(req);
+    } catch (error) {
+      usuario = null;
+    }
+
+    const db = obtenerFirestoreAdmin();
+    await db.collection('pedidos_pendientes_paypal').doc(orden.id).set({
+      uid: usuario ? usuario.uid : '',
+      nombre_cuenta: usuario ? usuario.nombre : '',
+      correo_cuenta: usuario ? usuario.email : '',
+      productos,
+      direccion: direccion || {},
+      creado: Date.now()
+    });
 
     return res.status(200).json({
       init_point: linkAprobacion.href
