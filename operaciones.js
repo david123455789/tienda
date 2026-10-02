@@ -403,6 +403,7 @@ function crearProductosDesdeSheets(productosRows, variantesRows) {
         price: primeraVariante ? primeraVariante.precio : Number(producto.precio),
         stock: primeraVariante ? primeraVariante.stock : Number(producto.stock),
         tallas: primeraVariante ? primeraVariante.tallas : producto.tallas,
+        grip: producto.Grip || producto.grip || '',
         image_url: primeraVariante ? primeraVariante.image_url : producto.imagen_url,
         galeria: (producto.fotos_extra || '')
           .split(',')
@@ -616,6 +617,8 @@ function mostrarDetalleProducto(product) {
 
   renderizarVariantes(product);
 
+  renderizarGrip(product.grip);
+
   if (vistaInicio) vistaInicio.classList.add('oculto');
   if (vistaColeccion) vistaColeccion.classList.add('oculto');
   if (vistaCarrito) vistaCarrito.classList.add('oculto');
@@ -780,8 +783,10 @@ function agregarAlCarrito(product) {
 
   const tallaSeleccionada = document.querySelector('.size-grid button.selected');
   const talla = tallaSeleccionada ? tallaSeleccionada.textContent.trim() : 'Sin talla';
+  const grip = document.querySelector('.grip-grid button.selected');
+  const gripTexto = grip ? grip.textContent.trim() : '';
 
-  const color = varianteActual ? varianteActual.color : 'Ãšnico';
+  const color = varianteActual ? varianteActual.color : 'Único';
   const precio = varianteActual ? Number(varianteActual.precio) : Number(product.price || product.precio);
   const imagen = varianteActual ? varianteActual.image_url : product.image_url;
   const idVariante = varianteActual ? varianteActual.id_variante : null;
@@ -789,7 +794,8 @@ function agregarAlCarrito(product) {
   const itemExistente = carrito.find(item =>
     item.id === id &&
     item.idVariante === idVariante &&
-    item.talla === talla
+    item.talla === talla &&
+    item.grip === gripTexto
   );
 
   if (itemExistente) {
@@ -801,6 +807,7 @@ function agregarAlCarrito(product) {
       nombre,
       color,
       talla,
+      grip: gripTexto,
       precio,
       imagen,
       cantidad: cantidadProducto
@@ -864,7 +871,7 @@ function renderizarResumenCheckout() {
 
     return `
       <div class="checkout-item">
-        <span>${item.nombre}${item.talla ? ' - Talla ' + item.talla : ''}${item.color ? ' - ' + item.color : ''} × ${item.cantidad}</span>
+        <span>${item.nombre}${item.talla ? ' - Talla ' + item.talla : ''}${item.grip ? ' - ' + item.grip : ''}${item.color ? ' - ' + item.color : ''} × ${item.cantidad}</span>
         <strong>$${subtotal.toFixed(2)}</strong>
       </div>
     `;
@@ -1573,8 +1580,9 @@ function renderizarCarrito() {
       <img src="${item.imagen}" alt="${item.nombre}">
       <div>
         <h3>${item.nombre}</h3>
-        <p>Color: ${item.color || 'Ãšnico'}</p>
+        <p>Color: ${item.color || 'Único'}</p>
         <p>Talla: ${item.talla || 'Sin talla'}</p>
+        ${item.grip ? `<p>Grip: ${item.grip}</p>` : ''}
         <p>Precio: $${item.precio.toFixed(2)}</p>
         <p>Cantidad: ${item.cantidad}</p>
         <p>Subtotal: $${subtotal.toFixed(2)}</p>
@@ -1665,8 +1673,50 @@ function renderizarTallas(tallasTexto) {
     sizeGrid.appendChild(boton);
   });
 }
+
+function renderizarGrip(gripTexto) {
+  const gripGrid = document.querySelector('.grip-grid');
+  const gripOpcion = document.querySelector('.grip-opcion');
+  if (!gripGrid || !gripOpcion) return;
+
+  const opciones = obtenerLista(gripTexto);
+
+  gripGrid.innerHTML = '';
+  gripSeleccionado = '';
+
+  if (opciones.length === 0) {
+    gripOpcion.classList.add('oculto');
+    return;
+  }
+
+  gripOpcion.classList.remove('oculto');
+  gripSeleccionado = opciones[0];
+
+  opciones.forEach((grip, index) => {
+    const boton = document.createElement('button');
+    boton.type = 'button';
+    boton.textContent = grip;
+
+    if (index === 0) {
+      boton.classList.add('selected');
+    }
+
+    boton.addEventListener('click', () => {
+      gripSeleccionado = grip;
+
+      document.querySelectorAll('.grip-grid button').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+
+      boton.classList.add('selected');
+    });
+
+    gripGrid.appendChild(boton);
+  });
+}
 function armarProductoParaPagar() {
   const tallaSeleccionada = document.querySelector('.size-grid button.selected');
+  const gripSeleccionadoBoton = document.querySelector('.grip-grid button.selected');
 
   return {
     nombre: productoActual.name || productoActual.nombre || 'Producto',
@@ -1675,6 +1725,7 @@ function armarProductoParaPagar() {
       : Number(productoActual.price || productoActual.precio),
     cantidad: Math.max(1, Number(cantidadProducto) || 1),
     talla: tallaSeleccionada ? tallaSeleccionada.textContent.trim() : '',
+    grip: gripSeleccionadoBoton ? gripSeleccionadoBoton.textContent.trim() : '',
     color: varianteActual ? varianteActual.color : 'Único'
   };
 }

@@ -338,8 +338,8 @@ header {
 
 .productos-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 34px 14px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 30px 14px;
   align-items: start;
 }
 
@@ -360,7 +360,7 @@ header {
 
 .producto-imagen {
   width: 100%;
-  height: 400px;
+  height: 320px;
   display: block;
   object-fit: cover;
   object-position: center top;
@@ -474,8 +474,8 @@ header {
 
 .detalle-layout {
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(360px, 0.95fr);
-  gap: 82px;
+  grid-template-columns: minmax(0, 0.85fr) minmax(320px, 1.05fr);
+  gap: 56px;
   align-items: start;
 }
 
@@ -491,8 +491,8 @@ header {
 .detalle-galeria-lista {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  width: min(100%, 440px);
+  gap: 8px;
+  width: min(100%, 360px);
 }
 
 .detalle-galeria img {
@@ -527,16 +527,16 @@ header {
 }
 
 .detalle-info h1 {
-  margin: 0 0 22px;
-  font-size: clamp(42px, 4.5vw, 72px);
-  line-height: 1.05;
+  margin: 0 0 16px;
+  font-size: clamp(28px, 2.6vw, 42px);
+  line-height: 1.1;
   font-weight: 400;
 }
 
 .detalle-precio {
-  margin: 0 0 16px;
+  margin: 0 0 14px;
   color: var(--charcoal);
-  font-size: 28px;
+  font-size: 21px;
 }
 
 .detalle-impuestos {
@@ -550,9 +550,9 @@ header {
 }
 
 .detalle-opcion > p {
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   color: var(--saddle);
-  font-size: 19px;
+  font-size: 15px;
 }
 
 .color-options {
@@ -562,7 +562,7 @@ header {
 }
 
 .color-card {
-  width: 140px;
+  width: 104px;
   padding: 0;
   border: none;
   background: transparent;
@@ -576,7 +576,7 @@ header {
 
 .color-card img {
   width: 100%;
-  height: 130px;
+  height: 96px;
   object-fit: contain;
   object-position: center;
   padding: 0;
@@ -606,28 +606,31 @@ header {
   text-underline-offset: 4px;
 }
 
-.size-grid {
+.size-grid,
+.grip-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(64px, 1fr));
   gap: 14px;
 }
 
-.size-grid button {
+.size-grid button,
+.grip-grid button {
   min-height: 56px;
   border: 1px solid var(--border);
   background: var(--ivory);
   color: var(--black);
 }
 
-.size-grid button.selected {
+.size-grid button.selected,
+.grip-grid button.selected {
   background: var(--black);
   color: var(--ivory);
   border-color: var(--black);
 }
 
 .quantity-control {
-  width: 220px;
-  height: 62px;
+  width: 170px;
+  height: 48px;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   border: 1px solid var(--taupe);
@@ -649,12 +652,12 @@ header {
 .buy-btn,
 .buy-now-btn {
   width: 100%;
-  min-height: 66px;
-  margin-top: 16px;
+  min-height: 52px;
+  margin-top: 14px;
   border: 1px solid var(--black);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-size: 17px;
+  font-size: 14px;
 }
 
 .add-cart-btn {
@@ -1383,15 +1386,16 @@ header {
 
   .detalle-galeria-lista {
     gap: 6px;
-    width: min(100%, 340px);
+    width: min(100%, 300px);
     margin: 0 auto;
   }
 
   .detalle-info h1 {
-    font-size: 40px;
+    font-size: 30px;
   }
 
-  .size-grid {
+  .size-grid,
+  .grip-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 
@@ -1665,11 +1669,11 @@ header {
 
 @media (max-width: 1200px) {
   .productos-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .producto-imagen {
-    height: 370px;
+    height: 300px;
   }
 }
 
@@ -1680,7 +1684,7 @@ header {
   }
 
   .producto-imagen {
-    height: 310px;
+    height: 260px;
   }
 
   .producto-info h2 {
@@ -2950,12 +2954,13 @@ header {
 @media (max-width: 700px) {
   .productos-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 28px 2px;
+    gap: 24px 10px;
+    padding: 0 6px;
   }
 
   .producto-imagen {
     height: auto;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 4 / 5;
   }
 
   .producto-info {
