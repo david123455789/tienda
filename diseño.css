@@ -691,6 +691,11 @@ header {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  min-width: 0;
+}
+
+.metodos-pago-botones > * {
+  min-width: 0;
 }
 
 .pago-btn {
@@ -766,6 +771,11 @@ header {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
+  min-width: 0;
+}
+
+.tarjeta-fila > * {
+  min-width: 0;
 }
 
 .pago-btn-tarjeta-guardada {
@@ -841,6 +851,7 @@ header {
 
 .checkout-resumen,
 .checkout-direccion {
+  min-width: 0;
   background: var(--pearl);
   border: 1px solid var(--border);
   padding: 28px;
@@ -897,6 +908,7 @@ header {
 
 #checkout-direcciones-guardadas-wrap select {
   width: 100%;
+  min-width: 0;
   margin-top: 6px;
   padding: 12px 14px;
   border: 1px solid var(--border);
@@ -2868,6 +2880,10 @@ header {
   max-width: 1050px;
 }
 
+.cuenta-contenido {
+  min-width: 0;
+}
+
 .cuenta-tabs {
   display: flex;
   flex-direction: column;
@@ -2949,6 +2965,8 @@ header {
 }
 
 .form-direccion input {
+  width: 100%;
+  min-width: 0;
   padding: 12px 14px;
   border: 1px solid var(--border);
   background: var(--ivory);
