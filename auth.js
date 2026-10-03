@@ -211,12 +211,14 @@ onAuthStateChanged(auth, usuario => {
   usuarioActual = usuario;
   window.usuarioActual = usuario;
 
+  const textoCuenta = btnCuenta.querySelector('.cuenta-texto') || btnCuenta;
+
   if (usuario) {
     const nombre = usuario.displayName || usuario.email;
-    btnCuenta.textContent = nombre.length > 14 ? nombre.slice(0, 14) + '...' : nombre;
+    textoCuenta.textContent = nombre.length > 14 ? nombre.slice(0, 14) + '...' : nombre;
     btnCuenta.classList.add('sesion-activa');
   } else {
-    btnCuenta.textContent = 'Cuenta';
+    textoCuenta.textContent = 'Cuenta';
     btnCuenta.classList.remove('sesion-activa');
     cerrarDropdownCuenta();
   }
