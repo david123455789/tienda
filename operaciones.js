@@ -1213,9 +1213,7 @@ async function confirmarPedidoSiAplica() {
 
 /* TARJETAS GUARDADAS (Mercado Pago) */
 
-// Esta es la llave PÚBLICA de Mercado Pago (no es secreta, está pensada para
-// vivir en el navegador). Reemplázala por la tuya desde tu panel de
-// Mercado Pago → Credenciales → Llave pública.
+
 const MERCADO_PAGO_PUBLIC_KEY = 'APP_USR-dc150f64-1c80-416b-ad5c-47a001c230e1';
 
 let instanciaMP = null;

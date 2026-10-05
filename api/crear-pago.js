@@ -79,18 +79,9 @@ module.exports = async function handler(req, res) {
       auto_return: 'approved'
     };
 
-    if (direccion && (direccion.nombre || direccion.telefono)) {
-      cuerpoPreferencia.payer = {
-        name: direccion.nombre || undefined,
-        phone: direccion.telefono ? { number: direccion.telefono } : undefined,
-        address: direccion.calle
-          ? {
-              street_name: direccion.calle,
-              zip_code: direccion.cp || undefined
-            }
-          : undefined
-      };
-    }
+    // No mandamos datos del comprador (nombre, teléfono, dirección) a Mercado Pago:
+    // ya se los pide él mismo en su pantalla de pago, y mandarlos de más puede
+    // provocar rechazos. La dirección de entrega viaja en la metadata de abajo.
 
     // Guardamos aquí quién compró y qué compró (talla/color/grip incluidos)
     // para poder crear el pedido en Sheets cuando confirmemos que sí se pagó.
