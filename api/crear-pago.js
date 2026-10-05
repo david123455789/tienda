@@ -25,7 +25,6 @@ function aplicarCors(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
-
 function obtenerUrlRetorno(urlRetorno) {
   try {
     const url = new URL(urlRetorno);
@@ -77,7 +76,10 @@ module.exports = async function handler(req, res) {
         failure: `${base}?pago=fallido`,
         pending: `${base}?pago=pendiente`
       },
-      auto_return: 'approved'
+      auto_return: 'approved',
+      // Mercado Pago avisa aquí cuando el pago se aprueba, aunque el cliente
+      // cierre la pestaña antes de volver a la tienda.
+      notification_url: `${process.env.URL_BACKEND || 'https://tienda-alpha-red.vercel.app'}/api/webhook-mercadopago`
     };
 
     // No mandamos datos del comprador (nombre, teléfono, dirección) a Mercado Pago:

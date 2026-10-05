@@ -136,6 +136,25 @@ async function leerFilas(hoja) {
   return datos.values || [];
 }
 
+async function limpiarRango(rango) {
+  const token = await obtenerTokenSheets();
+  const spreadsheetId = idHojaPedidos();
+
+  const respuesta = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(rango)}:clear`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: '{}'
+    }
+  );
+
+  if (!respuesta.ok) {
+    const datos = await respuesta.json();
+    throw new Error(datos.error ? datos.error.message : 'No se pudo limpiar el rango.');
+  }
+}
+
 function generarIdEnvio() {
   const fecha = new Date();
   const partes = [
@@ -182,4 +201,4 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
   return idEnvio;
 }
 
-module.exports = { agregarFilas, leerFilas, crearPedidoEnSheets };
+module.exports = { agregarFilas, leerFilas, limpiarRango, crearPedidoEnSheets };

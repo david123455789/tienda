@@ -95,6 +95,8 @@ const tarjetas = require('./api/tarjetas');
 const pagarConTarjeta = require('./api/pagar-con-tarjeta');
 const confirmarPedido = require('./api/confirmar-pedido');
 const pedidos = require('./api/pedidos');
+const webhookMercadoPago = require('./api/webhook-mercadopago');
+const diagnosticoPedidos = require('./api/diagnostico-pedidos');
 
 app.post('/api/crear-pago', crearPagoMercadoPago);
 app.post('/api/crear-pago-paypal', crearPagoPaypal);
@@ -102,6 +104,8 @@ app.all('/api/tarjetas', tarjetas);
 app.post('/api/pagar-con-tarjeta', pagarConTarjeta);
 app.post('/api/confirmar-pedido', confirmarPedido);
 app.get('/api/pedidos', pedidos);
+app.all('/api/webhook-mercadopago', webhookMercadoPago);
+app.get('/api/diagnostico-pedidos', diagnosticoPedidos);
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);

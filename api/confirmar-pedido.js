@@ -38,6 +38,14 @@ async function reclamarDedup(db, clave) {
   }
 }
 
+async function liberarDedup(db, clave) {
+  try {
+    await db.collection('pedidos_creados').doc(clave).delete();
+  } catch (error) {
+    // si no se pudo liberar, no hay nada más que hacer
+  }
+}
+
 async function confirmarMercadoPago(paymentId) {
   const respuesta = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
     headers: { Authorization: `Bearer ${process.env.MERCADO_PAGO_ACCESS_TOKEN}` }
@@ -141,7 +149,30 @@ async function confirmarPaypal(orderId, db) {
   };
 }
 
-module.exports = async function handler(req, res) {
+async function procesarPagoMercadoPago(paymentId, db) {
+  const claveDedup = `mp_${paymentId}`;
+  const datosPedido = await confirmarMercadoPago(paymentId);
+
+  if (!datosPedido) {
+    return { ok: false, mensaje: 'El pago todavía no está aprobado.' };
+  }
+
+  const esNuevo = await reclamarDedup(db, claveDedup);
+
+  if (!esNuevo) {
+    return { ok: true, repetido: true };
+  }
+
+  try {
+    const idEnvio = await crearPedidoEnSheets(datosPedido);
+    return { ok: true, idEnvio };
+  } catch (errorSheets) {
+    await liberarDedup(db, claveDedup);
+    throw errorSheets;
+  }
+}
+
+async function handler(req, res) {
   aplicarCors(req, res);
 
   if (req.method === 'OPTIONS') {
@@ -179,7 +210,16 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true, repetido: true });
     }
 
-    const idEnvio = await crearPedidoEnSheets(datosPedido);
+    let idEnvio;
+
+    try {
+      idEnvio = await crearPedidoEnSheets(datosPedido);
+    } catch (errorSheets) {
+      // Si no se pudo escribir en el Sheet, liberamos la marca para que un
+      // reintento (recargar la página, o el aviso de Mercado Pago) lo vuelva a intentar.
+      await liberarDedup(db, claveDedup);
+      throw errorSheets;
+    }
 
     if (proveedor === 'paypal' && orderId) {
       await db.collection('pedidos_pendientes_paypal').doc(orderId).delete();
@@ -193,4 +233,7 @@ module.exports = async function handler(req, res) {
       message: error.message
     });
   }
-};
+}
+
+module.exports = handler;
+module.exports.procesarPagoMercadoPago = procesarPagoMercadoPago;
