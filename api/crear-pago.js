@@ -25,6 +25,7 @@ function aplicarCors(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
+
 function obtenerUrlRetorno(urlRetorno) {
   try {
     const url = new URL(urlRetorno);
