@@ -1649,9 +1649,11 @@ header {
 }
 
 .video-content h1 .video-destacado {
-  font-family: "Brush Script MT", "Segoe Script", cursive;
-  font-style: italic;
+  font-family: "Allura", "Brush Script MT", "Segoe Script", cursive;
+  font-style: normal;
   font-weight: 400;
+  font-size: 1.2em;
+  line-height: 1.1;
   color: var(--khaki);
 }
 
