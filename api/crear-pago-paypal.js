@@ -33,6 +33,8 @@ async function obtenerTokenPaypal() {
 const ORIGENES_PERMITIDOS = [
   'https://david123455789.github.io',
   'https://tienda-alpha-red.vercel.app',
+  'https://inequestrian.com.mx',
+  'https://www.inequestrian.com.mx',
   'http://localhost:3000'
 ];
 

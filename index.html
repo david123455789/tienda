@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="diseño.css">
   <script src="https://sdk.mercadopago.com/js/v2"></script>
+  <script src="https://sdk.clip.mx/js/clip-sdk.js"></script>
 </head>
 <body>
 
@@ -154,7 +155,7 @@
       <div class="video-overlay"></div>
 
       <div class="video-content">
-        <h1>Ride Beyond Limits.<br><span class="video-destacado">Sin límites</span></h1>
+        <h1>Elegancia Ecuestre.<br><span class="video-destacado">Sin límites</span></h1>
       </div>
     </section>
 
@@ -345,12 +346,27 @@
 
         <div class="metodos-pago">
           <p class="metodos-pago-label">Pagar con</p>
+
+          <button id="btn-mostrar-tarjeta-clip" type="button" class="pago-btn-tarjeta-nueva">
+            Tarjeta de crédito o débito
+          </button>
+
+          <div id="panel-tarjeta-clip" class="panel-tarjeta-clip oculto">
+            <div id="clip-card" class="clip-card"></div>
+            <p class="tarjeta-aviso">Tus datos de tarjeta van directo a Clip. Esta tienda nunca ve ni guarda el número completo.</p>
+            <button id="btn-confirmar-pago-clip" type="button" class="pago-btn-confirmar-clip">Pagar</button>
+          </div>
+
           <div class="metodos-pago-botones">
-            <button id="btn-pagar-mercadopago" type="button" class="pago-btn pago-btn-mercadopago">
+            <!-- Mercado Pago está oculto por ahora. Para volver a mostrarlo, quita la palabra "oculto" de la clase. -->
+            <button id="btn-pagar-mercadopago" type="button" class="pago-btn pago-btn-mercadopago oculto">
               Mercado Pago
             </button>
             <button id="btn-pagar-paypal" type="button" class="pago-btn pago-btn-paypal">
               PayPal
+            </button>
+            <button id="btn-pagar-clip" type="button" class="pago-btn pago-btn-clip">
+              Clip
             </button>
           </div>
 

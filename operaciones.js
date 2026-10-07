@@ -15,6 +15,7 @@ const btnComprarAhora = document.getElementById('btn-comprar-ahora');
 const btnFinalizarCompra = document.getElementById('btn-finalizar-compra');
 const btnPagarMercadoPago = document.getElementById('btn-pagar-mercadopago');
 const btnPagarPaypal = document.getElementById('btn-pagar-paypal');
+const btnPagarClip = document.getElementById('btn-pagar-clip');
 
 const btnVolverColeccion = document.getElementById('btn-volver-coleccion');
 const btnCarrito = document.getElementById('btn-carrito');
@@ -112,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
   configurarCheckout();
   configurarFormularioTarjeta();
   configurarPagoTarjetaGuardada();
+  configurarPagoClip();
   cargarCarritoUsuario();
   cargarProductos();
   confirmarPedidoSiAplica();
@@ -879,6 +881,7 @@ function renderizarResumenCheckout() {
   }).join('');
 
   totalEl.textContent = `$${total.toFixed(2)}`;
+  actualizarBotonClip();
 }
 
 function configurarCheckout() {
@@ -1211,10 +1214,233 @@ async function confirmarPedidoSiAplica() {
   }
 }
 
+/* PAGO DIRECTO CON TARJETA (Clip) */
+
+// Esta es tu API Key de Clip (la pública, NO la clave secreta). La sacas de tu panel
+// de desarrollador de Clip. La clave secreta va solo en Vercel, nunca aquí.
+const CLIP_API_KEY = 'TU_API_KEY_DE_CLIP';
+
+let clipTarjeta = null;
+
+function obtenerTarjetaClip() {
+  if (clipTarjeta) return clipTarjeta;
+  if (!window.ClipSDK) return null;
+
+  const clip = new window.ClipSDK(CLIP_API_KEY);
+  clipTarjeta = clip.element.create('Card', { theme: 'light', locale: 'es' });
+  clipTarjeta.mount('clip-card');
+
+  return clipTarjeta;
+}
+
+function totalCheckout() {
+  return itemsCheckout.reduce(
+    (suma, item) => suma + Number(item.precio) * Number(item.cantidad),
+    0
+  );
+}
+
+function actualizarBotonClip() {
+  const boton = document.getElementById('btn-confirmar-pago-clip');
+  if (!boton) return;
+
+  boton.textContent = `Pagar $${totalCheckout().toFixed(2)}`;
+}
+
+function configurarPagoClip() {
+  const btnMostrar = document.getElementById('btn-mostrar-tarjeta-clip');
+  const panel = document.getElementById('panel-tarjeta-clip');
+  const btnPagar = document.getElementById('btn-confirmar-pago-clip');
+
+  if (btnMostrar && panel) {
+    btnMostrar.addEventListener('click', () => {
+      panel.classList.toggle('oculto');
+
+      if (!panel.classList.contains('oculto')) {
+        actualizarBotonClip();
+        // El formulario se monta ya con el panel visible para que tome bien su tamaño.
+        obtenerTarjetaClip();
+      }
+    });
+  }
+
+  if (btnPagar) {
+    btnPagar.addEventListener('click', pagarConTarjetaClip);
+  }
+}
+
+function pagoClipExitoso() {
+  carrito = [];
+  guardarCarrito();
+  actualizarContadorCarrito();
+
+  alert('¡Gracias por tu compra! Tu pedido ya quedó registrado y lo puedes ver en "Mi cuenta → Pedidos".');
+
+  window.location.href = window.location.origin + window.location.pathname;
+}
+
+async function pagarConTarjetaClip() {
+  const mensaje = document.getElementById('checkout-mensaje');
+  const boton = document.getElementById('btn-confirmar-pago-clip');
+
+  if (!itemsCheckout.length) return;
+
+  if (!window.usuarioActual) {
+    pedirInicioSesion('Inicia sesión para pagar con tarjeta.');
+    return;
+  }
+
+  const direccion = obtenerDireccionCheckout();
+
+  if (!direccion) {
+    if (mensaje) mensaje.textContent = 'Completa tu dirección de entrega antes de pagar.';
+    return;
+  }
+
+  if (mensaje) mensaje.textContent = '';
+  if (boton) {
+    boton.disabled = true;
+    boton.textContent = 'Procesando...';
+  }
+
+  try {
+    const tarjeta = obtenerTarjetaClip();
+
+    if (!tarjeta) {
+      throw new Error('No se pudo cargar el formulario de tarjeta. Recarga la página e intenta de nuevo.');
+    }
+
+    let token;
+
+    try {
+      token = await tarjeta.cardToken();
+    } catch (error) {
+      throw new Error((error && error.message) || 'Revisa los datos de tu tarjeta.');
+    }
+
+    let prevencion = null;
+
+    try {
+      prevencion = await tarjeta.preventionData();
+    } catch (error) {
+      prevencion = null;
+    }
+
+    const campoGuardar = document.getElementById('checkout-guardar-direccion');
+    if (campoGuardar && campoGuardar.checked) {
+      await guardarDireccionDesdeCheckout();
+    }
+
+    const idToken = await window.obtenerTokenSesion();
+
+    const respuesta = await fetch(obtenerBaseApi() + '/api/pagar-con-clip', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`
+      },
+      body: JSON.stringify({
+        token: token.id,
+        productos: itemsCheckout,
+        direccion,
+        prevention_data: prevencion
+      })
+    });
+
+    const datos = await respuesta.json();
+
+    if (datos.requiere3ds) {
+      await validar3dsClip(datos.url, datos.paymentId);
+      return;
+    }
+
+    if (!respuesta.ok || !datos.ok) {
+      throw new Error(datos.mensaje || datos.error || 'No se pudo procesar el pago.');
+    }
+
+    pagoClipExitoso();
+  } catch (error) {
+    console.error('No se pudo pagar con tarjeta:', error);
+    if (mensaje) mensaje.textContent = error.message || 'No se pudo procesar el pago.';
+  } finally {
+    if (boton) boton.disabled = false;
+    actualizarBotonClip();
+  }
+}
+
+// Muestra la ventana donde el banco pide validar la identidad (código por SMS o app)
+// y, cuando termina, le pregunta al servidor si el pago quedó aprobado.
+function validar3dsClip(url, paymentId) {
+  return new Promise(resolver => {
+    const mensaje = document.getElementById('checkout-mensaje');
+
+    const contenedor = document.createElement('div');
+    contenedor.className = 'clip-3ds-overlay';
+    contenedor.innerHTML = `
+      <button type="button" class="clip-3ds-cancelar">Cancelar</button>
+      <iframe title="Validación del banco" src="${url}"></iframe>
+    `;
+    document.body.appendChild(contenedor);
+
+    const origen = new URL(url).origin;
+
+    function cerrar() {
+      window.removeEventListener('message', alRecibirMensaje);
+      contenedor.remove();
+      resolver();
+    }
+
+    async function alRecibirMensaje(evento) {
+      if (evento.origin !== origen) return;
+
+      const idRetorno = evento.data && evento.data.paymentId;
+      if (!idRetorno || idRetorno !== paymentId) return;
+
+      window.removeEventListener('message', alRecibirMensaje);
+      contenedor.remove();
+
+      try {
+        const idToken = await window.obtenerTokenSesion();
+
+        const respuesta = await fetch(obtenerBaseApi() + '/api/confirmar-pago-clip', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`
+          },
+          body: JSON.stringify({ paymentId: idRetorno })
+        });
+
+        const datos = await respuesta.json();
+
+        if (respuesta.ok && datos.ok) {
+          pagoClipExitoso();
+        } else if (mensaje) {
+          mensaje.textContent = datos.mensaje || 'No se pudo confirmar el pago.';
+        }
+      } catch (error) {
+        console.error('No se pudo confirmar el pago con 3DS:', error);
+        if (mensaje) mensaje.textContent = 'No se pudo confirmar el pago. Revisa "Mis pedidos" antes de intentar de nuevo.';
+      }
+
+      resolver();
+    }
+
+    window.addEventListener('message', alRecibirMensaje);
+
+    contenedor.querySelector('.clip-3ds-cancelar').addEventListener('click', () => {
+      if (mensaje) mensaje.textContent = 'Cancelaste la validación del banco. No se hizo ningún cobro.';
+      cerrar();
+    });
+  });
+}
+
 /* TARJETAS GUARDADAS (Mercado Pago) */
 
-
-const MERCADO_PAGO_PUBLIC_KEY = 'APP_USR-dc150f64-1c80-416b-ad5c-47a001c230e1';
+// Esta es la llave PÚBLICA de Mercado Pago (no es secreta, está pensada para
+// vivir en el navegador). Reemplázala por la tuya desde tu panel de
+// Mercado Pago → Credenciales → Llave pública.
+const MERCADO_PAGO_PUBLIC_KEY = 'TU_LLAVE_PUBLICA_DE_MERCADO_PAGO';
 
 let instanciaMP = null;
 let camposTarjetaCuentaMontados = false;
@@ -1880,6 +2106,43 @@ if (btnPagarMercadoPago) {
   });
 }
 
+// Link de pago de Clip. OJO: es un link fijo, no sabe cuánto cuesta el carrito.
+const URL_PAGO_CLIP = 'https://pago.clip.mx/6272e5d6-3c91-4f79-bd2e-83264d25d17c';
+
+function pagarConClip() {
+  const mensaje = document.getElementById('checkout-mensaje');
+
+  if (!itemsCheckout.length) return;
+
+  const direccion = obtenerDireccionCheckout();
+
+  if (!direccion) {
+    if (mensaje) mensaje.textContent = 'Completa tu dirección de entrega antes de pagar.';
+    return;
+  }
+
+  if (mensaje) mensaje.textContent = '';
+
+  // Se guarda la dirección sin esperar, para no perder el permiso del navegador
+  // de abrir la pestaña de pago.
+  const campoGuardar = document.getElementById('checkout-guardar-direccion');
+  if (campoGuardar && campoGuardar.checked) {
+    guardarDireccionDesdeCheckout();
+  }
+
+  const ventana = window.open(URL_PAGO_CLIP, '_blank');
+
+  if (ventana) {
+    ventana.opener = null;
+  } else {
+    window.location.href = URL_PAGO_CLIP;
+  }
+}
+
+if (btnPagarClip) {
+  btnPagarClip.addEventListener('click', pagarConClip);
+}
+
 if (btnPagarPaypal) {
   btnPagarPaypal.addEventListener('click', () => {
     procesarPagoCheckout('paypal');
@@ -2197,13 +2460,14 @@ const URL_BACKEND_VERCEL = 'https://tienda-alpha-red.vercel.app';
 function obtenerBaseApi() {
   const host = window.location.hostname;
 
-  // En localhost (server.js) y en Vercel, la API vive en el mismo dominio.
-  if (host === 'localhost' || host === '127.0.0.1' || host.endsWith('vercel.app')) {
-    return '';
+  // Solo en GitHub Pages (hosting estático, sin servidor) se usa el backend de Vercel.
+  // En localhost, en Vercel y en tu dominio propio (inequestrian.com.mx), la API
+  // vive en el mismo dominio que la página.
+  if (host.endsWith('github.io')) {
+    return URL_BACKEND_VERCEL;
   }
 
-  // En GitHub Pages (u otro hosting estatico) se usa el backend de Vercel.
-  return URL_BACKEND_VERCEL;
+  return '';
 }
 
 async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion = null) {

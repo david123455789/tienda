@@ -732,6 +732,11 @@ header {
   color: #003087;
 }
 
+.pago-btn-clip {
+  background: #ff5a1f;
+  color: #ffffff;
+}
+
 .checkout-mensaje {
   margin: 12px 0 0;
   color: #8a2c2c;
@@ -3150,4 +3155,77 @@ header {
   .pedido-paso-texto {
     font-size: 11px;
   }
+}
+
+/* PAGO DIRECTO CON TARJETA (Clip) */
+
+.pago-btn-tarjeta-nueva {
+  width: 100%;
+  min-height: 54px;
+  margin-bottom: 12px;
+  border: none;
+  border-radius: 999px;
+  background: var(--black);
+  color: var(--ivory);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.pago-btn-tarjeta-nueva:hover {
+  opacity: 0.9;
+}
+
+.panel-tarjeta-clip {
+  margin-bottom: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  background: var(--pearl);
+}
+
+.clip-card {
+  min-height: 150px;
+  background: #ffffff;
+}
+
+.pago-btn-confirmar-clip {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 14px;
+  border: none;
+  border-radius: 999px;
+  background: #ff5a1f;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.pago-btn-confirmar-clip:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.clip-3ds-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #ffffff;
+}
+
+.clip-3ds-overlay iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.clip-3ds-cancelar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  padding: 10px 18px;
+  border: 1px solid var(--black);
+  background: var(--ivory);
+  cursor: pointer;
 }
