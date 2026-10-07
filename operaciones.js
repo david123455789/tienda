@@ -117,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
   cargarCarritoUsuario();
   cargarProductos();
   confirmarPedidoSiAplica();
+  confirmarLinkClipSiAplica();
 });
 
 function configurarMenu() {
@@ -1175,6 +1176,74 @@ async function renderizarPedidos() {
   }
 }
 
+/* CONFIRMAR PEDIDO AL VOLVER DE PAGAR CON CLIP */
+
+// Ejecuta la función cuando ya se sabe si hay una sesión iniciada (Firebase tarda un instante).
+function cuandoHayUsuario(funcion) {
+  if (window.usuarioActual) {
+    funcion();
+    return;
+  }
+
+  let ejecutada = false;
+
+  const ejecutar = () => {
+    if (ejecutada) return;
+    ejecutada = true;
+    document.removeEventListener('usuario-actualizado', ejecutar);
+    funcion();
+  };
+
+  document.addEventListener('usuario-actualizado', ejecutar);
+  setTimeout(ejecutar, 4000);
+}
+
+async function confirmarLinkClipSiAplica() {
+  const parametros = new URLSearchParams(window.location.search);
+  const resultado = parametros.get('pago');
+
+  if (resultado !== 'clip' && resultado !== 'clip_error') return;
+
+  const idPago = sessionStorage.getItem('clip_payment_request_id');
+
+  window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
+
+  if (resultado === 'clip_error') {
+    sessionStorage.removeItem('clip_payment_request_id');
+    alert('No se completó el pago con Clip. No se hizo ningún cobro. Puedes intentar de nuevo.');
+    return;
+  }
+
+  if (!idPago) return;
+
+  try {
+    const respuesta = await fetch(obtenerBaseApi() + '/api/confirmar-link-clip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paymentRequestId: idPago })
+    });
+
+    const datos = await respuesta.json();
+
+    if (respuesta.ok && datos.ok) {
+      sessionStorage.removeItem('clip_payment_request_id');
+
+      cuandoHayUsuario(() => {
+        carrito = [];
+        guardarCarrito();
+        actualizarContadorCarrito();
+      });
+
+      alert('¡Gracias por tu compra! Tu pedido ya quedó registrado y lo puedes ver en "Mi cuenta → Pedidos".');
+      return;
+    }
+
+    alert('Tu pago todavía no se confirma. Si elegiste pagar en efectivo, tu pedido se registrará solo en cuanto recibamos el pago. Si ya pagaste con tarjeta, revisa "Mi cuenta → Pedidos" en unos minutos.');
+  } catch (error) {
+    console.error('No se pudo confirmar el pago con Clip:', error);
+  }
+}
+
 /* CONFIRMAR PEDIDO AL VOLVER DE PAGAR (Mercado Pago / PayPal) */
 
 async function confirmarPedidoSiAplica() {
@@ -1218,7 +1287,7 @@ async function confirmarPedidoSiAplica() {
 
 // Esta es tu API Key de Clip (la pública, NO la clave secreta). La sacas de tu panel
 // de desarrollador de Clip. La clave secreta va solo en Vercel, nunca aquí.
-const CLIP_API_KEY = '03de9677-7a6d-4100-bd5a-9b25fe8f8ab0';
+const CLIP_API_KEY = 'TU_API_KEY_DE_CLIP';
 
 let clipTarjeta = null;
 
@@ -2106,13 +2175,23 @@ if (btnPagarMercadoPago) {
   });
 }
 
-// Link de pago de Clip. OJO: es un link fijo, no sabe cuánto cuesta el carrito.
-const URL_PAGO_CLIP = 'https://pago.clip.mx/6272e5d6-3c91-4f79-bd2e-83264d25d17c';
+// Antes este botón abría un link fijo de Clip (https://pago.clip.mx/6272e5d6-...), que cobraba
+// siempre el mismo monto. Ahora el servidor genera un link por pedido, con el monto exacto.
 
-function pagarConClip() {
+function irA(url) {
+  window.location.href = url;
+}
+
+async function pagarConClip() {
   const mensaje = document.getElementById('checkout-mensaje');
+  const boton = document.getElementById('btn-pagar-clip');
 
   if (!itemsCheckout.length) return;
+
+  if (!window.usuarioActual) {
+    pedirInicioSesion('Inicia sesión para pagar con Clip.');
+    return;
+  }
 
   const direccion = obtenerDireccionCheckout();
 
@@ -2123,19 +2202,52 @@ function pagarConClip() {
 
   if (mensaje) mensaje.textContent = '';
 
-  // Se guarda la dirección sin esperar, para no perder el permiso del navegador
-  // de abrir la pestaña de pago.
-  const campoGuardar = document.getElementById('checkout-guardar-direccion');
-  if (campoGuardar && campoGuardar.checked) {
-    guardarDireccionDesdeCheckout();
+  const textoOriginal = boton ? boton.textContent : '';
+
+  if (boton) {
+    boton.disabled = true;
+    boton.textContent = 'Abriendo Clip...';
   }
 
-  const ventana = window.open(URL_PAGO_CLIP, '_blank');
+  try {
+    const campoGuardar = document.getElementById('checkout-guardar-direccion');
+    if (campoGuardar && campoGuardar.checked) {
+      await guardarDireccionDesdeCheckout();
+    }
 
-  if (ventana) {
-    ventana.opener = null;
-  } else {
-    window.location.href = URL_PAGO_CLIP;
+    const idToken = await window.obtenerTokenSesion();
+
+    const respuesta = await fetch(obtenerBaseApi() + '/api/crear-link-clip', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`
+      },
+      body: JSON.stringify({
+        productos: itemsCheckout,
+        direccion,
+        urlRetorno: window.location.origin + window.location.pathname
+      })
+    });
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok || !datos.ok) {
+      throw new Error(datos.mensaje || 'No se pudo generar el link de pago.');
+    }
+
+    // Guardamos el identificador para confirmar el pago cuando el cliente regrese.
+    sessionStorage.setItem('clip_payment_request_id', datos.paymentRequestId);
+
+    irA(datos.url);
+  } catch (error) {
+    console.error('No se pudo pagar con Clip:', error);
+    if (mensaje) mensaje.textContent = error.message || 'No se pudo abrir Clip.';
+
+    if (boton) {
+      boton.disabled = false;
+      boton.textContent = textoOriginal;
+    }
   }
 }
 

@@ -117,9 +117,64 @@ async function registrarPedidoUnaVez(db, clave, datosPedido) {
   }
 }
 
+// Devuelve la dirección de tu tienda a la que Clip regresará al cliente después de pagar.
+// Solo se aceptan las direcciones de la lista de arriba, para que nadie desvíe al cliente.
+function urlBaseSegura(urlRetorno) {
+  const porDefecto = 'https://tienda-alpha-red.vercel.app/';
+
+  try {
+    const url = new URL(urlRetorno);
+
+    if (ORIGENES_PERMITIDOS.includes(url.origin)) {
+      return url.origin + url.pathname;
+    }
+  } catch (error) {
+    // se usa la dirección por defecto
+  }
+
+  return porDefecto;
+}
+
+// Revisa con Clip si un link de pago ya se completó y, solo entonces, crea el pedido.
+async function procesarLinkClip(db, paymentRequestId) {
+  const link = await llamarClip(`/v2/checkout/${encodeURIComponent(paymentRequestId)}`);
+
+  if (link.status !== 'CHECKOUT_COMPLETED') {
+    return { ok: false, estado: link.status || 'DESCONOCIDO' };
+  }
+
+  const referencia = db.collection('pedidos_pendientes_clip_link').doc(String(paymentRequestId));
+  const pendiente = await referencia.get();
+
+  if (!pendiente.exists) {
+    const yaRegistrado = await db.collection('pedidos_creados').doc(`cliplink_${paymentRequestId}`).get();
+
+    return yaRegistrado.exists
+      ? { ok: true, repetido: true }
+      : { ok: false, estado: link.status, mensaje: 'No encontramos ese pedido.' };
+  }
+
+  const datos = pendiente.data();
+
+  // Doble revisión: lo que Clip cobró debe ser lo que nosotros calculamos.
+  if (link.amount !== undefined && Math.abs(Number(link.amount) - Number(datos.total)) > 0.01) {
+    const error = new Error('El monto cobrado por Clip no coincide con el del pedido.');
+    error.status = 409;
+    throw error;
+  }
+
+  const resultado = await registrarPedidoUnaVez(db, `cliplink_${paymentRequestId}`, datos.datosPedido);
+
+  await referencia.delete();
+
+  return { ok: true, idEnvio: resultado.idEnvio || null, repetido: Boolean(resultado.repetido) };
+}
+
 module.exports = {
   aplicarCors,
   llamarClip,
   mensajeRechazo,
-  registrarPedidoUnaVez
+  registrarPedidoUnaVez,
+  urlBaseSegura,
+  procesarLinkClip
 };

@@ -99,6 +99,9 @@ const webhookMercadoPago = require('./api/webhook-mercadopago');
 const diagnosticoPedidos = require('./api/diagnostico-pedidos');
 const pagarConClip = require('./api/pagar-con-clip');
 const confirmarPagoClip = require('./api/confirmar-pago-clip');
+const crearLinkClip = require('./api/crear-link-clip');
+const confirmarLinkClip = require('./api/confirmar-link-clip');
+const webhookClip = require('./api/webhook-clip');
 
 app.post('/api/crear-pago', crearPagoMercadoPago);
 app.post('/api/crear-pago-paypal', crearPagoPaypal);
@@ -110,6 +113,9 @@ app.all('/api/webhook-mercadopago', webhookMercadoPago);
 app.get('/api/diagnostico-pedidos', diagnosticoPedidos);
 app.post('/api/pagar-con-clip', pagarConClip);
 app.post('/api/confirmar-pago-clip', confirmarPagoClip);
+app.post('/api/crear-link-clip', crearLinkClip);
+app.post('/api/confirmar-link-clip', confirmarLinkClip);
+app.post('/api/webhook-clip', webhookClip);
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
