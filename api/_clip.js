@@ -164,6 +164,7 @@ async function procesarLinkClip(db, paymentRequestId) {
   }
 
   const resultado = await registrarPedidoUnaVez(db, `cliplink_${paymentRequestId}`, datos.datosPedido);
+  
 
   await referencia.delete();
 
