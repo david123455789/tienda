@@ -1,6 +1,30 @@
-const { initializeApp, cert, getApps, getApp } = require('firebase-admin/app');
-const { getAuth } = require('firebase-admin/auth');
-const { getFirestore } = require('firebase-admin/firestore');
+// Se cargan al usarse (no al iniciar) para que, si algo falla, el error llegue como mensaje claro.
+function cargarFirebaseAdmin() {
+  try {
+    return {
+      ...require('firebase-admin/app'),
+      getAuth: require('firebase-admin/auth').getAuth,
+      getFirestore: require('firebase-admin/firestore').getFirestore
+    };
+  } catch (errorModular) {
+    try {
+      const admin = require('firebase-admin');
+      return {
+        initializeApp: (opciones) => admin.initializeApp(opciones),
+        cert: (c) => admin.credential.cert(c),
+        getApps: () => admin.apps || [],
+        getApp: () => admin.app(),
+        getAuth: (app) => admin.auth(app),
+        getFirestore: (app) => admin.firestore(app)
+      };
+    } catch (errorClasico) {
+      throw new Error(
+        'No se pudo cargar firebase-admin en el servidor: ' + errorModular.message +
+        ' — Revisa que "firebase-admin" esté en dependencies de tu package.json.'
+      );
+    }
+  }
+}
 
 /*
  * Este archivo confirma, del lado del servidor, quién es realmente el usuario
@@ -13,6 +37,8 @@ const { getFirestore } = require('firebase-admin/firestore');
  */
 
 function obtenerAppFirebaseAdmin() {
+  const { initializeApp, cert, getApps, getApp } = cargarFirebaseAdmin();
+
   if (getApps().length) {
     return getApp();
   }
@@ -61,6 +87,7 @@ async function obtenerUsuarioDesdeToken(req) {
   const app = obtenerAppFirebaseAdmin();
 
   try {
+    const { getAuth } = cargarFirebaseAdmin();
     const datos = await getAuth(app).verifyIdToken(idToken);
     return { uid: datos.uid, email: datos.email || '', nombre: datos.name || '' };
   } catch (error) {
@@ -72,6 +99,7 @@ async function obtenerUsuarioDesdeToken(req) {
 
 function obtenerFirestoreAdmin() {
   const app = obtenerAppFirebaseAdmin();
+  const { getFirestore } = cargarFirebaseAdmin();
   return getFirestore(app);
 }
 
