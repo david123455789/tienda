@@ -23,7 +23,23 @@ function obtenerAppFirebaseAdmin() {
     );
   }
 
-  const credencial = JSON.parse(credencialTexto);
+  let credencial;
+
+  try {
+    credencial = JSON.parse(credencialTexto.trim());
+  } catch (error) {
+    throw new Error(
+      'FIREBASE_SERVICE_ACCOUNT no es un JSON válido. Pega completo el archivo que descargas en Firebase → Configuración del proyecto → Cuentas de servicio → Generar nueva clave privada.'
+    );
+  }
+
+  if (!credencial.private_key || !credencial.client_email || !credencial.project_id) {
+    throw new Error(
+      'FIREBASE_SERVICE_ACCOUNT está incompleto: le falta private_key, client_email o project_id. Debe ser el JSON de "Cuentas de servicio", no la configuración web de Firebase.'
+    );
+  }
+
+  credencial.private_key = String(credencial.private_key).replace(/\\n/g, '\n');
 
   return admin.initializeApp({
     credential: admin.credential.cert(credencial)
