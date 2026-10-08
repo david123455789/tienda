@@ -11,7 +11,7 @@ const admin = require('firebase-admin');
  */
 
 function obtenerAppFirebaseAdmin() {
-  if (admin.apps.length) {
+  if (admin.apps && admin.apps.length) {
     return admin.app();
   }
 
