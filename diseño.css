@@ -3229,3 +3229,41 @@ header {
   background: var(--ivory);
   cursor: pointer;
 }
+
+
+/* INICIO: 2x2 + Accesorios ancho + BY IN */
+.category-showcase {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.category-showcase .category-tile {
+  height: auto !important;
+  aspect-ratio: 4 / 3;
+}
+.category-showcase .category-tile[data-categoria-home="Accesorios"] {
+  grid-column: 1 / -1;
+  aspect-ratio: 16 / 6;
+}
+.category-showcase .category-tile span { left: 0; right: 0; text-align: center; bottom: 18px; }
+.category-showcase .category-tile span::after { display: none; }
+
+.home-byin { padding: 20px 20px 70px; background: var(--pearl); }
+.byin-heading { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 26px; }
+.byin-heading span { flex: 0 1 90px; height: 1px; background: rgba(0,0,0,.35); }
+.byin-heading h2 { margin: 0; font-size: 18px; letter-spacing: .25em; font-weight: 600; }
+.byin-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; max-width: 1000px; margin: 0 auto; }
+.byin-tile { border: none; background: #fff; padding: 0 0 12px; cursor: pointer; text-align: center; min-width: 0; }
+.byin-tile img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; }
+.byin-tile span { display: block; margin-top: 10px; font-size: 13px; letter-spacing: .05em; }
+@media (max-width: 700px) {
+  .home-byin { padding: 10px 8px 44px; }
+  .byin-grid { gap: 4px; }
+  .byin-tile span { font-size: 10px; margin-top: 6px; }
+  .category-showcase .category-tile span { font-size: 12px; bottom: 12px; }
+}
+
+/* BY IN: nombre sin cuadro blanco */
+.byin-tile { background: transparent !important; padding: 0 !important; }
+.byin-tile span { background: transparent; }

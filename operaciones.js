@@ -121,8 +121,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function configurarMenu() {
-  const dropdown = document.querySelector('.dropdown');
-  const btnMaximilian = document.getElementById('btn-maximilian');
+  const dropdowns = Array.from(document.querySelectorAll('.menu-principal'));
+  const dropdown = {
+    classList: {
+      remove: () => dropdowns.forEach(d => d.classList.remove('open'))
+    }
+  };
   const btnInicio = document.getElementById('btn-inicio');
   const logoInicio = document.getElementById('logo-inicio');
 
@@ -130,28 +134,30 @@ function configurarMenu() {
     logoInicio.addEventListener('click', event => {
       event.preventDefault();
       mostrarInicio();
-
-      if (dropdown) {
-        dropdown.classList.remove('open');
-      }
-    });
-  }
-
-  if (btnMaximilian && dropdown) {
-    btnMaximilian.addEventListener('click', event => {
-      event.preventDefault();
-      event.stopPropagation();
-      dropdown.classList.toggle('open');
-    });
-
-    dropdown.addEventListener('click', event => {
-      event.stopPropagation();
-    });
-
-    document.addEventListener('click', () => {
       dropdown.classList.remove('open');
     });
   }
+
+  dropdowns.forEach(item => {
+    const boton = item.querySelector('.dropdown-btn');
+    if (!boton) return;
+
+    boton.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const abrir = !item.classList.contains('open');
+      dropdown.classList.remove('open');
+      if (abrir) item.classList.add('open');
+    });
+
+    item.addEventListener('click', event => {
+      event.stopPropagation();
+    });
+  });
+
+  document.addEventListener('click', () => {
+    dropdown.classList.remove('open');
+  });
 
   document.querySelectorAll('.category-btn').forEach(button => {
     button.addEventListener('click', event => {
@@ -160,7 +166,7 @@ function configurarMenu() {
 
       const category = button.closest('.menu-category');
 
-      document.querySelectorAll('.menu-category').forEach(item => {
+      button.closest('.dropdown-menu').querySelectorAll('.menu-category').forEach(item => {
         if (item !== category) {
           item.classList.remove('open');
         }
@@ -190,7 +196,7 @@ function configurarMenu() {
       event.preventDefault();
 
       const categoria = button.dataset.categoriaHome;
-      filtrarProductos(categoria, '');
+      filtrarProductos(categoria, button.dataset.subcategoriaHome || '');
     });
   });
 
