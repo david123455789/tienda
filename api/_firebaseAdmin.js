@@ -9,6 +9,14 @@ function cargarFirebaseAdmin() {
   } catch (errorModular) {
     try {
       const admin = require('firebase-admin');
+
+      if (!admin || !admin.credential) {
+        let version = 'desconocida';
+        try { version = require('firebase-admin/package.json').version; } catch (e) {}
+        throw new Error(
+          'firebase-admin no cargó bien (versión ' + version + '). Error al cargar: ' + errorModular.message
+        );
+      }
       return {
         initializeApp: (opciones) => admin.initializeApp(opciones),
         cert: (c) => admin.credential.cert(c),
