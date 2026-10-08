@@ -1,4 +1,6 @@
-const admin = require('firebase-admin');
+const { initializeApp, cert, getApps, getApp } = require('firebase-admin/app');
+const { getAuth } = require('firebase-admin/auth');
+const { getFirestore } = require('firebase-admin/firestore');
 
 /*
  * Este archivo confirma, del lado del servidor, quién es realmente el usuario
@@ -11,8 +13,8 @@ const admin = require('firebase-admin');
  */
 
 function obtenerAppFirebaseAdmin() {
-  if (admin.apps && admin.apps.length) {
-    return admin.app();
+  if (getApps().length) {
+    return getApp();
   }
 
   const credencialTexto = process.env.FIREBASE_SERVICE_ACCOUNT;
@@ -41,8 +43,8 @@ function obtenerAppFirebaseAdmin() {
 
   credencial.private_key = String(credencial.private_key).replace(/\\n/g, '\n');
 
-  return admin.initializeApp({
-    credential: admin.credential.cert(credencial)
+  return initializeApp({
+    credential: cert(credencial)
   });
 }
 
@@ -59,7 +61,7 @@ async function obtenerUsuarioDesdeToken(req) {
   const app = obtenerAppFirebaseAdmin();
 
   try {
-    const datos = await admin.auth(app).verifyIdToken(idToken);
+    const datos = await getAuth(app).verifyIdToken(idToken);
     return { uid: datos.uid, email: datos.email || '', nombre: datos.name || '' };
   } catch (error) {
     const errorAuth = new Error('Tu sesión no es válida o ya expiró.');
@@ -70,7 +72,7 @@ async function obtenerUsuarioDesdeToken(req) {
 
 function obtenerFirestoreAdmin() {
   const app = obtenerAppFirebaseAdmin();
-  return admin.firestore(app);
+  return getFirestore(app);
 }
 
 module.exports = { obtenerUsuarioDesdeToken, obtenerFirestoreAdmin };
