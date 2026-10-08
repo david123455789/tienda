@@ -1244,6 +1244,13 @@ async function confirmarLinkClipSiAplica() {
       return;
     }
 
+    console.warn('Respuesta de confirmar-link-clip:', respuesta.status, datos);
+
+    if (datos && datos.detalle) {
+      alert('Tu pago se cobró, pero no pudimos registrar el pedido: ' + datos.detalle);
+      return;
+    }
+
     alert('Tu pago todavía no se confirma. Si elegiste pagar en efectivo, tu pedido se registrará solo en cuanto recibamos el pago. Si ya pagaste con tarjeta, revisa "Mi cuenta → Pedidos" en unos minutos.');
   } catch (error) {
     console.error('No se pudo confirmar el pago con Clip:', error);
@@ -2573,7 +2580,7 @@ function mostrarBusquedaComoColeccion(resultados, termino) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-const URL_BACKEND_VERCEL = 'https://tienda-alpha-red.vercel.app';
+const URL_BACKEND_VERCEL = 'https://www.inequestrian.com.mx';
 
 function obtenerBaseApi() {
   const host = window.location.hostname;

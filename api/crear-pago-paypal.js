@@ -38,7 +38,7 @@ const ORIGENES_PERMITIDOS = [
   'http://localhost:3000'
 ];
 
-const URL_RETORNO_POR_DEFECTO = 'https://tienda-alpha-red.vercel.app/';
+const URL_RETORNO_POR_DEFECTO = 'https://www.inequestrian.com.mx/';
 
 function aplicarCors(req, res) {
   const origen = req.headers.origin;

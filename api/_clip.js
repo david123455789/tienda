@@ -120,7 +120,7 @@ async function registrarPedidoUnaVez(db, clave, datosPedido) {
 // Devuelve la dirección de tu tienda a la que Clip regresará al cliente después de pagar.
 // Solo se aceptan las direcciones de la lista de arriba, para que nadie desvíe al cliente.
 function urlBaseSegura(urlRetorno) {
-  const porDefecto = 'https://tienda-alpha-red.vercel.app/';
+  const porDefecto = 'https://www.inequestrian.com.mx/';
 
   try {
     const url = new URL(urlRetorno);
@@ -164,7 +164,6 @@ async function procesarLinkClip(db, paymentRequestId) {
   }
 
   const resultado = await registrarPedidoUnaVez(db, `cliplink_${paymentRequestId}`, datos.datosPedido);
-  
 
   await referencia.delete();
 

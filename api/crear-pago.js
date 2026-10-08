@@ -13,7 +13,7 @@ const ORIGENES_PERMITIDOS = [
   'http://localhost:3000'
 ];
 
-const URL_RETORNO_POR_DEFECTO = 'https://tienda-alpha-red.vercel.app/';
+const URL_RETORNO_POR_DEFECTO = 'https://www.inequestrian.com.mx/';
 
 function aplicarCors(req, res) {
   const origen = req.headers.origin;
@@ -81,7 +81,7 @@ module.exports = async function handler(req, res) {
       auto_return: 'approved',
       // Mercado Pago avisa aquí cuando el pago se aprueba, aunque el cliente
       // cierre la pestaña antes de volver a la tienda.
-      notification_url: `${process.env.URL_BACKEND || 'https://tienda-alpha-red.vercel.app'}/api/webhook-mercadopago`
+      notification_url: `${process.env.URL_BACKEND || 'https://www.inequestrian.com.mx'}/api/webhook-mercadopago`
     };
 
     // No mandamos datos del comprador (nombre, teléfono, dirección) a Mercado Pago:

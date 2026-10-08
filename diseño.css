@@ -3267,3 +3267,18 @@ header {
 /* BY IN: nombre sin cuadro blanco */
 .byin-tile { background: transparent !important; padding: 0 !important; }
 .byin-tile span { background: transparent; }
+
+
+/* MENÚ EN CELULAR: que quepa todo (logo, Maximilian, IN Collection, buscar, cuenta, carrito) */
+@media (max-width: 560px) {
+  .site-header { padding: 8px 6px; gap: 4px; }
+  .site-header #btn-inicio { display: none; }
+  .site-header .navbar { gap: 8px; flex: 1 1 auto; min-width: 0; justify-content: flex-start; }
+  .site-header .menu-label { font-size: 0.56rem; letter-spacing: 0.2px; white-space: nowrap; }
+  .site-header .dropdown-btn { gap: 2px; padding: 4px 2px; }
+  .site-header .chevron { display: none; }
+  .site-header .header-icon { width: 21px; height: 21px; }
+  .site-header .nav-link { padding-left: 2px; padding-right: 2px; }
+  .site-header .cuenta-btn { margin-left: 0; flex: 0 0 auto; }
+  .site-header .header-search-btn { flex: 0 0 auto; }
+}

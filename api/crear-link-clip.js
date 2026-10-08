@@ -60,7 +60,7 @@ module.exports = async function handler(req, res) {
     }
 
     const base = urlBaseSegura(urlRetorno);
-    const urlBackend = process.env.URL_BACKEND || 'https://tienda-alpha-red.vercel.app';
+    const urlBackend = process.env.URL_BACKEND || 'https://www.inequestrian.com.mx';
 
     const descripcion = verificado.productos
       .map(producto => `${producto.nombre} x${producto.cantidad}`)
