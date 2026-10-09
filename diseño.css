@@ -3282,3 +3282,116 @@ header {
   .site-header .cuenta-btn { margin-left: 0; flex: 0 0 auto; }
   .site-header .header-search-btn { flex: 0 0 auto; }
 }
+
+/* HEADER: más delgado, logo más grande y marca pegada a la izquierda */
+@media (min-width: 901px) {
+  .site-header {
+    min-height: 72px;
+    padding: 6px 28px;
+    gap: 24px;
+  }
+
+  .site-header .brand-link {
+    min-width: 0;
+    margin-right: auto;
+    gap: 16px;
+  }
+
+  .site-header .brand-logo-img {
+    height: 58px;
+  }
+
+  .site-header .brand-divider {
+    height: 34px;
+  }
+
+  .site-header .navbar {
+    margin-left: auto;
+    gap: clamp(18px, 2.4vw, 40px);
+  }
+
+  .site-header .dropdown-menu {
+    top: calc(100% + 6px);
+  }
+
+  .search-panel {
+    top: 72px;
+  }
+}
+
+@media (max-width: 900px) {
+  .site-header .brand-logo-img {
+    height: 36px;
+  }
+}
+
+/* VIDEO: texto centrado; en computadora el video es más bajo (en celular queda igual) */
+.video-section { justify-content: center; }
+.video-content { text-align: center; width: min(1000px, 100%); }
+.video-overlay { background: rgba(31, 31, 31, 0.38); }
+
+@media (min-width: 701px) {
+  .video-section { min-height: 0; height: clamp(340px, 42vw, 520px); }
+  .video-content h1 { font-size: clamp(44px, 5.4vw, 84px); white-space: nowrap; }
+}
+
+/* FUENTE DEL TÍTULO: Beyond Infinity - Demo (sube el archivo a la carpeta "fonts") */
+@font-face {
+  font-family: "Beyond Infinity";
+  src: url("fonts/BeyondInfinity-Demo.woff2") format("woff2"),
+       url("fonts/BeyondInfinity-Demo.otf") format("opentype"),
+       url("fonts/BeyondInfinity-Demo.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.video-content h1,
+.video-content h1 .video-destacado {
+  font-family: "Beyond Infinity", "Allura", "Brush Script MT", cursive;
+  font-weight: 400;
+}
+
+.video-content h1 .video-destacado { font-size: 1em; color: inherit; }
+
+/* VIDEO COMPLETO (sin recortar) en PC y celular */
+.video-section {
+  display: block;
+  position: relative;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  background: var(--black);
+  text-align: center;
+}
+
+.video-bg {
+  position: relative;
+  inset: auto;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 560px;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+.video-overlay { position: absolute; inset: 0; }
+
+.video-content {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+@media (max-width: 700px) {
+  .video-bg { max-height: none; }
+  .video-content h1 { white-space: normal; font-size: clamp(34px, 11vw, 48px); }
+}
+
+/* VIDEO: ancho completo, proporción original, sin franjas negras */
+.video-bg { max-height: none !important; width: 100%; height: auto; object-fit: fill; }
