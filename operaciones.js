@@ -1298,6 +1298,7 @@ async function confirmarPedidoSiAplica() {
 
 /* PAGO DIRECTO CON TARJETA (Clip) */
 
+
 // Esta es tu API Key de Clip (la pública, NO la clave secreta). La sacas de tu panel
 // de desarrollador de Clip. La clave secreta va solo en Vercel, nunca aquí.
 const CLIP_API_KEY = '03de9677-7a6d-4100-bd5a-9b25fe8f8ab0';
