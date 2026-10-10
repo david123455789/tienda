@@ -479,7 +479,8 @@ function filtrarProductos(categoria, subcategoria) {
   }
 
   if (descripcionCatalogo) {
-    descripcionCatalogo.textContent = `Maximilian - ${categoria}${subcategoria ? ' - ' + subcategoria : ''}`;
+    const marcaCatalogo = normalizar(categoria) === 'propio' ? 'IN Collection' : 'Maximilian';
+    descripcionCatalogo.textContent = marcaCatalogo + (categoria && marcaCatalogo === 'Maximilian' ? ' - ' + categoria : '') + (subcategoria ? ' - ' + subcategoria : '');
   }
 
   mostrarColeccionActual();
@@ -495,7 +496,7 @@ function mostrarProductos(lista) {
   contenedorProductos.innerHTML = '';
 
   if (!lista || lista.length === 0) {
-    contenedorProductos.innerHTML = '<p class="mensaje-vacio">No hay productos en esta categorÃ­a.</p>';
+    contenedorProductos.innerHTML = '<p class="mensaje-vacio">Proximamente.</p>';
     return;
   }
 
