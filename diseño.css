@@ -3395,3 +3395,98 @@ header {
 
 /* VIDEO: ancho completo, proporción original, sin franjas negras */
 .video-bg { max-height: none !important; width: 100%; height: auto; object-fit: fill; }
+
+/* Paleta de marca: nombres de IN Collection y título de destacados */
+.byin-tile,
+.byin-tile span {
+  color: var(--charcoal) !important;
+  -webkit-text-fill-color: var(--charcoal);
+}
+
+.featured-header h2 {
+  color: var(--saddle) !important;
+  font-size: clamp(22px, 2.6vw, 34px) !important;
+}
+
+@media (max-width: 700px) {
+  .featured-header h2 { font-size: 24px !important; }
+}
+
+/* LOGO EN CELULAR/TABLET: el mismo logo, más grande */
+@media (max-width: 900px) {
+  .site-header { min-height: 92px; padding: 6px 12px; }
+  .site-header .brand-divider,
+  .site-header .brand-wordmark { display: none !important; }
+  .site-header .brand-logo-img { height: 72px; width: auto; }
+  .site-header .brand-link { min-width: 0; }
+  .site-header .dropdown-menu { top: 92px; }
+  .search-panel { top: 92px; }
+}
+
+@media (max-width: 560px) {
+  .site-header { min-height: 84px; }
+  .site-header .brand-logo-img { height: 64px; }
+  .site-header .dropdown-menu { top: 84px; }
+  .search-panel { top: 84px; }
+}
+
+/* Imagen "Maximilian" entre el video y las categorías */
+.solo-lectores {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.section-heading-logo { text-align: center; margin-bottom: 26px; }
+
+.maximilian-logo {
+  display: block;
+  margin: 0 auto;
+  width: clamp(150px, 22vw, 260px);
+  height: auto;
+}
+
+/* Imagen "IN Collection" entre las líneas */
+.byin-heading { gap: 14px; }
+.byin-heading .byin-logo {
+  display: block;
+  width: clamp(110px, 18vw, 200px);
+  height: auto;
+  flex: 0 0 auto;
+}
+.byin-heading span { flex: 1 1 0; max-width: 140px; min-width: 20px; }
+
+/* Nombres de IN Collection siempre en color de la paleta (nunca azul de enlace) */
+.byin-tile, .byin-tile:link, .byin-tile:visited, .byin-tile:hover, .byin-tile:active, .byin-tile:focus,
+.byin-tile span {
+  color: #393634 !important;
+  -webkit-text-fill-color: #393634 !important;
+}
+
+/* Productos destacados: centrado, como el diseño de referencia */
+.featured-header {
+  max-width: none;
+  margin: 0 auto 34px;
+  text-align: center;
+}
+
+.featured-header .section-kicker {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: clamp(13px, 1.5vw, 17px);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--taupe);
+  margin: 0;
+}
+
+.featured-header h2 {
+  margin: 6px 0 0 !important;
+  font-size: clamp(24px, 3vw, 38px) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--saddle) !important;
+}
