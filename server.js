@@ -115,6 +115,14 @@ app.post('/api/crear-link-clip', crearLinkClip);
 app.post('/api/confirmar-link-clip', confirmarLinkClip);
 app.post('/api/webhook-clip', webhookClip);
 
+// Cualquier dirección que no sea un archivo ni /api abre la tienda (para rutas como /maximilian-hombre-jackets-hoodies).
+app.use((req, res, next) => {
+  if (req.method === 'GET' && !req.path.startsWith('/api/') && !require('path').extname(req.path)) {
+    return res.sendFile(require('path').resolve('index.html'));
+  }
+  next();
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

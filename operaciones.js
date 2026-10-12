@@ -275,7 +275,7 @@ async function cargarProductos() {
     ]);
 
     productos = crearProductosDesdeSheets(productosRows, variantesRows);
-    mostrarInicio();
+    aplicarRutaActual();
   } catch (error) {
     console.error('Error cargando productos:', error);
 
@@ -424,7 +424,93 @@ function crearProductosDesdeSheets(productosRows, variantesRows) {
     });
 }
 
+/* RUTAS: cada sección tiene su propia URL (ej. /maximilian-hombre-jackets-hoodies) */
+
+let aplicandoRuta = false;
+
+function slugTexto(texto) {
+  return String(texto || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/&/g, ' ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function etiquetaMenuColeccion(categoria, subcategoria) {
+  const enlace = Array.from(document.querySelectorAll('a[data-categoria][data-subcategoria]'))
+    .find(a => a.dataset.categoria === categoria && a.dataset.subcategoria === subcategoria);
+
+  return enlace ? enlace.textContent.trim() : subcategoria;
+}
+
+function rutaDeColeccion(categoria, subcategoria) {
+  const esPropio = String(categoria).toLowerCase() === 'propio';
+  const partes = [esPropio ? 'in-collection' : 'maximilian'];
+
+  if (!esPropio) partes.push(slugTexto(categoria));
+  if (subcategoria) partes.push(slugTexto(etiquetaMenuColeccion(categoria, subcategoria)));
+
+  return '/' + partes.filter(Boolean).join('-');
+}
+
+function tablaDeRutas() {
+  const tabla = {};
+
+  document.querySelectorAll('[data-categoria]').forEach(enlace => {
+    const categoria = enlace.dataset.categoria;
+    const subcategoria = enlace.dataset.subcategoria || '';
+    tabla[rutaDeColeccion(categoria, subcategoria)] = { categoria, subcategoria };
+  });
+
+  document.querySelectorAll('[data-categoria-home]').forEach(boton => {
+    const categoria = boton.dataset.categoriaHome;
+    const subcategoria = boton.dataset.subcategoriaHome || '';
+    tabla[rutaDeColeccion(categoria, subcategoria)] = { categoria, subcategoria };
+  });
+
+  return tabla;
+}
+
+function actualizarRuta(ruta) {
+  if (aplicandoRuta) return;
+
+  try {
+    if (window.location.pathname !== ruta) {
+      window.history.pushState({}, '', ruta);
+    }
+  } catch (error) {
+    // Si el navegador no permite cambiar la URL (por ejemplo, abriendo el archivo directo), no pasa nada.
+  }
+}
+
+function aplicarRutaActual() {
+  aplicandoRuta = true;
+
+  try {
+    const ruta = window.location.pathname.replace(/\/+$/, '').replace(/\/index\.html$/, '') || '/';
+    const destino = ruta === '/' ? null : tablaDeRutas()[ruta];
+
+    if (destino) {
+      filtrarProductos(destino.categoria, destino.subcategoria);
+    } else {
+      if (ruta !== '/') {
+        try { window.history.replaceState({}, '', '/' + window.location.search); } catch (error) { /* sin cambios */ }
+      }
+      mostrarInicio();
+    }
+  } finally {
+    aplicandoRuta = false;
+  }
+}
+
+window.addEventListener('popstate', () => {
+  if (productos && productos.length) aplicarRutaActual();
+});
+
 function mostrarInicio() {
+  actualizarRuta('/');
   if (vistaInicio) vistaInicio.classList.remove('oculto');
   if (vistaColeccion) vistaColeccion.classList.add('oculto');
   if (vistaProducto) vistaProducto.classList.add('oculto');
@@ -455,6 +541,7 @@ function mostrarColeccionActual() {
 }
 
 function filtrarProductos(categoria, subcategoria) {
+  actualizarRuta(rutaDeColeccion(categoria, subcategoria));
   ultimaCategoria = categoria;
   ultimaSubcategoria = subcategoria;
 
