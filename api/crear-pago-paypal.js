@@ -1,4 +1,5 @@
 const { obtenerUsuarioDesdeToken, obtenerFirestoreAdmin } = require('./_firebaseAdmin');
+const { validarProductos } = require('./_catalogo');
 
 const PAYPAL_API_BASE = process.env.PAYPAL_API_BASE || 'https://api-m.paypal.com';
 
@@ -85,16 +86,18 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Carrito vacio' });
     }
 
-    const items = productos
-      .map((producto) => ({
-        name: String(producto.nombre || 'Producto').slice(0, 127),
-        quantity: String(Number(producto.cantidad || 1)),
-        unit_amount: {
-          currency_code: 'MXN',
-          value: Number(producto.precio || 0).toFixed(2)
-        }
-      }))
-      .filter((item) => Number(item.quantity) > 0 && Number(item.unit_amount.value) > 0);
+    // Los precios y el total los calcula el servidor con tu catálogo (Google Sheets),
+    // nunca se toman del navegador.
+    const verificado = await validarProductos(productos);
+
+    const items = verificado.productos.map((producto) => ({
+      name: String(producto.nombre || 'Producto').slice(0, 127),
+      quantity: String(producto.cantidad),
+      unit_amount: {
+        currency_code: 'MXN',
+        value: Number(producto.precio).toFixed(2)
+      }
+    }));
 
     if (!items.length) {
       return res.status(400).json({ error: 'Carrito vacio' });
@@ -179,7 +182,7 @@ module.exports = async function handler(req, res) {
       uid: usuario ? usuario.uid : '',
       nombre_cuenta: usuario ? usuario.nombre : '',
       correo_cuenta: usuario ? usuario.email : '',
-      productos,
+      productos: verificado.productos,
       direccion: direccion || {},
       creado: Date.now()
     });
@@ -188,6 +191,13 @@ module.exports = async function handler(req, res) {
       init_point: linkAprobacion.href
     });
   } catch (error) {
+    if (error.paraCliente) {
+      return res.status(error.status || 400).json({
+        error: error.message,
+        message: error.message
+      });
+    }
+
     return res.status(500).json({
       error: 'No se pudo crear el pago con PayPal',
       message: error.message
