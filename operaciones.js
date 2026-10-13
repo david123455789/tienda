@@ -571,11 +571,73 @@ function filtrarProductos(categoria, subcategoria) {
   }
 
   mostrarColeccionActual();
- productosColeccionActual = filtrados;
-resetearFiltros();
-renderizarFiltros(productosColeccionActual);
-mostrarProductos(productosColeccionActual);
+
+  // Solo en IN Collection > Socks: selector Adultos / YR
+  const esSocks = normalizar(categoria) === 'propio' && normalizar(subcategoria) === 'socks';
+  coleccionSocksBase = esSocks ? filtrados : null;
+  edadSocks = 'adultos';
+  actualizarSelectorEdad();
+
+  productosColeccionActual = esSocks ? filtrarSocksPorEdad(filtrados, edadSocks) : filtrados;
+  resetearFiltros();
+  renderizarFiltros(productosColeccionActual);
+  mostrarProductos(productosColeccionActual);
 }
+
+/* SOCKS: adultos / YR */
+let coleccionSocksBase = null;
+let edadSocks = 'adultos';
+
+function esProductoYR(product) {
+  return /^\s*yr\b/i.test(String(product.name || product.nombre || ''));
+}
+
+function filtrarSocksPorEdad(lista, edad) {
+  return lista.filter(p => (edad === 'yr') === esProductoYR(p));
+}
+
+function actualizarSelectorEdad() {
+  const selector = document.getElementById('selector-edad');
+  const etiqueta = document.getElementById('edad-etiqueta');
+  const menu = document.getElementById('menu-edad');
+  const boton = document.getElementById('btn-edad');
+  if (!selector) return;
+
+  selector.classList.toggle('oculto', !coleccionSocksBase);
+  if (etiqueta) etiqueta.textContent = edadSocks === 'yr' ? 'YR' : 'Adultos';
+  if (menu) menu.classList.add('oculto');
+  if (boton) boton.setAttribute('aria-expanded', 'false');
+}
+
+function configurarSelectorEdad() {
+  const boton = document.getElementById('btn-edad');
+  const menu = document.getElementById('menu-edad');
+  if (!boton || !menu) return;
+
+  boton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const abierto = menu.classList.toggle('oculto') === false;
+    boton.setAttribute('aria-expanded', String(abierto));
+  });
+
+  menu.querySelectorAll('[data-edad]').forEach(opcion => {
+    opcion.addEventListener('click', () => {
+      if (!coleccionSocksBase) return;
+      edadSocks = opcion.dataset.edad === 'yr' ? 'yr' : 'adultos';
+      actualizarSelectorEdad();
+      productosColeccionActual = filtrarSocksPorEdad(coleccionSocksBase, edadSocks);
+      resetearFiltros();
+      renderizarFiltros(productosColeccionActual);
+      mostrarProductos(productosColeccionActual);
+    });
+  });
+
+  document.addEventListener('click', () => {
+    menu.classList.add('oculto');
+    boton.setAttribute('aria-expanded', 'false');
+  });
+}
+configurarSelectorEdad();
 
 function mostrarProductos(lista) {
   if (!contenedorProductos) return;
@@ -2650,6 +2712,8 @@ function renderizarResultadosBusqueda(termino) {
 
 function mostrarBusquedaComoColeccion(resultados, termino) {
   productosColeccionActual = resultados;
+  coleccionSocksBase = null;
+  actualizarSelectorEdad();
   ultimaCategoria = 'Busqueda';
   ultimaSubcategoria = termino;
 
@@ -2755,4 +2819,36 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
   else iniciar();
+})();
+
+/* REINTENTO AUTOMÁTICO DE IMÁGENES
+   Si una imagen falla al cargar (red lenta, servidor saturado), se vuelve a intentar
+   hasta 3 veces antes de mostrar la imagen de respaldo. */
+(function configurarReintentoImagenes() {
+  const MAX_REINTENTOS = 3;
+  const RESPALDO = 'imagenes/productos/placeholder.jpg';
+
+  document.addEventListener('error', (e) => {
+    const img = e.target;
+    if (!img || img.tagName !== 'IMG') return;
+
+    const original = img.dataset.srcOriginal || img.getAttribute('src');
+    if (!original || original === RESPALDO || original.startsWith('data:')) return;
+    img.dataset.srcOriginal = original;
+
+    const intentos = Number(img.dataset.reintentos || 0);
+
+    if (intentos >= MAX_REINTENTOS) {
+      img.dataset.reintentos = 'fin';
+      img.src = RESPALDO;
+      return;
+    }
+    if (img.dataset.reintentos === 'fin') return;
+
+    img.dataset.reintentos = String(intentos + 1);
+    setTimeout(() => {
+      const separador = original.includes('?') ? '&' : '?';
+      img.src = `${original}${separador}r=${Date.now()}`;
+    }, 600 * (intentos + 1));
+  }, true);
 })();

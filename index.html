@@ -242,6 +242,16 @@
       <p id="descripcion-catalogo">Catalogo conectado a Google Sheets</p>
     </div>
 
+    <div id="selector-edad" class="selector-edad oculto">
+      <button id="btn-edad" class="btn-edad" type="button" aria-expanded="false" aria-haspopup="true">
+        <span id="edad-etiqueta">Adultos</span> <span class="edad-flecha" aria-hidden="true">&#9662;</span>
+      </button>
+      <div id="menu-edad" class="menu-edad oculto" role="menu">
+        <button type="button" role="menuitem" data-edad="adultos">Adultos</button>
+        <button type="button" role="menuitem" data-edad="yr">YR</button>
+      </div>
+    </div>
+
     <div class="catalogo-actions">
       <button id="btn-toggle-filtros" class="btn-toggle-filtros" type="button" aria-expanded="false" aria-controls="filtros-panel">
         Filtrar y ordenar

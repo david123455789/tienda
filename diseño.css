@@ -3514,3 +3514,14 @@ header {
 .whatsapp-flotante:hover{transform:scale(1.08)}
 .whatsapp-flotante svg{width:28px;height:28px}
 @media (max-width:600px){.whatsapp-flotante{right:14px;bottom:14px;width:44px;height:44px}.whatsapp-flotante svg{width:26px;height:26px}}
+
+
+/* Selector Adultos / YR (IN Collection > Socks) */
+.selector-edad{position:relative;display:inline-block;margin:0 0 18px}
+.selector-edad.oculto{display:none}
+.btn-edad{background:none;border:none;border-bottom:1px solid #393634;padding:6px 2px;font-family:"Times New Roman",serif;font-size:1.15rem;letter-spacing:.12em;text-transform:uppercase;color:#393634;cursor:pointer;-webkit-text-fill-color:#393634}
+.edad-flecha{font-size:.8em;margin-left:6px}
+.menu-edad{position:absolute;left:0;top:100%;z-index:50;min-width:140px;background:#f6f4f1;border:1px solid #ddd6ca;box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.menu-edad.oculto{display:none}
+.menu-edad button{display:block;width:100%;text-align:left;background:none;border:none;padding:12px 16px;font-family:"Times New Roman",serif;font-size:1rem;letter-spacing:.1em;text-transform:uppercase;color:#393634;-webkit-text-fill-color:#393634;cursor:pointer}
+.menu-edad button:hover{background:#ece8e2}
