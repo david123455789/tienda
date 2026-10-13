@@ -3490,3 +3490,12 @@ header {
   text-transform: uppercase;
   color: var(--saddle) !important;
 }
+
+
+/* Ventana de política de reembolso */
+.politica-modal{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(31,31,31,.55)}
+.politica-modal.oculto{display:none}
+.politica-box{position:relative;max-width:560px;width:100%;max-height:85vh;overflow:auto;background:#f6f4f1;color:#393634;padding:36px 32px 30px;border-radius:6px;font-family:"Times New Roman",serif}
+.politica-box h2{margin:0 0 16px;font-size:1.6rem;font-weight:400;color:#6b5d52}
+.politica-box p{margin:0;line-height:1.7;font-size:1.05rem}
+.cerrar-politica{position:absolute;top:8px;right:14px;background:none;border:none;font-size:2rem;line-height:1;color:#6b5d52;cursor:pointer}

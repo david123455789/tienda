@@ -374,6 +374,7 @@
         <div class="metodos-pago">
           <p class="metodos-pago-label">Pagar con</p>
 
+          <!-- TARJETA DE CRÉDITO O DÉBITO (desactivado por ahora; quita este comentario para reactivarlo)
           <button id="btn-mostrar-tarjeta-clip" type="button" class="pago-btn-tarjeta-nueva">
             Tarjeta de crédito o débito
           </button>
@@ -383,6 +384,7 @@
             <p class="tarjeta-aviso">Tus datos de tarjeta van directo a Clip. Esta tienda nunca ve ni guarda el número completo.</p>
             <button id="btn-confirmar-pago-clip" type="button" class="pago-btn-confirmar-clip">Pagar</button>
           </div>
+          -->
 
           <div class="metodos-pago-botones">
             <!-- Mercado Pago está oculto por ahora. Para volver a mostrarlo, quita la palabra "oculto" de la clase. -->
@@ -397,6 +399,7 @@
             </button>
           </div>
 
+          <!-- TARJETAS GUARDADAS (desactivado por ahora; quita este comentario para reactivarlo)
           <button id="btn-mostrar-tarjetas-guardadas" type="button" class="pago-btn-tarjeta-guardada">
             Pagar con una tarjeta guardada
           </button>
@@ -412,6 +415,7 @@
               </button>
             </div>
           </div>
+          -->
 
           <p id="checkout-mensaje" class="checkout-mensaje"></p>
         </div>
@@ -571,13 +575,21 @@
 
     <div class="footer-links">
       <a href="#">Pol­itica de privacidad</a>
-      <a href="#">Pol­itica de reembolso</a>
+      <a href="#" id="link-reembolso">Pol­itica de reembolso</a>
       <a href="#">Pol­itica de envio</a>
       <a href="#">Información de contacto</a>
       <a href="#">Terminos del servicio</a>
     </div>
   </div>
 </footer>
+
+<div id="politica-modal" class="politica-modal oculto" role="dialog" aria-modal="true" aria-labelledby="politica-titulo">
+  <div class="politica-box">
+    <button id="cerrar-politica" class="cerrar-politica" type="button" aria-label="Cerrar">&times;</button>
+    <h2 id="politica-titulo">Política De Rembolso</h2>
+    <p>En caso de devoluciones o rembolsos, Cuentan con 30 días posteriores a la entrega. Se requiere que no se quiten las etiquetas de la prenda y que este sin usar en perfectas condiciones. El envió de la prenda reembolsada correrá por parte del cliente, es importante notar que las tallas vienen reducidas, por lo que recomendamos pedir una talla arriba de la normalmente usan.</p>
+  </div>
+</div>
 
 <div id="auth-modal" class="auth-modal oculto">
   <div class="auth-box">

@@ -2715,3 +2715,23 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion
     alert('No se pudo iniciar el pago: ' + error.message);
   }
 }
+
+/* POLÍTICA DE REEMBOLSO (ventana desde el pie de página) */
+(function configurarPoliticaReembolso() {
+  const iniciar = () => {
+    const link = document.getElementById('link-reembolso');
+    const modal = document.getElementById('politica-modal');
+    const cerrar = document.getElementById('cerrar-politica');
+    if (!link || !modal) return;
+
+    const abrir = (e) => { e.preventDefault(); modal.classList.remove('oculto'); };
+    const cerrarModal = () => modal.classList.add('oculto');
+
+    link.addEventListener('click', abrir);
+    if (cerrar) cerrar.addEventListener('click', cerrarModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) cerrarModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
+  else iniciar();
+})();
