@@ -3499,3 +3499,18 @@ header {
 .politica-box h2{margin:0 0 16px;font-size:1.6rem;font-weight:400;color:#6b5d52}
 .politica-box p{margin:0;line-height:1.7;font-size:1.05rem}
 .cerrar-politica{position:absolute;top:8px;right:14px;background:none;border:none;font-size:2rem;line-height:1;color:#6b5d52;cursor:pointer}
+
+
+/* Correo en el pie de página */
+.footer-social{align-items:center;gap:18px}
+.footer-correo{display:inline-flex;align-items:center;gap:12px;color:#393634;text-decoration:none}
+.footer-correo-texto{font-size:1rem;letter-spacing:.02em}
+.footer-correo:hover .footer-instagram{background:var(--black);color:var(--ivory)}
+@media (max-width:600px){.footer-correo-texto{font-size:.9rem}}
+
+
+/* Botón flotante de WhatsApp */
+.whatsapp-flotante{position:fixed;right:18px;bottom:18px;z-index:2500;width:48px;height:48px;border-radius:50%;background:#25d366;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.25);transition:transform .2s}
+.whatsapp-flotante:hover{transform:scale(1.08)}
+.whatsapp-flotante svg{width:28px;height:28px}
+@media (max-width:600px){.whatsapp-flotante{right:14px;bottom:14px;width:44px;height:44px}.whatsapp-flotante svg{width:26px;height:26px}}

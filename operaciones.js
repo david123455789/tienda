@@ -2716,18 +2716,39 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion
   }
 }
 
-/* POLÍTICA DE REEMBOLSO (ventana desde el pie de página) */
-(function configurarPoliticaReembolso() {
-  const iniciar = () => {
-    const link = document.getElementById('link-reembolso');
-    const modal = document.getElementById('politica-modal');
-    const cerrar = document.getElementById('cerrar-politica');
-    if (!link || !modal) return;
+/* POLÍTICAS (ventana desde el pie de página) */
+(function configurarPoliticas() {
+  const POLITICAS = {
+    'link-reembolso': {
+      titulo: 'Política De Rembolso',
+      texto: 'En caso de devoluciones o rembolsos, Cuentan con 30 días posteriores a la entrega. Se requiere que no se quiten las etiquetas de la prenda y que este sin usar en perfectas condiciones. El envió de la prenda reembolsada correrá por parte del cliente, es importante notar que las tallas vienen reducidas, por lo que recomendamos pedir una talla arriba de la normalmente usan.'
+    },
+    'link-envio': {
+      titulo: 'Política De Envio',
+      texto: 'Al realizar tu pedido previamente revisaremos la disponibilidad de los productos, si esta disponible en la boutique recibiras tu pedido en 3 días hábiles, en caso de no contar con tus productos en la boutique se pedirán de España y el tiempo de envió de entrega sera de 10-15 días hábiles.'
+    }
+  };
 
-    const abrir = (e) => { e.preventDefault(); modal.classList.remove('oculto'); };
+  const iniciar = () => {
+    const modal = document.getElementById('politica-modal');
+    const titulo = document.getElementById('politica-titulo');
+    const texto = document.getElementById('politica-texto');
+    const cerrar = document.getElementById('cerrar-politica');
+    if (!modal || !titulo || !texto) return;
+
     const cerrarModal = () => modal.classList.add('oculto');
 
-    link.addEventListener('click', abrir);
+    Object.keys(POLITICAS).forEach((id) => {
+      const link = document.getElementById(id);
+      if (!link) return;
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        titulo.textContent = POLITICAS[id].titulo;
+        texto.textContent = POLITICAS[id].texto;
+        modal.classList.remove('oculto');
+      });
+    });
+
     if (cerrar) cerrar.addEventListener('click', cerrarModal);
     modal.addEventListener('click', (e) => { if (e.target === modal) cerrarModal(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
