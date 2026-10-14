@@ -3525,3 +3525,21 @@ header {
 .menu-edad.oculto{display:none}
 .menu-edad button{display:block;width:100%;text-align:left;background:none;border:none;padding:12px 16px;font-family:"Times New Roman",serif;font-size:1rem;letter-spacing:.1em;text-transform:uppercase;color:#393634;-webkit-text-fill-color:#393634;cursor:pointer}
 .menu-edad button:hover{background:#ece8e2}
+
+
+/* Reembolso en Mis pedidos */
+.pedido-devolucion{margin-top:16px;padding-top:14px;border-top:1px solid #ddd6ca}
+.btn-reembolso{background:none;border:1px solid #393634;color:#393634;-webkit-text-fill-color:#393634;padding:9px 20px;font-family:"Times New Roman",serif;font-size:.95rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.btn-reembolso:hover{background:#393634;color:#f6f4f1;-webkit-text-fill-color:#f6f4f1}
+.pedido-devolucion-estatus{margin:0;font-weight:bold;color:#6b5d52;letter-spacing:.04em}
+.pedido-devolucion-razon{margin:6px 0 0;font-size:.95rem;color:#393634}
+.reembolso-box{max-width:420px;text-align:center}
+.reembolso-box h2{font-size:1.4rem}
+.reembolso-botones{display:flex;gap:12px;justify-content:center;margin-top:22px}
+.reembolso-btn,.reembolso-razon{font-family:"Times New Roman",serif;font-size:1rem;padding:12px 26px;border:1px solid #393634;background:#f6f4f1;color:#393634;-webkit-text-fill-color:#393634;cursor:pointer;letter-spacing:.06em}
+.reembolso-btn-principal{background:#393634;color:#f6f4f1;-webkit-text-fill-color:#f6f4f1}
+.reembolso-razones{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.reembolso-razon:hover{background:#ece8e2}
+.reembolso-razon:disabled,.reembolso-btn:disabled{opacity:.5;cursor:default}
+.reembolso-error{margin:14px 0 0;color:#8b2c2c;font-size:.95rem}
+.reembolso-error.oculto,.reembolso-box .oculto{display:none}

@@ -1,5 +1,5 @@
 const { obtenerUsuarioDesdeToken } = require('./_firebaseAdmin');
-const { leerFilas } = require('./_sheetsPedidos');
+const { leerFilas, actualizarCeldas } = require('./_sheetsPedidos');
 
 /*
  * Lista los pedidos del cliente que inició sesión, leyendo directo tu Sheet
@@ -23,7 +23,7 @@ function aplicarCors(req, res) {
     res.setHeader('Vary', 'Origin');
   }
 
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
@@ -31,8 +31,74 @@ function aplicarCors(req, res) {
 // A=ID ENVIO B=Nombre C=Correo D=Numero E=Calle F=Numero G=Colonia H=Ciudad I=CP J=Estado K=Estatus
 const COL_ENVIO = {
   id: 0, nombre: 1, correo: 2, telefono: 3, calle: 4, numero: 5,
-  colonia: 6, ciudad: 7, cp: 8, estado: 9, estatus: 10
+  colonia: 6, ciudad: 7, cp: 8, estado: 9, estatus: 10,
+  devolucion: 11, razon: 12, estatusDev: 13
 };
+
+// Razones que el cliente puede elegir al pedir un reembolso.
+const RAZONES_REEMBOLSO = [
+  'Me equivoqué',
+  'Quería otro producto',
+  'No me quedó el producto'
+];
+
+// El estatus de la devolución se escribe a mano en la columna N del Sheet;
+// aquí se normaliza el texto para mostrarlo bonito al cliente.
+function textoEstatusDevolucion(valor) {
+  const texto = String(valor || '').trim();
+  if (!texto) return '';
+
+  const minusculas = texto.toLowerCase();
+
+  if (minusculas.includes('complet')) return 'Devolución completada';
+  if (minusculas.includes('proces') || minusculas.includes('porces')) return 'Devolución en proceso';
+  if (minusculas.includes('acept')) return 'Devolución aceptada';
+
+  return texto;
+}
+
+function leerCuerpo(req) {
+  if (req.body && typeof req.body === 'object') return req.body;
+
+  try {
+    return JSON.parse(req.body || '{}');
+  } catch (error) {
+    return {};
+  }
+}
+
+async function solicitarReembolso(req, res, usuario) {
+  const { idEnvio, razon } = leerCuerpo(req);
+
+  if (!idEnvio || !RAZONES_REEMBOLSO.includes(razon)) {
+    return res.status(400).json({ error: 'Datos de reembolso no válidos.' });
+  }
+
+  const filasEnvio = await leerFilas('Envio');
+  const correo = (usuario.email || '').trim().toLowerCase();
+
+  const indice = filasEnvio.findIndex((fila, i) =>
+    i > 0 &&
+    fila[COL_ENVIO.id] === idEnvio &&
+    (fila[COL_ENVIO.correo] || '').trim().toLowerCase() === correo
+  );
+
+  if (indice === -1) {
+    return res.status(404).json({ error: 'No encontramos ese pedido en tu cuenta.' });
+  }
+
+  const yaSolicitado = String(filasEnvio[indice][COL_ENVIO.devolucion] || '').trim();
+
+  if (yaSolicitado) {
+    return res.status(409).json({ error: 'Este pedido ya tiene una devolución solicitada.' });
+  }
+
+  // Columnas L (Devolucion) y M (Razon) de la fila del pedido.
+  const fila = indice + 1;
+  await actualizarCeldas(`Envio!L${fila}:M${fila}`, [['Sí', razon]]);
+
+  return res.status(200).json({ ok: true });
+}
 
 // Columnas de la hoja "Producto":
 // A=ID Envio B=Nombre producto C=Cantidad D=Talla E=Color F=Grip
@@ -45,7 +111,7 @@ module.exports = async function handler(req, res) {
     return res.status(204).end();
   }
 
-  if (req.method !== 'GET') {
+  if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Metodo no permitido' });
   }
 
@@ -55,6 +121,18 @@ module.exports = async function handler(req, res) {
     usuario = await obtenerUsuarioDesdeToken(req);
   } catch (error) {
     return res.status(error.status || 401).json({ error: error.message });
+  }
+
+  if (req.method === 'POST') {
+    try {
+      return await solicitarReembolso(req, res, usuario);
+    } catch (error) {
+      console.error('Error al solicitar reembolso:', error);
+      return res.status(500).json({
+        error: 'No se pudo registrar tu solicitud. Intenta de nuevo.',
+        message: error.message
+      });
+    }
   }
 
   try {
@@ -86,6 +164,9 @@ module.exports = async function handler(req, res) {
       return {
         idEnvio,
         estatus: fila[COL_ENVIO.estatus] || 'Aceptado',
+        devolucion: String(fila[COL_ENVIO.devolucion] || '').trim() !== '',
+        razonDevolucion: fila[COL_ENVIO.razon] || '',
+        estatusDevolucion: textoEstatusDevolucion(fila[COL_ENVIO.estatusDev]),
         direccion: {
           calle: fila[COL_ENVIO.calle] || '',
           numero: fila[COL_ENVIO.numero] || '',

@@ -605,6 +605,31 @@
   </svg>
 </a>
 
+<div id="reembolso-modal" class="politica-modal oculto" role="dialog" aria-modal="true" aria-labelledby="reembolso-titulo">
+  <div class="politica-box reembolso-box">
+    <button id="cerrar-reembolso" class="cerrar-politica" type="button" aria-label="Cerrar">&times;</button>
+
+    <div id="reembolso-paso-confirmar">
+      <h2 id="reembolso-titulo">¿Estás seguro?</h2>
+      <p>Vas a solicitar el reembolso del pedido <strong id="reembolso-pedido-id"></strong>.</p>
+      <div class="reembolso-botones">
+        <button id="reembolso-si" type="button" class="reembolso-btn reembolso-btn-principal">Sí</button>
+        <button id="reembolso-no" type="button" class="reembolso-btn">No</button>
+      </div>
+    </div>
+
+    <div id="reembolso-paso-razon" class="oculto">
+      <h2>¿Por qué quieres el reembolso?</h2>
+      <div class="reembolso-razones">
+        <button type="button" class="reembolso-razon" data-razon="Me equivoqué">Me equivoqué</button>
+        <button type="button" class="reembolso-razon" data-razon="Quería otro producto">Quería otro producto</button>
+        <button type="button" class="reembolso-razon" data-razon="No me quedó el producto">No me quedó el producto</button>
+      </div>
+      <p id="reembolso-error" class="reembolso-error oculto"></p>
+    </div>
+  </div>
+</div>
+
 <div id="politica-modal" class="politica-modal oculto" role="dialog" aria-modal="true" aria-labelledby="politica-titulo">
   <div class="politica-box">
     <button id="cerrar-politica" class="cerrar-politica" type="button" aria-label="Cerrar">&times;</button>

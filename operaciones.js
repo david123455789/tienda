@@ -1280,6 +1280,99 @@ function armarBarraEstatus(estatusActual) {
   `;
 }
 
+function armarBloqueReembolso(pedido) {
+  if (pedido.devolucion) {
+    const estado = pedido.estatusDevolucion || 'Devolución solicitada';
+    return `
+      <div class="pedido-devolucion">
+        <p class="pedido-devolucion-estatus">${estado}</p>
+        ${pedido.razonDevolucion ? `<p class="pedido-devolucion-razon">Motivo: ${pedido.razonDevolucion}</p>` : ''}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="pedido-devolucion">
+      <button type="button" class="btn-reembolso" data-reembolso-id="${pedido.idEnvio}">Reembolso</button>
+    </div>
+  `;
+}
+
+/* SOLICITAR REEMBOLSO */
+
+let pedidoReembolsoActual = null;
+
+function abrirReembolso(idEnvio) {
+  pedidoReembolsoActual = idEnvio;
+  document.getElementById('reembolso-pedido-id').textContent = idEnvio;
+  document.getElementById('reembolso-paso-confirmar').classList.remove('oculto');
+  document.getElementById('reembolso-paso-razon').classList.add('oculto');
+  document.getElementById('reembolso-error').classList.add('oculto');
+  document.getElementById('reembolso-modal').classList.remove('oculto');
+}
+
+function cerrarReembolso() {
+  pedidoReembolsoActual = null;
+  const modal = document.getElementById('reembolso-modal');
+  if (modal) modal.classList.add('oculto');
+}
+
+async function enviarReembolso(razon, botones) {
+  const error = document.getElementById('reembolso-error');
+  error.classList.add('oculto');
+  botones.forEach(b => { b.disabled = true; });
+
+  try {
+    const idToken = await window.obtenerTokenSesion();
+
+    const respuesta = await fetch(obtenerBaseApi() + '/api/pedidos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`
+      },
+      body: JSON.stringify({ idEnvio: pedidoReembolsoActual, razon })
+    });
+
+    const datos = await respuesta.json().catch(() => ({}));
+
+    if (!respuesta.ok) {
+      throw new Error(datos.error || 'No se pudo registrar tu solicitud.');
+    }
+
+    cerrarReembolso();
+    renderizarPedidos();
+  } catch (e) {
+    error.textContent = e.message;
+    error.classList.remove('oculto');
+    botones.forEach(b => { b.disabled = false; });
+  }
+}
+
+(function configurarReembolso() {
+  const iniciar = () => {
+    const modal = document.getElementById('reembolso-modal');
+    if (!modal) return;
+
+    document.getElementById('cerrar-reembolso').addEventListener('click', cerrarReembolso);
+    document.getElementById('reembolso-no').addEventListener('click', cerrarReembolso);
+    modal.addEventListener('click', e => { if (e.target === modal) cerrarReembolso(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarReembolso(); });
+
+    document.getElementById('reembolso-si').addEventListener('click', () => {
+      document.getElementById('reembolso-paso-confirmar').classList.add('oculto');
+      document.getElementById('reembolso-paso-razon').classList.remove('oculto');
+    });
+
+    const botonesRazon = [...modal.querySelectorAll('.reembolso-razon')];
+    botonesRazon.forEach(boton => {
+      boton.addEventListener('click', () => enviarReembolso(boton.dataset.razon, botonesRazon));
+    });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
+  else iniciar();
+})();
+
 async function renderizarPedidos() {
   const contenedor = document.getElementById('cuenta-pedidos-lista');
   if (!contenedor || !window.usuarioActual) return;
@@ -1323,8 +1416,14 @@ async function renderizarPedidos() {
         <p class="pedido-direccion">
           Entrega: ${pedido.direccion.calle} ${pedido.direccion.numero}, ${pedido.direccion.colonia}, ${pedido.direccion.ciudad}, ${pedido.direccion.estado}, CP ${pedido.direccion.cp}
         </p>
+
+        ${armarBloqueReembolso(pedido)}
       </div>
     `).join('');
+
+    contenedor.querySelectorAll('[data-reembolso-id]').forEach(boton => {
+      boton.addEventListener('click', () => abrirReembolso(boton.dataset.reembolsoId));
+    });
   } catch (error) {
     console.error('No se pudieron cargar los pedidos:', error);
     contenedor.className = 'cuenta-vacio';
