@@ -1018,6 +1018,9 @@ function mostrarCheckout(items) {
   });
 }
 
+// Costo fijo de envío por pedido (el servidor lo vuelve a calcular; esto solo se muestra).
+const COSTO_ENVIO = 280;
+
 function renderizarResumenCheckout() {
   const lista = document.getElementById('checkout-resumen-lista');
   const totalEl = document.getElementById('checkout-total');
@@ -1037,7 +1040,13 @@ function renderizarResumenCheckout() {
     `;
   }).join('');
 
-  totalEl.textContent = `$${total.toFixed(2)}`;
+  const envio = itemsCheckout.length ? COSTO_ENVIO : 0;
+  const subEl = document.getElementById('checkout-subtotal');
+  const envEl = document.getElementById('checkout-envio');
+  if (subEl) subEl.textContent = `$${total.toFixed(2)}`;
+  if (envEl) envEl.textContent = `$${envio.toFixed(2)}`;
+
+  totalEl.textContent = `$${(total + envio).toFixed(2)}`;
   actualizarBotonClip();
 }
 
@@ -1566,10 +1575,12 @@ function obtenerTarjetaClip() {
 }
 
 function totalCheckout() {
-  return itemsCheckout.reduce(
+  const productos = itemsCheckout.reduce(
     (suma, item) => suma + Number(item.precio) * Number(item.cantidad),
     0
   );
+
+  return productos + (itemsCheckout.length ? COSTO_ENVIO : 0);
 }
 
 function actualizarBotonClip() {
@@ -2242,6 +2253,10 @@ function renderizarCarrito() {
   if (carrito.length === 0) {
     carritoContenido.innerHTML = '<p>Tu carrito estÃ¡ vacÃ­o.</p>';
     carritoTotal.textContent = '$0.00';
+    const sub0 = document.getElementById('carrito-subtotal');
+    const env0 = document.getElementById('carrito-envio');
+    if (sub0) sub0.textContent = '$0.00';
+    if (env0) env0.textContent = '$0.00';
     return;
   }
 
@@ -2271,7 +2286,12 @@ function renderizarCarrito() {
     carritoContenido.appendChild(card);
   });
 
-  carritoTotal.textContent = `$${total.toFixed(2)}`;
+  const subC = document.getElementById('carrito-subtotal');
+  const envC = document.getElementById('carrito-envio');
+  if (subC) subC.textContent = `$${total.toFixed(2)}`;
+  if (envC) envC.textContent = `$${COSTO_ENVIO.toFixed(2)}`;
+
+  carritoTotal.textContent = `$${(total + COSTO_ENVIO).toFixed(2)}`;
 
   document.querySelectorAll('.cart-remove').forEach(button => {
     button.addEventListener('click', () => {

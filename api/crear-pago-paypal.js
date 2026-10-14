@@ -110,14 +110,23 @@ module.exports = async function handler(req, res) {
 
     const token = await obtenerTokenPaypal();
 
+    // Productos + envío ($280, un solo envío por pedido). El envío va como
+    // concepto aparte para que el reembolso pueda devolver solo los productos.
+    const envio = Number(verificado.envio);
+    const totalPedido = totalItems + envio;
+
     const purchaseUnit = {
       amount: {
         currency_code: 'MXN',
-        value: totalItems.toFixed(2),
+        value: totalPedido.toFixed(2),
         breakdown: {
           item_total: {
             currency_code: 'MXN',
             value: totalItems.toFixed(2)
+          },
+          shipping: {
+            currency_code: 'MXN',
+            value: envio.toFixed(2)
           }
         }
       },

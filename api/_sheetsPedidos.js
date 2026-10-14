@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { COSTO_ENVIO } = require('./_catalogo');
 
 /*
  * Lee y escribe en tu Google Sheet "Pedidos" (hojas "Envio" y "Producto").
@@ -193,6 +194,13 @@ function generarIdEnvio() {
 async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, productos }) {
   const idEnvio = generarIdEnvio();
 
+  // Desglose del cobro: productos + envío fijo (columnas O, P y Q de "Envio").
+  const subtotal = (productos || []).reduce(
+    (suma, p) => suma + Number(p.precio || 0) * Number(p.cantidad || 1),
+    0
+  );
+  const envio = (productos || []).length ? COSTO_ENVIO : 0;
+
   await agregarFilas('Envio', [[
     idEnvio,
     nombre || '',
@@ -204,7 +212,11 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
     direccion ? direccion.ciudad || '' : '',
     direccion ? direccion.cp || '' : '',
     direccion ? direccion.estado || '' : '',
-    'Aceptado'
+    'Aceptado',
+    '', '', '',            // L Devolucion, M Razon, N Estatus Dev (se llenan después)
+    subtotal,              // O Subtotal productos (esto sí se reembolsa)
+    envio,                 // P Envío (no reembolsable)
+    subtotal + envio       // Q Total cobrado
   ]]);
 
   const filasProducto = (productos || []).map(producto => [

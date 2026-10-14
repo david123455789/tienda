@@ -3543,3 +3543,8 @@ header {
 .reembolso-razon:disabled,.reembolso-btn:disabled{opacity:.5;cursor:default}
 .reembolso-error{margin:14px 0 0;color:#8b2c2c;font-size:.95rem}
 .reembolso-error.oculto,.reembolso-box .oculto{display:none}
+
+
+/* Envío */
+.checkout-resumen-linea{display:flex;justify-content:space-between;padding:6px 0;color:#393634}
+.cart-envio-nota{margin:0 0 6px;font-size:.95rem;color:#6b5d52}

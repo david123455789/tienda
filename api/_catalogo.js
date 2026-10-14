@@ -113,6 +113,9 @@ function errorCatalogo(mensaje, status = 400) {
   return error;
 }
 
+// Costo fijo de envío por pedido, sin importar cuántos productos se compren.
+const COSTO_ENVIO = 280;
+
 async function validarProductos(productosCliente) {
   if (!Array.isArray(productosCliente) || productosCliente.length === 0) {
     throw errorCatalogo('Tu carrito está vacío.');
@@ -182,7 +185,11 @@ async function validarProductos(productosCliente) {
     total += precio * cantidad;
   }
 
-  return { productos: verificados, total: Number(total.toFixed(2)) };
+  const subtotal = Number(total.toFixed(2));
+  const envio = verificados.length ? COSTO_ENVIO : 0;
+
+  // total = productos + envío (un solo envío por pedido)
+  return { productos: verificados, subtotal, envio, total: Number((subtotal + envio).toFixed(2)) };
 }
 
-module.exports = { validarProductos, parsearCsv };
+module.exports = { validarProductos, parsearCsv, COSTO_ENVIO };
