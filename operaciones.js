@@ -825,7 +825,7 @@ function renderizarVariantes(product) {
     colorOptions.innerHTML = `
       <button class="color-card selected" type="button">
         <img src="${imagen}" alt="${nombre}">
-        <span>Ãšnico</span>
+          <span>Color Unico</span>
       </button>
     `;
 
@@ -2775,7 +2775,13 @@ function obtenerResultadosBusqueda(termino) {
   const texto = normalizarBusqueda(termino);
   if (!texto) return productos.slice(0, 6);
 
+  // Cada palabra escrita debe aparecer en el producto (nombre, categoría, colores, etc.),
+  // así "negro" encuentra todo lo que tenga ese color y "chamarra negro" lo afina.
+  const palabras = texto.split(' ').filter(Boolean);
+
   return productos.filter(producto => {
+    const colores = (producto.variantes || []).map(variante => variante.color);
+
     const contenido = [
       producto.nombre,
       producto.name,
@@ -2783,10 +2789,12 @@ function obtenerResultadosBusqueda(termino) {
       producto.subcategoria,
       producto.descripcion,
       producto.description,
-      producto.slug
+      producto.slug,
+      producto.color,
+      ...colores
     ].map(normalizarBusqueda).join(' ');
 
-    return contenido.includes(texto);
+    return palabras.every(palabra => contenido.includes(palabra));
   });
 }
 
@@ -2908,7 +2916,7 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion
     },
     'link-privacidad': {
       titulo: 'Política De Privacidad',
-      texto: 'Al realizar tu compra entiendes que el tiempo de entrega puede variar en base a la disponibilidad del producto, serás notificado brevemente acerca de esto.'
+      texto: "In Equestrian Shop gestiona de esta tienda y este sitio web, incluidos los datos, el contenido, las funciones, las herramientas, los productos y los servicios para ofrecerle a usted, el cliente, una experiencia de compra seleccionada (los “Servicios”). Esta Política de privacidad describe cómo recopilamos, utilizamos y divulgamos su información personal cuando visita, utiliza o realiza una compra u otra transacción a través de los Servicios o cuando se comunica con nosotros por cualquier otro medio. En caso de conflicto entre nuestros Términos del Servicio y esta Política de privacidad, prevalecerá esta Política de privacidad en lo que respecta a la recopilación, el tratamiento y la divulgación de su información personal.\n\nLe rogamos que lea atentamente esta Política de privacidad. Al utilizar y acceder a cualquiera de los Servicios, usted reconoce haber leído esta Política de privacidad y entender la forma en que se recopila, utiliza y divulga su información personal, de conformidad con lo establecido en la presente Política de privacidad.\n\nSi tiene alguna reclamación sobre cómo tratamos su información personal, le rogamos que se ponga en contacto con nosotros a través de los detalles de contacto que se indican más abajo. Según el lugar en el que resida, es posible que tenga derecho a recurrir nuestra decisión poniéndose en contacto con nosotros a través de los detalles de contacto que se indican más abajo, o a presentar una reclamación ante la autoridad local de protección de datos."
     },
     'link-terminos': {
       titulo: 'Términos De Servicio',

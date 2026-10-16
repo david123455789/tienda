@@ -3553,3 +3553,7 @@ header {
 /* Teléfono y correo en la sección de ubicación */
 .ubicacion-enlace{color:inherit;text-decoration:none;word-break:break-word}
 .ubicacion-enlace:hover{text-decoration:underline}
+
+
+/* Párrafos en las ventanas de políticas */
+.politica-box p{white-space:pre-line;text-align:left}
