@@ -2906,6 +2906,14 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion
       titulo: 'Política De Rembolso',
       texto: 'En caso de devoluciones o rembolsos, Cuentan con 30 días posteriores a la entrega. Se requiere que no se quiten las etiquetas de la prenda y que este sin usar en perfectas condiciones. El envió de la prenda reembolsada correrá por parte del cliente, es importante notar que las tallas vienen reducidas, por lo que recomendamos pedir una talla arriba de la normalmente usan.'
     },
+    'link-privacidad': {
+      titulo: 'Política De Privacidad',
+      texto: 'Al realizar tu compra entiendes que el tiempo de entrega puede variar en base a la disponibilidad del producto, serás notificado brevemente acerca de esto.'
+    },
+    'link-terminos': {
+      titulo: 'Términos De Servicio',
+      texto: 'Al realizar tu compra entiendes que el tiempo de entrega puede variar en base a la disponibilidad del producto, serás notificado brevemente acerca de esto.'
+    },
     'link-envio': {
       titulo: 'Política De Envio',
       texto: 'Al realizar tu pedido previamente revisaremos la disponibilidad de los productos, si esta disponible en la boutique recibiras tu pedido en 3 días hábiles, en caso de no contar con tus productos en la boutique se pedirán de España y el tiempo de envió de entrega sera de 10-15 días hábiles.'
