@@ -267,19 +267,47 @@ const PRODUCTOS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5Q
 
 const VARIANTES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QGmUxpghfQ4ksUmtL-79fJkke-pq7xBI7Pbv63H9DiJzksny0XSyOJzgJxKlxgM0ALjFD2FegOS/pub?gid=1834938244&single=true&output=csv';
 
+// Un producto es válido si trae nombre, precio e imagen. Google Sheets a veces entrega
+// el CSV con celdas vacías por un instante; esos productos se ven rotos (sin foto, sin nombre, $0).
+function productoCompleto(producto) {
+  const variantes = producto.variantes || [];
+  const imagenOk = Boolean(producto.image_url) && variantes.every(v => Boolean(v.image_url));
+
+  return Boolean(producto.nombre) && Number(producto.precio) > 0 && imagenOk;
+}
+
 async function cargarProductos() {
-  try {
-    const [productosRows, variantesRows] = await Promise.all([
-      leerCsvDirecto(PRODUCTOS_CSV_URL),
-      leerCsvDirecto(VARIANTES_CSV_URL)
-    ]);
+  const INTENTOS = 4;
+  let ultimoError = null;
+  let lista = [];
 
-    productos = crearProductosDesdeSheets(productosRows, variantesRows);
-    aplicarRutaActual();
-  } catch (error) {
-    console.error('Error cargando productos:', error);
+  for (let intento = 0; intento < INTENTOS; intento++) {
+    try {
+      // En los reintentos se agrega un parámetro distinto para saltarse cualquier copia a medias en caché.
+      const extra = intento === 0 ? '' : `&t=${Date.now()}`;
 
-    const mensaje = `<p>No se pudieron cargar los productos: ${error.message}</p>`;
+      const [productosRows, variantesRows] = await Promise.all([
+        leerCsvDirecto(PRODUCTOS_CSV_URL + extra),
+        leerCsvDirecto(VARIANTES_CSV_URL + extra)
+      ]);
+
+      lista = crearProductosDesdeSheets(productosRows, variantesRows);
+      ultimoError = null;
+
+      if (lista.every(productoCompleto)) break;
+    } catch (error) {
+      ultimoError = error;
+    }
+
+    if (intento < INTENTOS - 1) {
+      await new Promise(resolve => setTimeout(resolve, 700 * (intento + 1)));
+    }
+  }
+
+  if (ultimoError && !lista.length) {
+    console.error('Error cargando productos:', ultimoError);
+
+    const mensaje = `<p>No se pudieron cargar los productos. Recarga la página en unos segundos.</p>`;
 
     if (contenedorProductos) {
       contenedorProductos.innerHTML = mensaje;
@@ -288,11 +316,21 @@ async function cargarProductos() {
     if (productosDestacados) {
       productosDestacados.innerHTML = mensaje;
     }
+    return;
   }
+
+  // Lo que siga incompleto después de reintentar no se muestra, para que el cliente nunca vea tarjetas rotas.
+  const incompletos = lista.filter(producto => !productoCompleto(producto));
+  if (incompletos.length) {
+    console.warn('Productos ocultos por datos incompletos en el Sheet:', incompletos.map(p => p.slug || p.id));
+  }
+
+  productos = lista.filter(productoCompleto);
+  aplicarRutaActual();
 }
 
 async function leerCsvDirecto(url) {
-  const response = await fetch(url);
+  const response = await fetch(url, { cache: 'no-store' });
 
   if (!response.ok) {
     throw new Error('No se pudo leer Google Sheets');
@@ -825,7 +863,7 @@ function renderizarVariantes(product) {
     colorOptions.innerHTML = `
       <button class="color-card selected" type="button">
         <img src="${imagen}" alt="${nombre}">
-          <span>Color Unico</span>
+        <span>Ãšnico</span>
       </button>
     `;
 
