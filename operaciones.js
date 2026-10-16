@@ -863,7 +863,7 @@ function renderizarVariantes(product) {
     colorOptions.innerHTML = `
       <button class="color-card selected" type="button">
         <img src="${imagen}" alt="${nombre}">
-        <span>Ãšnico</span>
+       <span>Color Unico</span>
       </button>
     `;
 
