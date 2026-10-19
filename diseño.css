@@ -3557,3 +3557,8 @@ header {
 
 /* Párrafos en las ventanas de políticas */
 .politica-box p{white-space:pre-line;text-align:left}
+
+
+/* Fecha y cancelación en Mis pedidos */
+.pedido-fecha{margin:4px 0 0;font-size:.9rem;color:#6b5d52}
+.pedido-cancelado{margin:14px 0;font-weight:bold;letter-spacing:.06em;text-transform:uppercase;color:#8b2c2c}

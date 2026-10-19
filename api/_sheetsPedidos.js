@@ -178,6 +178,19 @@ async function limpiarRango(rango) {
   }
 }
 
+function fechaPedido() {
+  // Ej. 19/10/2026 15:34 en hora de Ciudad de México
+  const partes = new Intl.DateTimeFormat('es-MX', {
+    timeZone: 'America/Mexico_City',
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+  }).formatToParts(new Date());
+
+  const v = tipo => (partes.find(p => p.type === tipo) || {}).value || '';
+
+  return `${v('day')}/${v('month')}/${v('year')} ${v('hour')}:${v('minute')}`;
+}
+
 function generarIdEnvio() {
   const fecha = new Date();
   const partes = [
@@ -216,7 +229,9 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
     '', '', '',            // L Devolucion, M Razon, N Estatus Dev (se llenan después)
     subtotal,              // O Subtotal productos (esto sí se reembolsa)
     envio,                 // P Envío (no reembolsable)
-    subtotal + envio       // Q Total cobrado
+    subtotal + envio,      // Q Total cobrado
+    fechaPedido(),         // R Fecha del pedido (hora de Ciudad de México)
+    ''                     // S Cancelada (la llenas tú con "Sí" para cancelar)
   ]]);
 
   const filasProducto = (productos || []).map(producto => [

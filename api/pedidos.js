@@ -32,7 +32,8 @@ function aplicarCors(req, res) {
 const COL_ENVIO = {
   id: 0, nombre: 1, correo: 2, telefono: 3, calle: 4, numero: 5,
   colonia: 6, ciudad: 7, cp: 8, estado: 9, estatus: 10,
-  devolucion: 11, razon: 12, estatusDev: 13
+  devolucion: 11, razon: 12, estatusDev: 13,
+  fecha: 17, cancelada: 18
 };
 
 // Razones que el cliente puede elegir al pedir un reembolso.
@@ -55,6 +56,11 @@ function textoEstatusDevolucion(valor) {
   if (minusculas.includes('acept')) return 'Devolución aceptada';
 
   return texto;
+}
+
+// "Sí", "si", "SI", "sí " → verdadero
+function esSi(valor) {
+  return String(valor || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'si';
 }
 
 function leerCuerpo(req) {
@@ -85,6 +91,10 @@ async function solicitarReembolso(req, res, usuario) {
 
   if (indice === -1) {
     return res.status(404).json({ error: 'No encontramos ese pedido en tu cuenta.' });
+  }
+
+  if (esSi(filasEnvio[indice][COL_ENVIO.cancelada])) {
+    return res.status(409).json({ error: 'Este pedido está cancelado.' });
   }
 
   const yaSolicitado = String(filasEnvio[indice][COL_ENVIO.devolucion] || '').trim();
@@ -164,6 +174,8 @@ module.exports = async function handler(req, res) {
       return {
         idEnvio,
         estatus: fila[COL_ENVIO.estatus] || 'Aceptado',
+        fecha: fila[COL_ENVIO.fecha] || '',
+        cancelada: esSi(fila[COL_ENVIO.cancelada]),
         devolucion: String(fila[COL_ENVIO.devolucion] || '').trim() !== '',
         razonDevolucion: fila[COL_ENVIO.razon] || '',
         estatusDevolucion: textoEstatusDevolucion(fila[COL_ENVIO.estatusDev]),

@@ -863,7 +863,7 @@ function renderizarVariantes(product) {
     colorOptions.innerHTML = `
       <button class="color-card selected" type="button">
         <img src="${imagen}" alt="${nombre}">
-       <span>Color Unico</span>
+        <span>Ãšnico</span>
       </button>
     `;
 
@@ -1328,6 +1328,8 @@ function armarBarraEstatus(estatusActual) {
 }
 
 function armarBloqueReembolso(pedido) {
+  if (pedido.cancelada) return '';
+
   if (pedido.devolucion) {
     const estado = pedido.estatusDevolucion || 'Devolución solicitada';
     return `
@@ -1450,9 +1452,10 @@ async function renderizarPedidos() {
       <div class="pedido-card">
         <div class="pedido-card-header">
           <p class="pedido-id">Pedido ${pedido.idEnvio}</p>
+          ${pedido.fecha ? `<p class="pedido-fecha">${pedido.fecha}</p>` : ''}
         </div>
 
-        ${armarBarraEstatus(pedido.estatus)}
+        ${pedido.cancelada ? '<p class="pedido-cancelado">Compra cancelada</p>' : armarBarraEstatus(pedido.estatus)}
 
         <div class="pedido-productos">
           ${pedido.productos.map(producto => `
