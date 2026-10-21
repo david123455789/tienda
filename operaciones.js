@@ -104,6 +104,7 @@ let filtrosActivos = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  prepararRutaInicial();
   configurarMenu();
   configurarDetalleProducto();
   configurarCarrito();
@@ -215,7 +216,19 @@ function configurarMenu() {
 function configurarDetalleProducto() {
   if (btnVolverColeccion) {
     btnVolverColeccion.addEventListener('click', () => {
+      // Si se entró directo al producto por un link, no hay colección previa: se usa la del producto.
+      if (!ultimaCategoria && productoActual && productoActual.categoria) {
+        filtrarProductos(productoActual.categoria, productoActual.subcategoria);
+        return;
+      }
+
       mostrarColeccionActual();
+
+      if (ultimaCategoria === 'Busqueda') {
+        actualizarRuta('/buscar?q=' + encodeURIComponent(ultimaSubcategoria));
+      } else if (ultimaCategoria) {
+        actualizarRuta(rutaDeColeccion(ultimaCategoria, ultimaSubcategoria));
+      }
     });
   }
 
@@ -306,6 +319,7 @@ async function cargarProductos() {
 
   if (ultimoError && !lista.length) {
     console.error('Error cargando productos:', ultimoError);
+    document.documentElement.classList.remove('cargando-ruta');
 
     const mensaje = `<p>No se pudieron cargar los productos. Recarga la página en unos segundos.</p>`;
 
@@ -511,11 +525,18 @@ function tablaDeRutas() {
   return tabla;
 }
 
-function actualizarRuta(ruta) {
+function actualizarRuta(ruta, reemplazar) {
   if (aplicandoRuta) return;
 
   try {
-    if (window.location.pathname !== ruta) {
+    // En el inicio se conserva la URL tal cual (por ejemplo, el ?pago=... al volver de pagar).
+    if (ruta === '/' && window.location.pathname === '/') return;
+
+    if (window.location.pathname + window.location.search === ruta) return;
+
+    if (reemplazar) {
+      window.history.replaceState({}, '', ruta);
+    } else {
       window.history.pushState({}, '', ruta);
     }
   } catch (error) {
@@ -523,24 +544,163 @@ function actualizarRuta(ruta) {
   }
 }
 
-function aplicarRutaActual() {
+// Ejecuta una acción de ruta sin que cambie la URL (la URL ya es la correcta).
+function conRutaAplicada(accion) {
   aplicandoRuta = true;
 
   try {
-    const ruta = window.location.pathname.replace(/\/+$/, '').replace(/\/index\.html$/, '') || '/';
-    const destino = ruta === '/' ? null : tablaDeRutas()[ruta];
+    accion();
+  } finally {
+    aplicandoRuta = false;
+    document.documentElement.classList.remove('cargando-ruta');
+  }
+}
 
+// Espera a que Firebase diga si hay sesión o no (tarda un instante al cargar la página).
+function esperarSesion(accion) {
+  if (window.usuarioActual !== undefined) {
+    accion();
+    return;
+  }
+
+  let ejecutada = false;
+
+  const ejecutar = () => {
+    if (ejecutada) return;
+    ejecutada = true;
+    document.removeEventListener('usuario-actualizado', ejecutar);
+    accion();
+  };
+
+  document.addEventListener('usuario-actualizado', ejecutar);
+  setTimeout(ejecutar, 6000);
+}
+
+const RUTAS_ESPECIALES = ['/producto', '/buscar', '/carrito', '/checkout', '/cuenta'];
+
+// Al entrar directo a un link de categoría, se muestra de inmediato la vista de colección
+// (con su título) mientras llega el catálogo, en lugar de mostrar el inicio un momento.
+function prepararRutaInicial() {
+  const ruta = window.location.pathname.replace(/\/+$/, '').replace(/\/index\.html$/, '');
+  if (!ruta) return;
+
+  const destino = tablaDeRutas()[ruta];
+  if (!destino) {
+    // Producto, búsqueda, carrito o cuenta: solo se oculta el inicio mientras carga.
+    if (!RUTAS_ESPECIALES.includes(ruta)) {
+      document.documentElement.classList.remove('cargando-ruta');
+    }
+    return;
+  }
+
+  document.documentElement.classList.add('ruta-coleccion');
+
+  const esPropio = String(destino.categoria).toLowerCase() === 'propio';
+
+  if (tituloCatalogo) tituloCatalogo.textContent = destino.subcategoria || destino.categoria;
+  if (descripcionCatalogo) {
+    descripcionCatalogo.textContent = (esPropio ? 'IN Collection' : 'Maximilian' + ' - ' + destino.categoria) +
+      (destino.subcategoria ? ' - ' + etiquetaMenuColeccion(destino.categoria, destino.subcategoria) : '');
+  }
+  if (contenedorProductos) contenedorProductos.innerHTML = '<p class="mensaje-vacio">Cargando...</p>';
+}
+
+function aplicarRutaActual() {
+  const ruta = window.location.pathname.replace(/\/+$/, '').replace(/\/index\.html$/, '') || '/';
+  const params = new URLSearchParams(window.location.search);
+  const destino = ruta === '/' ? null : tablaDeRutas()[ruta];
+
+  // Cuenta, carrito y checkout necesitan saber si hay sesión: se resuelven más abajo.
+  if (ruta === '/cuenta' || ruta === '/carrito' || ruta === '/checkout') {
+    esperarSesion(() => conRutaAplicada(() => aplicarRutaPrivada(ruta, params)));
+    return;
+  }
+
+  conRutaAplicada(() => {
     if (destino) {
       filtrarProductos(destino.categoria, destino.subcategoria);
+    } else if (ruta === '/producto') {
+      aplicarRutaProducto(params);
+    } else if (ruta === '/buscar') {
+      aplicarRutaBusqueda(params);
     } else {
       if (ruta !== '/') {
         try { window.history.replaceState({}, '', '/' + window.location.search); } catch (error) { /* sin cambios */ }
       }
       mostrarInicio();
     }
-  } finally {
-    aplicandoRuta = false;
+  });
+}
+
+function volverAlInicioPorRuta() {
+  try { window.history.replaceState({}, '', '/'); } catch (error) { /* sin cambios */ }
+  mostrarInicio();
+}
+
+// /producto?p=slug&color=negro&talla=M
+function aplicarRutaProducto(params) {
+  const slug = params.get('p');
+  const producto = productos.find(item => item.slug === slug);
+
+  if (!producto) {
+    volverAlInicioPorRuta();
+    return;
   }
+
+  mostrarDetalleProducto(producto);
+
+  const colorBuscado = slugTexto(params.get('color') || '');
+  const variantes = producto.variantes || [];
+
+  if (colorBuscado && variantes.length) {
+    const indice = variantes.findIndex(variante => slugTexto(variante.color) === colorBuscado);
+    const tarjetas = colorOptions ? colorOptions.querySelectorAll('.color-card') : [];
+
+    if (indice >= 0 && tarjetas[indice]) tarjetas[indice].click();
+  }
+
+  const tallaBuscada = String(params.get('talla') || '').trim().toLowerCase();
+
+  if (tallaBuscada) {
+    const boton = Array.from(document.querySelectorAll('.size-grid button'))
+      .find(item => item.textContent.trim().toLowerCase() === tallaBuscada);
+
+    if (boton) boton.click();
+  }
+}
+
+// /buscar?q=negro
+function aplicarRutaBusqueda(params) {
+  const termino = (params.get('q') || '').trim();
+
+  if (!termino) {
+    volverAlInicioPorRuta();
+    return;
+  }
+
+  if (inputBusqueda) inputBusqueda.value = termino;
+  mostrarBusquedaComoColeccion(obtenerResultadosBusqueda(termino), termino);
+}
+
+// /cuenta?seccion=pedidos, /carrito, /checkout
+function aplicarRutaPrivada(ruta, params) {
+  if (!window.usuarioActual) {
+    volverAlInicioPorRuta();
+    pedirInicioSesion(ruta === '/cuenta' ? 'Inicia sesión para ver tu cuenta.' : 'Inicia sesión para ver tu carrito.');
+    return;
+  }
+
+  if (ruta === '/cuenta') {
+    mostrarCuenta(params.get('seccion') || 'informacion');
+    return;
+  }
+
+  // El checkout no se puede reconstruir al recargar: se muestra el carrito.
+  if (ruta === '/checkout') {
+    try { window.history.replaceState({}, '', '/carrito'); } catch (error) { /* sin cambios */ }
+  }
+
+  mostrarCarrito();
 }
 
 window.addEventListener('popstate', () => {
@@ -824,10 +984,35 @@ function mostrarDetalleProducto(product) {
   if (vistaCheckout) vistaCheckout.classList.add('oculto');
   if (vistaProducto) vistaProducto.classList.remove('oculto');
 
+  actualizarUrlProducto(false);
+
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
   });
+}
+
+// La URL del producto incluye el color y la talla elegidos, para poder compartirlos.
+function rutaDeProducto() {
+  if (!productoActual || !productoActual.slug) return null;
+
+  const consulta = new URLSearchParams({ p: productoActual.slug });
+
+  if (varianteActual && varianteActual.color) {
+    consulta.set('color', slugTexto(varianteActual.color));
+  }
+
+  const tallaElegida = document.querySelector('.size-grid button.selected');
+  if (tallaElegida && tallaElegida.textContent.trim()) {
+    consulta.set('talla', tallaElegida.textContent.trim());
+  }
+
+  return '/producto?' + consulta.toString();
+}
+
+function actualizarUrlProducto(reemplazar) {
+  const ruta = rutaDeProducto();
+  if (ruta) actualizarRuta(ruta, reemplazar);
 }
 
 function renderizarGaleriaExtra(product) {
@@ -863,7 +1048,7 @@ function renderizarVariantes(product) {
     colorOptions.innerHTML = `
       <button class="color-card selected" type="button">
         <img src="${imagen}" alt="${nombre}">
-        <span>Ãšnico</span>
+        <span>Color Unico</span>
       </button>
     `;
 
@@ -907,6 +1092,7 @@ function renderizarVariantes(product) {
       button.classList.add('selected');
       varianteActual = variant;
       aplicarVariante(variant);
+      actualizarUrlProducto(true);
     });
 
     colorOptions.appendChild(button);
@@ -1017,6 +1203,7 @@ function agregarAlCarrito(product) {
 }
 
 function mostrarCarrito() {
+  actualizarRuta('/carrito');
   if (vistaInicio) vistaInicio.classList.add('oculto');
   if (vistaColeccion) vistaColeccion.classList.add('oculto');
   if (vistaProducto) vistaProducto.classList.add('oculto');
@@ -1036,6 +1223,7 @@ function mostrarCarrito() {
 
 function mostrarCheckout(items) {
   itemsCheckout = items;
+  actualizarRuta('/checkout');
 
   if (vistaInicio) vistaInicio.classList.add('oculto');
   if (vistaColeccion) vistaColeccion.classList.add('oculto');
@@ -1285,7 +1473,9 @@ async function procesarPagoCheckout(metodo) {
   await iniciarPago(itemsCheckout, metodo, direccion);
 }
 
-function mostrarCuenta() {
+const SECCIONES_CUENTA = ['informacion', 'pedidos', 'direcciones', 'tarjetas'];
+
+function mostrarCuenta(seccion) {
   if (!window.usuarioActual) return;
 
   if (vistaInicio) vistaInicio.classList.add('oculto');
@@ -1298,10 +1488,40 @@ function mostrarCuenta() {
   renderizarInformacionCuenta();
   renderizarDirecciones();
 
+  // Si la sección no existe (o está desactivada), se abre la información de cuenta.
+  const nombre = typeof seccion === 'string' && SECCIONES_CUENTA.includes(seccion) &&
+    document.getElementById(`cuenta-panel-${seccion}`)
+    ? seccion
+    : 'informacion';
+
+  activarSeccionCuenta(nombre);
+
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
   });
+}
+
+function activarSeccionCuenta(nombre) {
+  document.querySelectorAll('.cuenta-tab').forEach(item => {
+    item.classList.toggle('active', item.dataset.tab === nombre);
+  });
+
+  document.querySelectorAll('.cuenta-panel').forEach(panel => panel.classList.add('oculto'));
+
+  const panel = document.getElementById(`cuenta-panel-${nombre}`);
+  if (panel) panel.classList.remove('oculto');
+
+  if (nombre === 'tarjetas') {
+    montarCamposTarjetaCuenta();
+    renderizarTarjetasGuardadas();
+  }
+
+  if (nombre === 'pedidos') {
+    renderizarPedidos();
+  }
+
+  actualizarRuta('/cuenta?seccion=' + nombre);
 }
 
 /* MIS PEDIDOS */
@@ -2104,24 +2324,7 @@ async function confirmarPagoTarjetaGuardada() {
 
 function configurarCuenta() {
   document.querySelectorAll('.cuenta-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.cuenta-tab').forEach(item => item.classList.remove('active'));
-      tab.classList.add('active');
-
-      document.querySelectorAll('.cuenta-panel').forEach(panel => panel.classList.add('oculto'));
-
-      const panel = document.getElementById(`cuenta-panel-${tab.dataset.tab}`);
-      if (panel) panel.classList.remove('oculto');
-
-      if (tab.dataset.tab === 'tarjetas') {
-        montarCamposTarjetaCuenta();
-        renderizarTarjetasGuardadas();
-      }
-
-      if (tab.dataset.tab === 'pedidos') {
-        renderizarPedidos();
-      }
-    });
+    tab.addEventListener('click', () => activarSeccionCuenta(tab.dataset.tab));
   });
 
   const formDireccion = document.getElementById('form-direccion');
@@ -2149,7 +2352,7 @@ function configurarCuenta() {
     });
   }
 
-  document.addEventListener('abrir-mi-cuenta', mostrarCuenta);
+  document.addEventListener('abrir-mi-cuenta', () => mostrarCuenta());
 
   document.addEventListener('usuario-actualizado', () => {
     if (window.usuarioActual) {
@@ -2407,6 +2610,7 @@ function renderizarTallas(tallasTexto) {
       });
 
       boton.classList.add('selected');
+      actualizarUrlProducto(true);
     });
 
     sizeGrid.appendChild(boton);
@@ -2879,6 +3083,7 @@ function renderizarResultadosBusqueda(termino) {
 }
 
 function mostrarBusquedaComoColeccion(resultados, termino) {
+  actualizarRuta('/buscar?q=' + encodeURIComponent(termino));
   productosColeccionActual = resultados;
   coleccionSocksBase = null;
   actualizarSelectorEdad();
@@ -2953,19 +3158,19 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion
   const POLITICAS = {
     'link-reembolso': {
       titulo: 'Política De Rembolso',
-      texto: 'En caso de devoluciones o rembolsos, Cuentan con 30 días posteriores a la entrega. Se requiere que no se quiten las etiquetas de la prenda y que este sin usar en perfectas condiciones. El envió de la prenda reembolsada correrá por parte del cliente, es importante notar que las tallas vienen reducidas, por lo que recomendamos pedir una talla arriba de la normalmente usan.'
+      texto: 'En caso de devoluciones o reembolsos, cuentan con 30 días posteriores a la entrega. Se requiere que no se quiten las etiquetas de la prenda y que esté sin usar en perfectas condiciones. El envío de la prenda reembolsada correrá por parte del cliente; es importante notar que las tallas vienen reducidas, por lo que recomendamos pedir una talla arriba de la que normalmente usan.'
     },
     'link-privacidad': {
       titulo: 'Política De Privacidad',
-      texto: "In Equestrian Shop gestiona de esta tienda y este sitio web, incluidos los datos, el contenido, las funciones, las herramientas, los productos y los servicios para ofrecerle a usted, el cliente, una experiencia de compra seleccionada (los “Servicios”). Esta Política de privacidad describe cómo recopilamos, utilizamos y divulgamos su información personal cuando visita, utiliza o realiza una compra u otra transacción a través de los Servicios o cuando se comunica con nosotros por cualquier otro medio. En caso de conflicto entre nuestros Términos del Servicio y esta Política de privacidad, prevalecerá esta Política de privacidad en lo que respecta a la recopilación, el tratamiento y la divulgación de su información personal.\n\nLe rogamos que lea atentamente esta Política de privacidad. Al utilizar y acceder a cualquiera de los Servicios, usted reconoce haber leído esta Política de privacidad y entender la forma en que se recopila, utiliza y divulga su información personal, de conformidad con lo establecido en la presente Política de privacidad.\n\nSi tiene alguna reclamación sobre cómo tratamos su información personal, le rogamos que se ponga en contacto con nosotros a través de los detalles de contacto que se indican más abajo. Según el lugar en el que resida, es posible que tenga derecho a recurrir nuestra decisión poniéndose en contacto con nosotros a través de los detalles de contacto que se indican más abajo, o a presentar una reclamación ante la autoridad local de protección de datos."
+      texto: "InEquestrian Shop gestiona esta tienda y este sitio web, incluidos los datos, el contenido, las funciones, las herramientas, los productos y los servicios para ofrecerle a usted, el cliente, una experiencia de compra seleccionada (los “Servicios”). Esta Política de privacidad describe cómo recopilamos, utilizamos y divulgamos su información personal cuando visita, utiliza o realiza una compra u otra transacción a través de los Servicios o cuando se comunica con nosotros por cualquier otro medio. En caso de conflicto entre nuestros Términos del Servicio y esta Política de privacidad, prevalecerá esta Política de privacidad en lo que respecta a la recopilación, el tratamiento y la divulgación de su información personal.\n\nLe rogamos que lea atentamente esta Política de privacidad. Al utilizar y acceder a cualquiera de los Servicios, usted reconoce haber leído esta Política de privacidad y entender la forma en que se recopila, utiliza y divulga su información personal, de conformidad con lo establecido en la presente Política de privacidad.\n\nSi tiene alguna reclamación sobre cómo tratamos su información personal, le rogamos que se ponga en contacto con nosotros a través de los detalles de contacto que se indican más abajo. Según el lugar en el que resida, es posible que tenga derecho a recurrir nuestra decisión poniéndose en contacto con nosotros a través de los detalles de contacto que se indican más abajo, o a presentar una reclamación ante la autoridad local de protección de datos."
     },
     'link-terminos': {
       titulo: 'Términos De Servicio',
-      texto: 'Al realizar tu compra entiendes que el tiempo de entrega puede variar en base a la disponibilidad del producto, serás notificado brevemente acerca de esto.'
+      texto: 'Al realizar tu compra entiendes que el tiempo de entrega puede variar con base en la disponibilidad del producto; serás notificado a la brevedad acerca de esto.'
     },
     'link-envio': {
       titulo: 'Política De Envio',
-      texto: 'Al realizar tu pedido previamente revisaremos la disponibilidad de los productos, si esta disponible en la boutique recibiras tu pedido en 3 días hábiles, en caso de no contar con tus productos en la boutique se pedirán de España y el tiempo de envió de entrega sera de 10-15 días hábiles.'
+      texto: 'Al realizar tu pedido previamente revisaremos la disponibilidad de los productos; si está disponible en la boutique recibirás tu pedido en 3 días hábiles, en caso de no contar con tus productos en la boutique se pedirán de España y el tiempo de envío y entrega será de 10-15 días hábiles.'
     }
   };
 

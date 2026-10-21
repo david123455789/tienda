@@ -11,6 +11,17 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="diseño.css">
+    <script>
+    // Si entran directo a un link de categoría (ej. /maximilian-mujer-jackets-hoodies),
+    // no mostramos el inicio mientras carga el catálogo.
+    (function () {
+      var ruta = location.pathname.replace(/\/+$/, '').replace(/\/index\.html$/, '');
+      if (ruta) {
+        document.documentElement.classList.add('cargando-ruta');
+        setTimeout(function () { document.documentElement.classList.remove('cargando-ruta'); }, 15000);
+      }
+    })();
+  </script>
   <script src="https://sdk.mercadopago.com/js/v2"></script>
   <script src="https://sdk.clip.mx/js/clip-sdk.js"></script>
 </head>
@@ -447,7 +458,9 @@
         <button type="button" class="cuenta-tab active" data-tab="informacion">Información de cuenta</button>
         <button type="button" class="cuenta-tab" data-tab="pedidos">Pedidos</button>
         <button type="button" class="cuenta-tab" data-tab="direcciones">Direcciones</button>
+        <!-- PESTAÑA TARJETAS (desactivada por ahora; quita este comentario para reactivarla)
         <button type="button" class="cuenta-tab" data-tab="tarjetas">Tarjetas</button>
+        -->
       </nav>
 
       <div class="cuenta-contenido">
@@ -492,6 +505,7 @@
           </form>
         </div>
 
+        <!-- PANEL TARJETAS (desactivado por ahora; quita este comentario para reactivarlo)
         <div id="cuenta-panel-tarjetas" class="cuenta-panel oculto">
           <div id="cuenta-tarjetas-lista" class="cuenta-direcciones-lista"></div>
 
@@ -520,6 +534,7 @@
             <button type="submit" id="btn-guardar-tarjeta" class="auth-principal">Guardar tarjeta</button>
           </form>
         </div>
+        -->
       </div>
     </div>
   </section>
