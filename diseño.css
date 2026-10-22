@@ -3567,3 +3567,61 @@ header {
 /* Entrada directa a una categoría: no mostrar el inicio mientras carga */
 html.cargando-ruta #vista-inicio{display:none !important}
 html.cargando-ruta.ruta-coleccion #vista-coleccion{display:block !important}
+
+/* Buscador: se oculta la "x" azul del navegador; queda solo el botón de cerrar de la tienda */
+#input-busqueda::-webkit-search-cancel-button,
+#input-busqueda::-webkit-search-decoration{-webkit-appearance:none;appearance:none;display:none}
+#input-busqueda::-ms-clear{display:none}
+
+
+/* ===== CARRITO (nuevo diseño) ===== */
+.carrito-layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:32px;align-items:start;max-width:1200px;margin:0 auto}
+.carrito-lista{display:flex;flex-direction:column;gap:16px}
+
+.carrito-item{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:22px;align-items:center;padding:18px;background:#fbfaf8;border:1px solid #ddd6ca}
+.carrito-item-img{width:120px;height:150px;object-fit:cover;background:#ece8e2;display:block}
+.carrito-item-info h3{margin:0 0 6px;font-size:1.2rem;font-weight:700;color:#1f1f1f;letter-spacing:.02em}
+.carrito-item-detalle{margin:0 0 4px;color:#6b5d52;font-size:.98rem}
+.carrito-item-precio{margin:0 0 14px;color:#9e9084;font-size:.92rem}
+
+.carrito-cantidad{display:inline-flex;align-items:center;border:1px solid #b9aea2;background:#f6f4f1}
+.carrito-cantidad span{min-width:40px;text-align:center;color:#393634;font-size:1rem}
+.carrito-cantidad-btn{width:36px;height:36px;border:none;background:none;color:#393634;-webkit-text-fill-color:#393634;font-size:1.2rem;line-height:1;cursor:pointer}
+.carrito-cantidad-btn:hover:not(:disabled){background:#ece8e2}
+.carrito-cantidad-btn:disabled{opacity:.35;cursor:default}
+
+.carrito-item-lado{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;align-self:stretch;gap:12px}
+.carrito-item-subtotal{font-size:1.25rem;color:#1f1f1f}
+.carrito-quitar{background:none;border:none;padding:0;color:#9e9084;-webkit-text-fill-color:#9e9084;font-family:inherit;font-size:.9rem;text-decoration:underline;cursor:pointer}
+.carrito-quitar:hover{color:#8b2c2c;-webkit-text-fill-color:#8b2c2c}
+
+.carrito-resumen{position:sticky;top:110px;padding:26px;background:#ece8e2;border:1px solid #ddd6ca}
+.carrito-resumen.oculto{display:none}
+.carrito-resumen h2{margin:0 0 18px;font-size:1.05rem;letter-spacing:.14em;text-transform:uppercase;color:#6b5d52;font-weight:700}
+.carrito-resumen-fila{display:flex;justify-content:space-between;gap:12px;padding:8px 0;color:#393634}
+.carrito-resumen-fila small{display:block;color:#9e9084;font-size:.8rem}
+.carrito-resumen-total{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding-top:16px;border-top:1px solid #b9aea2;color:#1f1f1f}
+.carrito-resumen-total strong{font-size:1.8rem}
+.carrito-finalizar{width:100%;margin-top:22px;padding:16px;border:none;background:#1f1f1f;color:#f6f4f1;-webkit-text-fill-color:#f6f4f1;font-family:inherit;font-size:1rem;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+.carrito-finalizar:hover{background:#393634}
+.carrito-seguir{width:100%;margin-top:10px;padding:13px;border:1px solid #393634;background:none;color:#393634;-webkit-text-fill-color:#393634;font-family:inherit;font-size:.92rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.carrito-seguir:hover{background:#393634;color:#f6f4f1;-webkit-text-fill-color:#f6f4f1}
+
+.carrito-vacio{padding:56px 24px;text-align:center;background:#fbfaf8;border:1px dashed #b9aea2;color:#6b5d52}
+.carrito-vacio-titulo{margin:0 0 6px;font-size:1.4rem;color:#1f1f1f}
+.carrito-vacio p{margin:0 0 18px}
+.carrito-vacio-boton{width:auto;padding:13px 32px;margin-top:4px}
+
+/* El carrito vacío ocupa todo el ancho */
+.carrito-layout:has(.carrito-vacio){grid-template-columns:1fr}
+
+@media (max-width:900px){
+  .carrito-layout{grid-template-columns:1fr;gap:20px}
+  .carrito-resumen{position:static}
+}
+@media (max-width:600px){
+  .carrito-item{grid-template-columns:92px minmax(0,1fr);gap:14px;padding:14px}
+  .carrito-item-img{width:92px;height:116px}
+  .carrito-item-info h3{font-size:1.05rem}
+  .carrito-item-lado{grid-column:1 / -1;flex-direction:row;align-items:center;padding-top:10px;border-top:1px solid #ddd6ca}
+}

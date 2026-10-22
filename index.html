@@ -9,7 +9,8 @@
   <meta name="apple-mobile-web-app-title" content="In Equestrian Shop">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet"></noscript>
   <link rel="stylesheet" href="diseño.css">
     <script>
     // Si entran directo a un link de categoría (ej. /maximilian-mujer-jackets-hoodies),
@@ -22,8 +23,11 @@
       }
     })();
   </script>
+  <!-- SDK de pago con tarjeta (Mercado Pago y Clip): desactivados porque frenaban la carga de la página.
+       Quita este comentario SOLO cuando reactives las tarjetas (checkout y Mi cuenta).
   <script src="https://sdk.mercadopago.com/js/v2"></script>
   <script src="https://sdk.clip.mx/js/clip-sdk.js"></script>
+  -->
 </head>
 <body>
 
@@ -168,9 +172,17 @@
 <main>
   <section id="vista-inicio">
     <section class="video-section">
-      <video class="video-bg" autoplay muted loop playsinline>
-        <source src="imagenes/video.mp4" type="video/mp4">
-      </video>
+      <video class="video-bg" autoplay muted loop playsinline preload="auto" data-src="imagenes/video.mp4"></video>
+      <script>
+        // En el inicio el video empieza a descargarse de inmediato; en otras rutas se carga solo si hace falta.
+        (function () {
+          var v = document.querySelector('.video-bg[data-src]');
+          if (v && (location.pathname === '/' || location.pathname === '/index.html')) {
+            v.src = v.getAttribute('data-src');
+            v.removeAttribute('data-src');
+          }
+        })();
+      </script>
 
       <div class="video-overlay"></div>
 
@@ -182,32 +194,32 @@
     <section class="home-categories">
       <div class="section-heading section-heading-logo">
         <h2 class="solo-lectores">Maximilian</h2>
-        <img src="imagenes/max.png" alt="Maximilian Equestrian" class="maximilian-logo">
+        <img loading="lazy" decoding="async" src="imagenes/max.png" alt="Maximilian Equestrian" class="maximilian-logo">
       </div>
 
       <div class="category-showcase">
         <button type="button" data-categoria-home="Mujer" class="category-tile">
-          <img src="imagenes/imagen2.png" alt="Mujer">
+          <img loading="lazy" decoding="async" src="imagenes/imagen2.png" alt="Mujer">
           <span>Mujer</span>
         </button>
 
         <button type="button" data-categoria-home="Hombre" class="category-tile">
-          <img src="imagenes/imagen1.png" alt="Hombre">
+          <img loading="lazy" decoding="async" src="imagenes/imagen1.png" alt="Hombre">
           <span>Hombre</span>
         </button>
 
         <button type="button" data-categoria-home="Young Rider" class="category-tile">
-          <img src="imagenes/young.png" alt="Young Riders">
+          <img loading="lazy" decoding="async" src="imagenes/young.png" alt="Young Riders">
           <span>Young Riders</span>
         </button>
 
         <button type="button" data-categoria-home="Caballos" class="category-tile">
-          <img src="imagenes/imagen6.png" alt="Caballos">
+          <img loading="lazy" decoding="async" src="imagenes/imagen6.png" alt="Caballos">
           <span>Caballos</span>
         </button>
 
         <button type="button" data-categoria-home="Accesorios" class="category-tile">
-          <img src="imagenes/accesorios.png" alt="Accesorios">
+          <img loading="lazy" decoding="async" src="imagenes/accesorios.png" alt="Accesorios">
           <span>Accesorios</span>
         </button>
 
@@ -215,22 +227,22 @@
     </section>
 
     <section class="home-byin">
-      <div class="byin-heading"><span></span><h2 class="solo-lectores">IN Collection</h2><img src="imagenes/in.png" alt="IN Collection" class="byin-logo"><span></span></div>
+      <div class="byin-heading"><span></span><h2 class="solo-lectores">IN Collection</h2><img loading="lazy" decoding="async" src="imagenes/in.png" alt="IN Collection" class="byin-logo"><span></span></div>
       <div class="byin-grid">
         <button type="button" class="byin-tile" data-categoria-home="Propio" data-subcategoria-home="Sudaderas">
-          <img src="imagenes/hoodies.png" alt="Hoodies"><span>Hoodies</span>
+          <img loading="lazy" decoding="async" src="imagenes/hoodies.png" alt="Hoodies"><span>Hoodies</span>
         </button>
         <button type="button" class="byin-tile" data-categoria-home="Propio" data-subcategoria-home="Gorras">
-          <img src="imagenes/gorras.png" alt="Gorras"><span>Gorras</span>
+          <img loading="lazy" decoding="async" src="imagenes/gorras.png" alt="Gorras"><span>Gorras</span>
         </button>
         <button type="button" class="byin-tile" data-categoria-home="Propio" data-subcategoria-home="Blankets">
-          <img src="imagenes/blankets.png" alt="Blankets"><span>Blankets</span>
+          <img loading="lazy" decoding="async" src="imagenes/blankets.png" alt="Blankets"><span>Blankets</span>
         </button>
         <button type="button" class="byin-tile" data-categoria-home="Propio" data-subcategoria-home="Socks">
-          <img src="imagenes/Socks.png" alt="Socks"><span>Socks</span>
+          <img loading="lazy" decoding="async" src="imagenes/Socks.png" alt="Socks"><span>Socks</span>
         </button>
         <button type="button" class="byin-tile" data-categoria-home="Propio" data-subcategoria-home="Plush Horses">
-          <img src="imagenes/peluches.png" alt="Peluches"><span>Peluches</span>
+          <img loading="lazy" decoding="async" src="imagenes/peluches.png" alt="Peluches"><span>Peluches</span>
         </button>
       </div>
     </section>
@@ -336,13 +348,29 @@
       <p>Revisa tus productos antes de continuar con la compra.</p>
     </div>
 
-    <div id="carrito-contenido" class="cart-list"></div>
+    <div class="carrito-layout">
+      <div id="carrito-contenido" class="carrito-lista"></div>
 
-    <div class="cart-summary">
-      <p class="cart-envio-nota">Subtotal <span id="carrito-subtotal">$0.00</span> + envío <span id="carrito-envio">$280.00</span></p>
-      <p>Total</p>
-      <strong id="carrito-total">$0.00</strong>
-      <button id="btn-finalizar-compra" class="buy-now-btn" type="button">Finalizar compra</button>
+      <aside class="carrito-resumen" id="carrito-resumen">
+        <h2>Resumen</h2>
+
+        <div class="carrito-resumen-fila">
+          <span>Subtotal</span>
+          <span id="carrito-subtotal">$0.00</span>
+        </div>
+        <div class="carrito-resumen-fila">
+          <span>Envío <small>(un solo envío por pedido)</small></span>
+          <span id="carrito-envio">$280.00</span>
+        </div>
+
+        <div class="carrito-resumen-total">
+          <span>Total</span>
+          <strong id="carrito-total">$0.00</strong>
+        </div>
+
+        <button id="btn-finalizar-compra" class="carrito-finalizar" type="button">Finalizar compra</button>
+        <button id="btn-seguir-comprando" class="carrito-seguir" type="button">Seguir comprando</button>
+      </aside>
     </div>
   </section>
 
@@ -582,7 +610,7 @@
     </div>
 
     <div class="ubicacion-foto">
-      <img src="imagenes/tienda.png" alt="Boutique In Equestrian Shop en The Point Santa Fe">
+      <img loading="lazy" decoding="async" src="imagenes/tienda.png" alt="Boutique In Equestrian Shop en The Point Santa Fe">
     </div>
 
     <a

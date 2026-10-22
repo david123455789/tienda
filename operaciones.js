@@ -104,6 +104,7 @@ let filtrosActivos = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  cargarVideoInicio();
   prepararRutaInicial();
   configurarMenu();
   configurarDetalleProducto();
@@ -248,6 +249,11 @@ function configurarDetalleProducto() {
 }
 
 function configurarCarrito() {
+  const btnSeguir = document.getElementById('btn-seguir-comprando');
+  if (btnSeguir) {
+    btnSeguir.addEventListener('click', () => mostrarInicio());
+  }
+
   if (btnCarrito) {
     btnCarrito.addEventListener('click', event => {
       event.preventDefault();
@@ -289,11 +295,52 @@ function productoCompleto(producto) {
   return Boolean(producto.nombre) && Number(producto.precio) > 0 && imagenOk;
 }
 
+// El catálogo se guarda en el navegador: la próxima visita muestra los productos al instante
+// y en segundo plano se actualiza con lo más reciente del Sheet.
+const CLAVE_CATALOGO = 'catalogo_v1';
+const VIGENCIA_CATALOGO = 7 * 24 * 60 * 60 * 1000;
+
+function leerCatalogoGuardado() {
+  try {
+    const datos = JSON.parse(localStorage.getItem(CLAVE_CATALOGO));
+    if (datos && datos.p && datos.v && Date.now() - datos.t < VIGENCIA_CATALOGO) return datos;
+  } catch (error) { /* sin catálogo guardado */ }
+
+  return null;
+}
+
+function guardarCatalogo(productosRows, variantesRows) {
+  try {
+    localStorage.setItem(CLAVE_CATALOGO, JSON.stringify({ t: Date.now(), p: productosRows, v: variantesRows }));
+  } catch (error) { /* si no hay espacio o está bloqueado, no pasa nada */ }
+}
+
+function vistaListaVisible() {
+  const oculta = vista => !vista || vista.classList.contains('oculto');
+  return !oculta(vistaInicio) || !oculta(vistaColeccion);
+}
+
 async function cargarProductos() {
   const INTENTOS = 4;
   let ultimoError = null;
   let lista = [];
+  let filas = null;
 
+  // 1) Si hay catálogo guardado, se muestra de inmediato.
+  const guardado = leerCatalogoGuardado();
+  let usoGuardado = false;
+
+  if (guardado) {
+    const listaGuardada = crearProductosDesdeSheets(guardado.p, guardado.v).filter(productoCompleto);
+
+    if (listaGuardada.length) {
+      productos = listaGuardada;
+      usoGuardado = true;
+      aplicarRutaActual();
+    }
+  }
+
+  // 2) Se pide el catálogo actual al Sheet (con reintentos si llega incompleto).
   for (let intento = 0; intento < INTENTOS; intento++) {
     try {
       // En los reintentos se agrega un parámetro distinto para saltarse cualquier copia a medias en caché.
@@ -305,6 +352,7 @@ async function cargarProductos() {
       ]);
 
       lista = crearProductosDesdeSheets(productosRows, variantesRows);
+      filas = { productosRows, variantesRows };
       ultimoError = null;
 
       if (lista.every(productoCompleto)) break;
@@ -318,6 +366,9 @@ async function cargarProductos() {
   }
 
   if (ultimoError && !lista.length) {
+    // Sin internet o Sheets caído: si ya se mostró el catálogo guardado, se deja así.
+    if (usoGuardado) return;
+
     console.error('Error cargando productos:', ultimoError);
     document.documentElement.classList.remove('cargando-ruta');
 
@@ -339,12 +390,27 @@ async function cargarProductos() {
     console.warn('Productos ocultos por datos incompletos en el Sheet:', incompletos.map(p => p.slug || p.id));
   }
 
-  productos = lista.filter(productoCompleto);
+  const nuevos = lista.filter(productoCompleto);
+
+  if (filas && !incompletos.length) {
+    guardarCatalogo(filas.productosRows, filas.variantesRows);
+  }
+
+  if (usoGuardado) {
+    // Solo se vuelve a dibujar si algo cambió y el cliente está viendo el inicio o una colección.
+    if (JSON.stringify(nuevos) !== JSON.stringify(productos)) {
+      productos = nuevos;
+      if (vistaListaVisible()) aplicarRutaActual();
+    }
+    return;
+  }
+
+  productos = nuevos;
   aplicarRutaActual();
 }
 
 async function leerCsvDirecto(url) {
-  const response = await fetch(url, { cache: 'no-store' });
+  const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error('No se pudo leer Google Sheets');
@@ -707,7 +773,23 @@ window.addEventListener('popstate', () => {
   if (productos && productos.length) aplicarRutaActual();
 });
 
+// El video solo se descarga cuando se va a ver el inicio (no si entran directo a una categoría o producto).
+function cargarVideoInicio(forzar) {
+  const video = document.querySelector('.video-bg[data-src]');
+  if (!video) return;
+
+  const ruta = window.location.pathname.replace(/\/+$/, '').replace(/\/index\.html$/, '');
+  if (ruta && forzar !== true) return;
+
+  video.src = video.dataset.src;
+  video.removeAttribute('data-src');
+
+  const reproducir = video.play();
+  if (reproducir && reproducir.catch) reproducir.catch(() => {});
+}
+
 function mostrarInicio() {
+  cargarVideoInicio(true);
   actualizarRuta('/');
   if (vistaInicio) vistaInicio.classList.remove('oculto');
   if (vistaColeccion) vistaColeccion.classList.add('oculto');
@@ -891,7 +973,7 @@ function crearCardProducto(product) {
             title="${variant.color}"
             data-imagen="${variant.image_url}"
           >
-            <img src="${variant.image_url}" alt="${variant.color}">
+            <img loading="lazy" decoding="async" src="${variant.image_url}" alt="${variant.color}">
           </button>
         `).join('')}
       </div>
@@ -899,11 +981,11 @@ function crearCardProducto(product) {
     : '';
 
   card.innerHTML = `
-    <img class="producto-imagen" src="${imagen}" alt="${nombre}">
+    <img class="producto-imagen" loading="lazy" decoding="async" src="${imagen}" alt="${nombre}">
     ${variantesHtml}
     <div class="producto-info">
       <h2>${nombre}</h2>
-      <p class="producto-precio">$${precio}</p>
+      <p class="producto-precio">${dinero(precio)}</p>
     </div>
   `;
 
@@ -954,7 +1036,7 @@ function mostrarDetalleProducto(product) {
   }
 
   if (detallePrecio) {
-    detallePrecio.textContent = `$${precio}`;
+    detallePrecio.textContent = dinero(precio);
   }
 
   if (detalleDescripcion) {
@@ -1081,7 +1163,7 @@ function renderizarVariantes(product) {
         ${agotado ? '<span class="sold-out-badge">Agotado</span>' : ''}
       </div>
       <span>${variant.color}</span>
-      <small>$${variant.precio}</small>
+      <small>${dinero(variant.precio)}</small>
     `;
 
     button.addEventListener('click', () => {
@@ -1106,7 +1188,7 @@ function aplicarVariante(variant) {
   }
 
   if (detallePrecio) {
-    detallePrecio.textContent = `$${variant.precio}`;
+    detallePrecio.textContent = dinero(variant.precio);
   }
 
   const sinStock = Number(variant.stock) <= 0;
@@ -1261,7 +1343,7 @@ function renderizarResumenCheckout() {
     return `
       <div class="checkout-item">
         <span>${item.nombre}${item.talla ? ' - Talla ' + item.talla : ''}${item.grip ? ' - ' + item.grip : ''}${item.color ? ' - ' + item.color : ''} × ${item.cantidad}</span>
-        <strong>$${subtotal.toFixed(2)}</strong>
+        <strong>${dinero(subtotal)}</strong>
       </div>
     `;
   }).join('');
@@ -1269,10 +1351,10 @@ function renderizarResumenCheckout() {
   const envio = itemsCheckout.length ? COSTO_ENVIO : 0;
   const subEl = document.getElementById('checkout-subtotal');
   const envEl = document.getElementById('checkout-envio');
-  if (subEl) subEl.textContent = `$${total.toFixed(2)}`;
-  if (envEl) envEl.textContent = `$${envio.toFixed(2)}`;
+  if (subEl) subEl.textContent = dinero(total);
+  if (envEl) envEl.textContent = dinero(envio);
 
-  totalEl.textContent = `$${(total + envio).toFixed(2)}`;
+  totalEl.textContent = dinero(total + envio);
   actualizarBotonClip();
 }
 
@@ -1848,7 +1930,7 @@ function actualizarBotonClip() {
   const boton = document.getElementById('btn-confirmar-pago-clip');
   if (!boton) return;
 
-  boton.textContent = `Pagar $${totalCheckout().toFixed(2)}`;
+  boton.textContent = `Pagar ${dinero(totalCheckout())}`;
 }
 
 function configurarPagoClip() {
@@ -2489,63 +2571,97 @@ async function renderizarDirecciones() {
   });
 }
 
+function dinero(valor) {
+  return '$' + Number(valor || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function renderizarCarrito() {
   if (!carritoContenido || !carritoTotal) return;
+
+  const subC = document.getElementById('carrito-subtotal');
+  const envC = document.getElementById('carrito-envio');
+  const resumen = document.getElementById('carrito-resumen');
 
   carritoContenido.innerHTML = '';
 
   if (carrito.length === 0) {
-    carritoContenido.innerHTML = '<p>Tu carrito estÃ¡ vacÃ­o.</p>';
-    carritoTotal.textContent = '$0.00';
-    const sub0 = document.getElementById('carrito-subtotal');
-    const env0 = document.getElementById('carrito-envio');
-    if (sub0) sub0.textContent = '$0.00';
-    if (env0) env0.textContent = '$0.00';
+    carritoContenido.innerHTML = `
+      <div class="carrito-vacio">
+        <p class="carrito-vacio-titulo">Tu carrito está vacío</p>
+        <p>Cuando agregues productos, aparecerán aquí.</p>
+        <button type="button" class="carrito-seguir carrito-vacio-boton" id="btn-carrito-vacio-inicio">Ir a la tienda</button>
+      </div>
+    `;
+
+    const irInicio = document.getElementById('btn-carrito-vacio-inicio');
+    if (irInicio) irInicio.addEventListener('click', () => mostrarInicio());
+
+    if (resumen) resumen.classList.add('oculto');
+    carritoTotal.textContent = dinero(0);
+    if (subC) subC.textContent = dinero(0);
+    if (envC) envC.textContent = dinero(0);
     return;
   }
 
+  if (resumen) resumen.classList.remove('oculto');
+
   let total = 0;
 
-  carrito.forEach(item => {
+  carrito.forEach((item, indice) => {
     const subtotal = item.precio * item.cantidad;
     total += subtotal;
 
-    const card = document.createElement('div');
-    card.classList.add('cart-item');
+    const detalles = [
+      item.color || 'Color único',
+      item.talla ? 'Talla ' + item.talla : '',
+      item.grip ? 'Grip ' + item.grip : ''
+    ].filter(Boolean).join(' · ');
 
-    card.innerHTML = `
-      <img src="${item.imagen}" alt="${item.nombre}">
-      <div>
+    const tarjeta = document.createElement('article');
+    tarjeta.classList.add('carrito-item');
+
+    tarjeta.innerHTML = `
+      <img class="carrito-item-img" src="${item.imagen}" alt="${item.nombre}">
+
+      <div class="carrito-item-info">
         <h3>${item.nombre}</h3>
-        <p>Color: ${item.color || 'Único'}</p>
-        <p>Talla: ${item.talla || 'Sin talla'}</p>
-        ${item.grip ? `<p>Grip: ${item.grip}</p>` : ''}
-        <p>Precio: $${item.precio.toFixed(2)}</p>
-        <p>Cantidad: ${item.cantidad}</p>
-        <p>Subtotal: $${subtotal.toFixed(2)}</p>
+        <p class="carrito-item-detalle">${detalles}</p>
+        <p class="carrito-item-precio">${dinero(item.precio)} c/u</p>
+
+        <div class="carrito-cantidad" aria-label="Cantidad">
+          <button type="button" class="carrito-cantidad-btn" data-accion="menos" data-indice="${indice}" aria-label="Quitar una pieza"${item.cantidad <= 1 ? ' disabled' : ''}>−</button>
+          <span>${item.cantidad}</span>
+          <button type="button" class="carrito-cantidad-btn" data-accion="mas" data-indice="${indice}" aria-label="Agregar una pieza">+</button>
+        </div>
       </div>
-      <button class="cart-remove" data-id="${item.id}" data-variante="${item.idVariante || ''}" data-talla="${item.talla || ''}">Eliminar</button>
+
+      <div class="carrito-item-lado">
+        <strong class="carrito-item-subtotal">${dinero(subtotal)}</strong>
+        <button type="button" class="carrito-quitar" data-accion="quitar" data-indice="${indice}">Eliminar</button>
+      </div>
     `;
 
-    carritoContenido.appendChild(card);
+    carritoContenido.appendChild(tarjeta);
   });
 
-  const subC = document.getElementById('carrito-subtotal');
-  const envC = document.getElementById('carrito-envio');
-  if (subC) subC.textContent = `$${total.toFixed(2)}`;
-  if (envC) envC.textContent = `$${COSTO_ENVIO.toFixed(2)}`;
+  if (subC) subC.textContent = dinero(total);
+  if (envC) envC.textContent = dinero(COSTO_ENVIO);
 
-  carritoTotal.textContent = `$${(total + COSTO_ENVIO).toFixed(2)}`;
+  carritoTotal.textContent = dinero(total + COSTO_ENVIO);
 
-  document.querySelectorAll('.cart-remove').forEach(button => {
-    button.addEventListener('click', () => {
-      const id = Number(button.dataset.id);
-      const idVariante = button.dataset.variante ? Number(button.dataset.variante) : null;
-      const talla = button.dataset.talla;
+  carritoContenido.querySelectorAll('[data-accion]').forEach(boton => {
+    boton.addEventListener('click', () => {
+      const indice = Number(boton.dataset.indice);
+      const item = carrito[indice];
+      if (!item) return;
 
-      carrito = carrito.filter(item =>
-        !(item.id === id && item.idVariante === idVariante && item.talla === talla)
-      );
+      if (boton.dataset.accion === 'mas') {
+        item.cantidad = Math.min(Number(item.cantidad) + 1, 20);
+      } else if (boton.dataset.accion === 'menos') {
+        item.cantidad = Math.max(Number(item.cantidad) - 1, 1);
+      } else {
+        carrito.splice(indice, 1);
+      }
 
       guardarCarrito();
       actualizarContadorCarrito();
