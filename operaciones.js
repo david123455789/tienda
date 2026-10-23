@@ -1340,9 +1340,22 @@ function renderizarResumenCheckout() {
     const subtotal = Number(item.precio) * Number(item.cantidad);
     total += subtotal;
 
+    const detalles = [
+      item.color,
+      item.talla ? 'Talla ' + item.talla : '',
+      item.grip ? 'Grip ' + item.grip : ''
+    ].filter(Boolean).join(' · ');
+
     return `
       <div class="checkout-item">
-        <span>${item.nombre}${item.talla ? ' - Talla ' + item.talla : ''}${item.grip ? ' - ' + item.grip : ''}${item.color ? ' - ' + item.color : ''} × ${item.cantidad}</span>
+        <div class="checkout-item-foto">
+          ${item.imagen ? `<img src="${item.imagen}" alt="${item.nombre}">` : ''}
+          <span class="checkout-item-cant">${item.cantidad}</span>
+        </div>
+        <div class="checkout-item-info">
+          <p class="checkout-item-nombre">${item.nombre}</p>
+          <p class="checkout-item-detalle">${detalles}</p>
+        </div>
         <strong>${dinero(subtotal)}</strong>
       </div>
     `;
@@ -2773,11 +2786,17 @@ function renderizarGrip(gripTexto) {
     gripGrid.appendChild(boton);
   });
 }
+// La imagen solo se usa para mostrar el resumen; no es enumerable, así que no se envía al servidor.
+function conImagen(item, src) {
+  Object.defineProperty(item, 'imagen', { value: src || '', enumerable: false, writable: true });
+  return item;
+}
+
 function armarProductoParaPagar() {
   const tallaSeleccionada = document.querySelector('.size-grid button.selected');
   const gripSeleccionadoBoton = document.querySelector('.grip-grid button.selected');
 
-  return {
+  return conImagen({
     nombre: productoActual.name || productoActual.nombre || 'Producto',
     precio: varianteActual
       ? Number(varianteActual.precio || varianteActual.price)
@@ -2786,7 +2805,7 @@ function armarProductoParaPagar() {
     talla: tallaSeleccionada ? tallaSeleccionada.textContent.trim() : '',
     grip: gripSeleccionadoBoton ? gripSeleccionadoBoton.textContent.trim() : '',
     color: varianteActual ? varianteActual.color : 'Único'
-  };
+  }, (document.getElementById('detalle-imagen') || {}).src);
 }
 
 if (btnComprarAhora) {
@@ -2800,14 +2819,14 @@ if (btnFinalizarCompra) {
   btnFinalizarCompra.addEventListener('click', () => {
     if (!carrito.length) return;
 
-    const itemsCarrito = carrito.map(item => ({
+    const itemsCarrito = carrito.map(item => conImagen({
       nombre: item.nombre,
       precio: Number(item.precio),
       cantidad: item.cantidad,
       talla: item.talla && item.talla !== 'Sin talla' ? item.talla : '',
       color: item.color,
       grip: item.grip || ''
-    }));
+    }, item.imagen));
 
     mostrarCheckout(itemsCarrito);
   });
@@ -2846,7 +2865,7 @@ async function pagarConClip() {
 
   if (mensaje) mensaje.textContent = '';
 
-  const textoOriginal = boton ? boton.textContent : '';
+  const textoOriginal = boton ? boton.innerHTML : '';
 
   if (boton) {
     boton.disabled = true;
@@ -2890,7 +2909,7 @@ async function pagarConClip() {
 
     if (boton) {
       boton.disabled = false;
-      boton.textContent = textoOriginal;
+      boton.innerHTML = textoOriginal;
     }
   }
 }

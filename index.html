@@ -394,7 +394,7 @@
       </div>
 
       <div class="checkout-direccion">
-        <h3>Dirección de entrega</h3>
+        <h3><span class="checkout-num">1</span>Dirección de entrega</h3>
 
         <div id="checkout-direcciones-guardadas-wrap" class="oculto">
           <label class="campo-tarjeta-label" for="checkout-direccion-guardada">Usar una dirección guardada</label>
@@ -424,7 +424,7 @@
         </form>
 
         <div class="metodos-pago">
-          <p class="metodos-pago-label">Pagar con</p>
+          <h3 class="metodos-pago-titulo"><span class="checkout-num">2</span>Método de pago</h3>
 
           <!-- TARJETA DE CRÉDITO O DÉBITO (desactivado por ahora; quita este comentario para reactivarlo)
           <button id="btn-mostrar-tarjeta-clip" type="button" class="pago-btn-tarjeta-nueva">
@@ -443,11 +443,11 @@
             <button id="btn-pagar-mercadopago" type="button" class="pago-btn pago-btn-mercadopago oculto">
               Mercado Pago
             </button>
-            <button id="btn-pagar-paypal" type="button" class="pago-btn pago-btn-paypal">
-              PayPal
+            <button id="btn-pagar-paypal" type="button" class="pago-btn pago-btn-paypal" aria-label="Pagar con PayPal">
+              <img src="imagenes/paypal.png" alt="PayPal">
             </button>
-            <button id="btn-pagar-clip" type="button" class="pago-btn pago-btn-clip">
-              Clip
+            <button id="btn-pagar-clip" type="button" class="pago-btn pago-btn-clip" aria-label="Pagar con Clip">
+              <img src="imagenes/clip.png" alt="Clip">
             </button>
           </div>
 
@@ -469,6 +469,7 @@
           </div>
           -->
 
+          <p class="checkout-seguro">🔒 Pago seguro. Nunca guardamos los datos de tu tarjeta.</p>
           <p id="checkout-mensaje" class="checkout-mensaje"></p>
         </div>
       </div>

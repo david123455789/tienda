@@ -3625,3 +3625,73 @@ html.cargando-ruta.ruta-coleccion #vista-coleccion{display:block !important}
   .carrito-item-info h3{font-size:1.05rem}
   .carrito-item-lado{grid-column:1 / -1;flex-direction:row;align-items:center;padding-top:10px;border-top:1px solid #ddd6ca}
 }
+
+
+/* ===== CHECKOUT (nuevo diseño) ===== */
+.checkout-section{padding:70px 60px 90px}
+.checkout-layout{max-width:1200px;margin:0 auto;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:36px}
+.checkout-direccion{order:1;background:#fff;border:1px solid var(--khaki);padding:34px}
+.checkout-resumen{order:2;position:sticky;top:110px;background:var(--pearl);border:1px solid var(--khaki);padding:28px}
+.checkout-resumen h3,.checkout-direccion h3{display:flex;align-items:center;gap:12px;margin:0 0 22px;font-size:20px;font-weight:700;color:var(--black)}
+.checkout-num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--black);color:var(--ivory);-webkit-text-fill-color:var(--ivory);font-size:14px;font-weight:700;flex:none}
+.checkout-direccion .metodos-pago-titulo{margin-top:34px;padding-top:30px;border-top:1px solid var(--khaki)}
+
+/* Resumen */
+.checkout-resumen-lista{gap:0;margin-bottom:14px}
+.checkout-item{align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--khaki)}
+.checkout-item:first-child{padding-top:0}
+.checkout-item-foto{position:relative;flex:none;width:68px;height:84px;background:var(--ivory);border:1px solid var(--khaki)}
+.checkout-item-foto img{width:100%;height:100%;object-fit:cover;display:block}
+.checkout-item-cant{position:absolute;top:-8px;right:-8px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--saddle);color:#fff;-webkit-text-fill-color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.checkout-item-info{flex:1;min-width:0}
+.checkout-item-nombre{margin:0 0 4px;font-weight:700;font-size:15px;color:var(--black);line-height:1.3}
+.checkout-item-detalle{margin:0;font-size:13px;color:var(--saddle)}
+.checkout-item strong{font-size:15px;white-space:nowrap}
+.checkout-resumen-linea{padding:8px 0;font-size:15px}
+.checkout-resumen-total{margin-top:10px;padding-top:16px;border-top:1px solid var(--greige)}
+.checkout-resumen-total p{font-size:15px;letter-spacing:.08em;text-transform:uppercase}
+.checkout-resumen-total strong{font-size:28px;color:var(--black)}
+
+/* Formulario */
+.checkout-direccion .form-direccion{gap:14px;margin-bottom:0}
+.checkout-direccion .form-direccion input,
+#checkout-direcciones-guardadas-wrap select{width:100%;min-height:50px;padding:13px 16px;border:1px solid var(--khaki);border-radius:2px;background:var(--ivory);font-family:inherit;font-size:15px;color:var(--black);transition:border-color .2s,background .2s,box-shadow .2s}
+.checkout-direccion .form-direccion input:focus,
+#checkout-direcciones-guardadas-wrap select:focus{outline:none;border-color:var(--black);background:#fff;box-shadow:0 0 0 3px rgba(31,31,31,.07)}
+.checkout-direccion .form-direccion input::placeholder{color:var(--taupe)}
+.checkout-direccion .tarjeta-fila{gap:14px}
+.checkout-direccion .dir-cp-estado{margin:-8px 0 0}
+#checkout-direcciones-guardadas-wrap{margin-bottom:18px;padding-bottom:18px;border-bottom:1px dashed var(--khaki)}
+#checkout-direcciones-guardadas-wrap .campo-tarjeta-label{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--saddle)}
+.checkout-direccion .checkout-guardar-direccion{display:flex;align-items:center;justify-content:flex-start;gap:10px;margin:2px 0 0;font-size:14px;color:var(--charcoal);cursor:pointer}
+.checkout-direccion .checkout-guardar-direccion input[type=checkbox]{width:18px;height:18px;min-height:0;padding:0;margin:0;flex:none;accent-color:var(--black)}
+
+/* Pago */
+.checkout-direccion .metodos-pago{margin-top:0}
+.checkout-direccion .metodos-pago-botones{grid-template-columns:1fr 1fr;gap:14px}
+.checkout-direccion .pago-btn{min-height:58px;font-size:16px;letter-spacing:.02em;border-radius:999px;-webkit-text-fill-color:currentColor;box-shadow:0 2px 0 rgba(0,0,0,.08)}
+.checkout-direccion .pago-btn:hover{opacity:1;transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.14)}
+.checkout-direccion .pago-btn-paypal{color:#003087}
+.checkout-direccion .pago-btn-clip{color:#fff}
+.checkout-seguro{margin:16px 0 0;text-align:center;font-size:13px;color:var(--saddle)}
+.checkout-direccion .checkout-mensaje{text-align:center}
+
+@media (max-width:900px){
+  .checkout-section{padding:36px 16px 60px}
+  .checkout-layout{grid-template-columns:1fr;gap:22px}
+  .checkout-resumen{order:1;position:static;padding:22px}
+  .checkout-direccion{order:2;padding:24px 20px}
+}
+@media (max-width:480px){
+  .checkout-direccion .metodos-pago-botones{grid-template-columns:1fr}
+  .checkout-direccion .tarjeta-fila{grid-template-columns:1fr 1fr}
+  .checkout-item-foto{width:58px;height:72px}
+}
+.checkout-direccion .dir-cp-estado:empty{display:none}
+
+/* Logos en los botones de pago */
+.checkout-direccion .pago-btn-paypal,.checkout-direccion .pago-btn-clip{display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0 18px}
+.checkout-direccion .pago-btn-paypal{background:#ffc439}
+.checkout-direccion .pago-btn-clip{background:#fc4c02}
+.pago-btn-paypal img{height:34px;width:auto;display:block;pointer-events:none}
+.pago-btn-clip img{height:116px;width:auto;margin:-29px 0;display:block;pointer-events:none}
