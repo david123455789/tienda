@@ -338,6 +338,7 @@ async function cargarProductos() {
       productos = listaGuardada;
       usoGuardado = true;
       aplicarRutaActual();
+      precalentarImagenes();
     }
   }
 
@@ -403,11 +404,13 @@ async function cargarProductos() {
       productos = nuevos;
       if (vistaListaVisible()) aplicarRutaActual();
     }
+    precalentarImagenes();
     return;
   }
 
   productos = nuevos;
   aplicarRutaActual();
+  precalentarImagenes();
 }
 
 async function leerCsvDirecto(url) {
@@ -930,10 +933,41 @@ function mostrarProductos(lista) {
     return;
   }
 
-  lista.forEach(product => {
-    const card = crearCardProducto(product);
+  // Las primeras fotos (lo que se ve sin hacer scroll) se piden con prioridad alta.
+  lista.forEach((product, indice) => {
+    const card = crearCardProducto(product, indice < 10);
     contenedorProductos.appendChild(card);
   });
+}
+
+// Descarga en segundo plano la foto principal de todos los productos (cuando el navegador está libre),
+// así al entrar a cualquier categoría las fotos ya están en caché y aparecen al instante.
+const imagenesPrecalentadas = new Set();
+function precalentarImagenes() {
+  if (navigator.connection && navigator.connection.saveData) return;
+
+  const pendientes = productos
+    .map(p => p.image_url)
+    .filter(url => url && !imagenesPrecalentadas.has(url));
+  if (!pendientes.length) return;
+
+  const esperar = window.requestIdleCallback
+    ? (fn) => window.requestIdleCallback(fn, { timeout: 3000 })
+    : (fn) => setTimeout(fn, 300);
+
+  const siguiente = () => {
+    const lote = pendientes.splice(0, 3);
+    if (!lote.length) return;
+    lote.forEach(url => {
+      imagenesPrecalentadas.add(url);
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = url;
+    });
+    setTimeout(() => esperar(siguiente), 250);
+  };
+
+  esperar(siguiente);
 }
 
 function mostrarProductosAleatorios() {
@@ -950,12 +984,12 @@ function mostrarProductosAleatorios() {
   const seleccionados = productosMezclados.slice(0, 3);
 
   seleccionados.forEach(product => {
-    const card = crearCardProducto(product);
+    const card = crearCardProducto(product, true);
     productosDestacados.appendChild(card);
   });
 }
 
-function crearCardProducto(product) {
+function crearCardProducto(product, prioridad) {
   const nombre = product.name || product.nombre;
   const precio = product.price || product.precio;
   const imagen = product.image_url || 'imagenes/productos/placeholder.jpg';
@@ -974,7 +1008,7 @@ function crearCardProducto(product) {
             title="${variant.color}"
             data-imagen="${variant.image_url}"
           >
-            <img loading="lazy" decoding="async" src="${variant.image_url}" alt="${variant.color}">
+            <img decoding="async" fetchpriority="low" data-src="${variant.image_url}" alt="${variant.color}">
           </button>
         `).join('')}
       </div>
@@ -982,7 +1016,7 @@ function crearCardProducto(product) {
     : '';
 
   card.innerHTML = `
-    <img class="producto-imagen" loading="lazy" decoding="async" src="${imagen}" alt="${nombre}">
+    <img class="producto-imagen" ${prioridad ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" src="${imagen}" alt="${nombre}">
     ${variantesHtml}
     <div class="producto-info">
       <h2>${nombre}</h2>
@@ -991,6 +1025,21 @@ function crearCardProducto(product) {
   `;
 
   const imagenProducto = card.querySelector('.producto-imagen');
+
+  // Las miniaturas de color se descargan hasta que la foto principal termina,
+  // para que las fotos grandes no compitan con ellas y la tarjeta aparezca primero.
+  const cargarMiniaturas = () => {
+    card.querySelectorAll('.variante-mini img[data-src]').forEach(img => {
+      img.src = img.dataset.src;
+      img.removeAttribute('data-src');
+    });
+  };
+  if (imagenProducto.complete && imagenProducto.naturalWidth) {
+    cargarMiniaturas();
+  } else {
+    imagenProducto.addEventListener('load', cargarMiniaturas, { once: true });
+    imagenProducto.addEventListener('error', cargarMiniaturas, { once: true });
+  }
 
   card.querySelectorAll('.variante-mini').forEach(button => {
     button.addEventListener('click', event => {
@@ -3107,6 +3156,9 @@ function renderizarFiltros(lista) {
       Limpiar filtros
     </button>
   `;
+
+  const btnCerrar = panel.querySelector('.cerrar-filtros');
+  if (btnCerrar) btnCerrar.addEventListener('click', cerrarFiltros);
 
   panel.querySelectorAll('.filtro-subcategoria').forEach(input => {
     input.addEventListener('change', actualizarVistaConFiltros);
