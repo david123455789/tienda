@@ -3695,3 +3695,17 @@ html.cargando-ruta.ruta-coleccion #vista-coleccion{display:block !important}
 .checkout-direccion .pago-btn-clip{background:#fc4c02}
 .pago-btn-paypal img{height:34px;width:auto;display:block;pointer-events:none}
 .pago-btn-clip img{height:116px;width:auto;margin:-29px 0;display:block;pointer-events:none}
+
+/* Avisos (compra exitosa, errores de pago) */
+.aviso-box h2{padding-right:30px}
+.aviso-aceptar{display:block;margin:26px 0 0 auto;min-width:140px;min-height:46px;padding:0 28px;border:none;border-radius:999px;background:#1f1f1f;color:#f6f4f1;-webkit-text-fill-color:#f6f4f1;font-family:inherit;font-size:.95rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:opacity .2s}
+.aviso-aceptar:hover{opacity:.85}
+
+/* Filtro por color */
+.filtro-colores{display:flex;flex-wrap:wrap;gap:8px}
+.filtro-color{position:relative;cursor:pointer}
+.filtro-color input{position:absolute;opacity:0;pointer-events:none}
+.filtro-color span{display:inline-block;padding:8px 16px;border:1px solid var(--khaki);border-radius:999px;background:var(--ivory);font-size:14px;color:var(--charcoal);transition:background .2s,color .2s,border-color .2s}
+.filtro-color:hover span{border-color:var(--black)}
+.filtro-color input:checked + span{background:var(--black);border-color:var(--black);color:var(--ivory);-webkit-text-fill-color:var(--ivory)}
+.filtro-color input:focus-visible + span{outline:2px solid var(--saddle);outline-offset:2px}

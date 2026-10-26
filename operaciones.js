@@ -98,6 +98,7 @@ let itemsCheckout = [];
 let productosColeccionActual = [];
 let filtrosActivos = {
   subcategorias: [],
+  colores: [],
   precioMin: '',
   precioMax: '',
   orden: 'default'
@@ -1796,6 +1797,43 @@ async function renderizarPedidos() {
   }
 }
 
+/* AVISOS (reemplazan a alert): misma ventana que los términos de servicio */
+function mostrarAviso(titulo, texto, alCerrar) {
+  const previo = document.getElementById('aviso-modal');
+  if (previo) previo.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'aviso-modal';
+  modal.className = 'politica-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.innerHTML = `
+    <div class="politica-box aviso-box">
+      <button class="cerrar-politica" type="button" aria-label="Cerrar">&times;</button>
+      <h2></h2>
+      <p></p>
+      <button class="aviso-aceptar" type="button">Entendido</button>
+    </div>
+  `;
+  modal.querySelector('h2').textContent = titulo;
+  modal.querySelector('p').textContent = texto;
+
+  const cerrar = () => {
+    document.removeEventListener('keydown', alTeclear);
+    modal.remove();
+    if (typeof alCerrar === 'function') alCerrar();
+  };
+  const alTeclear = (e) => { if (e.key === 'Escape') cerrar(); };
+
+  modal.querySelector('.cerrar-politica').addEventListener('click', cerrar);
+  modal.querySelector('.aviso-aceptar').addEventListener('click', cerrar);
+  modal.addEventListener('click', (e) => { if (e.target === modal) cerrar(); });
+  document.addEventListener('keydown', alTeclear);
+
+  document.body.appendChild(modal);
+  modal.querySelector('.aviso-aceptar').focus();
+}
+
 /* CONFIRMAR PEDIDO AL VOLVER DE PAGAR CON CLIP */
 
 // Ejecuta la función cuando ya se sabe si hay una sesión iniciada (Firebase tarda un instante).
@@ -1830,7 +1868,7 @@ async function confirmarLinkClipSiAplica() {
 
   if (resultado === 'clip_error') {
     sessionStorage.removeItem('clip_payment_request_id');
-    alert('No se completó el pago con Clip. No se hizo ningún cobro. Puedes intentar de nuevo.');
+    mostrarAviso('Pago no completado', 'No se completó el pago con Clip. No se hizo ningún cobro. Puedes intentar de nuevo.');
     return;
   }
 
@@ -1854,18 +1892,18 @@ async function confirmarLinkClipSiAplica() {
         actualizarContadorCarrito();
       });
 
-      alert('¡Gracias por tu compra! Tu pedido ya quedó registrado y lo puedes ver en "Mi cuenta → Pedidos".');
+      mostrarAviso('¡Gracias por tu compra!', 'Tu pedido ya quedó registrado y lo puedes ver en "Mi cuenta → Pedidos".');
       return;
     }
 
     console.warn('Respuesta de confirmar-link-clip:', respuesta.status, datos);
 
     if (datos && datos.detalle) {
-      alert('Tu pago se cobró, pero no pudimos registrar el pedido: ' + datos.detalle);
+      mostrarAviso('Pedido pendiente', 'Tu pago se cobró, pero no pudimos registrar el pedido: ' + datos.detalle);
       return;
     }
 
-    alert('Tu pago todavía no se confirma. Si elegiste pagar en efectivo, tu pedido se registrará solo en cuanto recibamos el pago. Si ya pagaste con tarjeta, revisa "Mi cuenta → Pedidos" en unos minutos.');
+    mostrarAviso('Pago en revisión', 'Tu pago todavía no se confirma. Si elegiste pagar en efectivo, tu pedido se registrará solo en cuanto recibamos el pago. Si ya pagaste con tarjeta, revisa "Mi cuenta → Pedidos" en unos minutos.');
   } catch (error) {
     console.error('No se pudo confirmar el pago con Clip:', error);
   }
@@ -1900,7 +1938,7 @@ async function confirmarPedidoSiAplica() {
       carrito = [];
       guardarCarrito();
       actualizarContadorCarrito();
-      alert('¡Gracias por tu compra! Tu pedido ya quedó registrado y lo puedes ver en "Mi cuenta → Pedidos".');
+      mostrarAviso('¡Gracias por tu compra!', 'Tu pedido ya quedó registrado y lo puedes ver en "Mi cuenta → Pedidos".');
     }
   } catch (error) {
     console.error('No se pudo confirmar el pedido:', error);
@@ -1973,9 +2011,9 @@ function pagoClipExitoso() {
   guardarCarrito();
   actualizarContadorCarrito();
 
-  alert('¡Gracias por tu compra! Tu pedido ya quedó registrado y lo puedes ver en "Mi cuenta → Pedidos".');
-
-  window.location.href = window.location.origin + window.location.pathname;
+  mostrarAviso('¡Gracias por tu compra!', 'Tu pedido ya quedó registrado y lo puedes ver en "Mi cuenta → Pedidos".', () => {
+    window.location.href = window.location.origin + window.location.pathname;
+  });
 }
 
 async function pagarConTarjetaClip() {
@@ -2539,7 +2577,7 @@ async function guardarNuevaDireccion() {
     await renderizarDirecciones();
   } catch (error) {
     console.error('No se pudo guardar la direccion:', error);
-    alert('No se pudo guardar la dirección. Intenta de nuevo.');
+    mostrarAviso('No se pudo guardar', 'No se pudo guardar la dirección. Intenta de nuevo.');
   }
 }
 
@@ -2931,6 +2969,21 @@ function obtenerCategoria(producto) {
   return producto.categoria || producto['categorÃ­a'] || '';
 }
 
+// Colores de un producto (de todas sus variantes), normalizados para comparar.
+function claveColor(color) {
+  return String(color || '').trim().toLowerCase();
+}
+
+function esColorUnico(color) {
+  return ['', 'color unico', 'color único', 'unico', 'único', 'sin color'].includes(claveColor(color));
+}
+
+function coloresDeProducto(producto) {
+  return (producto.variantes || [])
+    .map(variante => claveColor(variante.color))
+    .filter(color => color && !esColorUnico(color));
+}
+
 function obtenerSubcategoria(producto) {
   return producto.subcategoria || producto['subcategorÃ­a'] || '';
 }
@@ -2938,6 +2991,7 @@ function obtenerSubcategoria(producto) {
 function resetearFiltros() {
   filtrosActivos = {
     subcategorias: [],
+    colores: [],
     precioMin: '',
     precioMax: '',
     orden: 'default'
@@ -2990,6 +3044,18 @@ function renderizarFiltros(lista) {
       .filter(Boolean)
   )];
 
+  // Lista de colores disponibles en esta colección (sin repetir, con su nombre tal como viene en el catálogo).
+  const nombresColor = new Map();
+  lista.forEach(producto => {
+    (producto.variantes || []).forEach(variante => {
+      const clave = claveColor(variante.color);
+      if (clave && !esColorUnico(clave) && !nombresColor.has(clave)) {
+        nombresColor.set(clave, String(variante.color).trim());
+      }
+    });
+  });
+  const colores = [...nombresColor.entries()].sort((a, b) => a[1].localeCompare(b[1], 'es'));
+
   panel.innerHTML = `
     <div class="filtros-head">
       <h3>Filtrar</h3>
@@ -3005,6 +3071,19 @@ function renderizarFiltros(lista) {
         </label>
       `).join('')}
     </div>
+
+    ${colores.length ? `
+    <div class="filtro-grupo">
+      <h4>Color</h4>
+      <div class="filtro-colores">
+        ${colores.map(([clave, nombre]) => `
+          <label class="filtro-color">
+            <input type="checkbox" value="${clave}" class="filtro-color-input"${filtrosActivos.colores.includes(clave) ? ' checked' : ''}>
+            <span>${nombre}</span>
+          </label>
+        `).join('')}
+      </div>
+    </div>` : ''}
 
     <div class="filtro-grupo">
       <h4>Precio</h4>
@@ -3033,6 +3112,10 @@ function renderizarFiltros(lista) {
     input.addEventListener('change', actualizarVistaConFiltros);
   });
 
+  panel.querySelectorAll('.filtro-color-input').forEach(input => {
+    input.addEventListener('change', actualizarVistaConFiltros);
+  });
+
   panel.querySelector('#precio-min').addEventListener('input', actualizarVistaConFiltros);
   panel.querySelector('#precio-max').addEventListener('input', actualizarVistaConFiltros);
   panel.querySelector('#orden-productos').addEventListener('change', actualizarVistaConFiltros);
@@ -3051,6 +3134,9 @@ function aplicarFiltrosColeccion() {
     filtrosActivos.subcategorias = [...panel.querySelectorAll('.filtro-subcategoria:checked')]
       .map(input => input.value);
 
+    filtrosActivos.colores = [...panel.querySelectorAll('.filtro-color-input:checked')]
+      .map(input => input.value);
+
     filtrosActivos.precioMin = panel.querySelector('#precio-min')?.value || '';
     filtrosActivos.precioMax = panel.querySelector('#precio-max')?.value || '';
     filtrosActivos.orden = panel.querySelector('#orden-productos')?.value || 'default';
@@ -3061,6 +3147,12 @@ function aplicarFiltrosColeccion() {
   if (filtrosActivos.subcategorias.length > 0) {
     resultado = resultado.filter(producto =>
       filtrosActivos.subcategorias.includes(obtenerSubcategoria(producto))
+    );
+  }
+
+  if (filtrosActivos.colores.length > 0) {
+    resultado = resultado.filter(producto =>
+      coloresDeProducto(producto).some(color => filtrosActivos.colores.includes(color))
     );
   }
 
@@ -3284,7 +3376,7 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion
 
     window.location.href = data.init_point;
   } catch (error) {
-    alert('No se pudo iniciar el pago: ' + error.message);
+    mostrarAviso('No se pudo iniciar el pago', error.message);
   }
 }
 
