@@ -1,3 +1,4 @@
+const { enviarCorreosDePedido } = require('./_correo');
 const crypto = require('crypto');
 const { COSTO_ENVIO } = require('./_catalogo');
 
@@ -245,6 +246,23 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
 
   if (filasProducto.length) {
     await agregarFilas('Producto', filasProducto);
+  }
+
+  // Correos: confirmación para el cliente y aviso para la tienda. Si fallan, el pedido ya quedó guardado.
+  try {
+    await enviarCorreosDePedido({
+      idEnvio,
+      nombre,
+      correo,
+      telefono: telefono || (direccion ? direccion.telefono : '') || '',
+      direccion: direccion || {},
+      productos: productos || [],
+      subtotal,
+      envio,
+      total: subtotal + envio
+    });
+  } catch (error) {
+    console.error('Error al enviar correos del pedido:', error);
   }
 
   return idEnvio;
