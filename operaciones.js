@@ -1377,7 +1377,9 @@ function mostrarCheckout(items) {
 }
 
 // Costo fijo de envío por pedido (el servidor lo vuelve a calcular; esto solo se muestra).
-const COSTO_ENVIO = 280;
+// ENVÍO DESACTIVADO PARA PRUEBAS. Para volver a cobrarlo: borra la línea de 0 y quita el comentario de la de 280.
+// const COSTO_ENVIO = 280;
+const COSTO_ENVIO = 0;
 
 function renderizarResumenCheckout() {
   const lista = document.getElementById('checkout-resumen-lista');

@@ -114,7 +114,9 @@ function errorCatalogo(mensaje, status = 400) {
 }
 
 // Costo fijo de envío por pedido, sin importar cuántos productos se compren.
-const COSTO_ENVIO = 280;
+// ENVÍO DESACTIVADO PARA PRUEBAS. Para volver a cobrarlo: borra la línea de 0 y quita el comentario de la de 280.
+// const COSTO_ENVIO = 280;
+const COSTO_ENVIO = 0;
 
 async function validarProductos(productosCliente) {
   if (!Array.isArray(productosCliente) || productosCliente.length === 0) {
