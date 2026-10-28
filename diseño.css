@@ -3740,3 +3740,18 @@ html.cargando-ruta.ruta-producto .carga-producto{display:grid}
 @media (prefers-reduced-motion:reduce){
   .carga-producto-img,.carga-linea{animation:none}
 }
+
+/* Botones de pago más compactos */
+.checkout-direccion .metodos-pago-botones{gap:12px}
+.checkout-direccion .pago-btn{min-height:44px;height:44px;padding:0 14px;box-shadow:none}
+.checkout-direccion .pago-btn:hover{box-shadow:0 3px 10px rgba(0,0,0,.12)}
+.pago-btn-paypal img{height:28px}
+.pago-btn-clip img{height:80px;margin:-18px 0}
+@media (max-width:480px){
+  .checkout-direccion .pago-btn{min-height:42px;height:42px}
+}
+
+/* Cuenta: siempre solo el icono de usuario (el texto queda oculto, pero lo leen los lectores de pantalla) */
+.site-header .cuenta-icon{display:block}
+.site-header .cuenta-texto{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+.site-header .cuenta-btn{padding-left:6px;padding-right:6px}

@@ -33,6 +33,10 @@
         'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QGmUxpghfQ4ksUmtL-79fJkke-pq7xBI7Pbv63H9DiJzksny0XSyOJzgJxKlxgM0ALjFD2FegOS/pub?gid=0&single=true&output=csv',
         'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QGmUxpghfQ4ksUmtL-79fJkke-pq7xBI7Pbv63H9DiJzksny0XSyOJzgJxKlxgM0ALjFD2FegOS/pub?gid=1834938244&single=true&output=csv'
       ];
+      // Copia del catálogo guardada en la propia tienda (cargada desde el servidor de la tienda, es rápida).
+      window.__snapshotTemprano = fetch('/catalogo-snapshot.json')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; });
       window.__catalogoTemprano = {};
       urls.forEach(function (u) {
         try {

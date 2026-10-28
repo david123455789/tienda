@@ -342,6 +342,28 @@ async function cargarProductos() {
     }
   }
 
+  // 1b) Primera visita (sin catálogo guardado en el navegador): se usa la copia del catálogo
+  // que vive en la propia tienda, que llega mucho más rápido que Google Sheets.
+  if (!usoGuardado && window.__snapshotTemprano) {
+    try {
+      const copia = await Promise.race([
+        window.__snapshotTemprano,
+        new Promise(resolve => setTimeout(() => resolve(null), 3000))
+      ]);
+
+      if (copia && typeof copia.p === 'string' && typeof copia.v === 'string') {
+        const listaCopia = crearProductosDesdeSheets(parsearCsv(copia.p), parsearCsv(copia.v)).filter(productoCompleto);
+
+        if (listaCopia.length) {
+          productos = listaCopia;
+          usoGuardado = true;
+          aplicarRutaActual();
+          precalentarImagenes();
+        }
+      }
+    } catch (error) { /* si la copia no sirve, se usa el Sheet en vivo */ }
+  }
+
   // 2) Se pide el catálogo actual al Sheet (con reintentos si llega incompleto).
   for (let intento = 0; intento < INTENTOS; intento++) {
     try {

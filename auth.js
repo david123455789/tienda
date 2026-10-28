@@ -217,9 +217,13 @@ onAuthStateChanged(auth, usuario => {
     const nombre = usuario.displayName || usuario.email;
     textoCuenta.textContent = nombre.length > 14 ? nombre.slice(0, 14) + '...' : nombre;
     btnCuenta.classList.add('sesion-activa');
+    btnCuenta.title = nombre;
+    btnCuenta.setAttribute('aria-label', 'Cuenta de ' + nombre);
   } else {
     textoCuenta.textContent = 'Cuenta';
     btnCuenta.classList.remove('sesion-activa');
+    btnCuenta.title = 'Cuenta';
+    btnCuenta.setAttribute('aria-label', 'Cuenta');
     cerrarDropdownCuenta();
   }
 
