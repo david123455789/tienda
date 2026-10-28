@@ -414,6 +414,17 @@ async function cargarProductos() {
 }
 
 async function leerCsvDirecto(url) {
+  // Si la página ya pidió este CSV al arrancar (script del <head>), se usa esa respuesta una sola vez.
+  const temprano = window.__catalogoTemprano && window.__catalogoTemprano[url];
+  if (temprano) {
+    delete window.__catalogoTemprano[url];
+    try {
+      return parsearCsv(await temprano);
+    } catch (error) {
+      // Si esa petición falló, se vuelve a pedir normalmente.
+    }
+  }
+
   const response = await fetch(url);
 
   if (!response.ok) {
@@ -3513,4 +3524,44 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion
       img.src = `${original}${separador}r=${Date.now()}`;
     }, 600 * (intentos + 1));
   }, true);
+})();
+
+/* BARRA DE ANUNCIOS: cambia sola entre sus mensajes cada pocos segundos */
+(function iniciarBarraAnuncios() {
+  const INTERVALO = 4000;
+
+  const iniciar = () => {
+    const barra = document.getElementById('barra-anuncios');
+    if (!barra) return;
+
+    const anuncios = [...barra.querySelectorAll('.anuncio')];
+    if (anuncios.length < 2) return;
+
+    let actual = 0;
+    let temporizador = null;
+
+    const siguiente = () => {
+      anuncios[actual].classList.remove('activo');
+      actual = (actual + 1) % anuncios.length;
+      anuncios[actual].classList.add('activo');
+    };
+
+    const arrancar = () => {
+      if (!temporizador) temporizador = setInterval(siguiente, INTERVALO);
+    };
+    const detener = () => {
+      clearInterval(temporizador);
+      temporizador = null;
+    };
+
+    // No gasta recursos cuando la pestaña no se está viendo.
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) detener(); else arrancar();
+    });
+
+    arrancar();
+  };
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
+  else iniciar();
 })();

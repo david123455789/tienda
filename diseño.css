@@ -3709,3 +3709,34 @@ html.cargando-ruta.ruta-coleccion #vista-coleccion{display:block !important}
 .filtro-color:hover span{border-color:var(--black)}
 .filtro-color input:checked + span{background:var(--black);border-color:var(--black);color:var(--ivory);-webkit-text-fill-color:var(--ivory)}
 .filtro-color input:focus-visible + span{outline:2px solid var(--saddle);outline-offset:2px}
+
+
+/* ===== BARRA DE ANUNCIOS (carrusel debajo del menú) ===== */
+.barra-anuncios{position:relative;height:32px;background:#1f1f1f;color:#f6f4f1;overflow:hidden}
+.barra-anuncios .anuncio{position:absolute;inset:0;margin:0;display:flex;align-items:center;justify-content:center;padding:0 16px;font-family:"Times New Roman",serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;color:#f6f4f1;-webkit-text-fill-color:#f6f4f1;opacity:0;transform:translateY(8px);transition:opacity .5s ease,transform .5s ease;pointer-events:none}
+.barra-anuncios .anuncio.activo{opacity:1;transform:none}
+@media (max-width:600px){
+  .barra-anuncios{height:30px}
+  .barra-anuncios .anuncio{font-size:10.5px;letter-spacing:.1em}
+}
+@media (prefers-reduced-motion:reduce){
+  .barra-anuncios .anuncio{transition:none;transform:none}
+}
+
+/* Entrada directa a un producto: esqueleto de carga mientras llega el catálogo */
+.carga-producto{display:none;grid-template-columns:minmax(0,450px) minmax(0,1fr);gap:70px;padding:60px 13vw;background:var(--ivory)}
+html.cargando-ruta.ruta-producto .carga-producto{display:grid}
+.carga-producto-img{aspect-ratio:4/5;background:linear-gradient(100deg,#ece8e2 30%,#f6f4f1 50%,#ece8e2 70%);background-size:200% 100%;animation:carga-brillo 1.4s linear infinite}
+.carga-producto-info{display:flex;flex-direction:column;gap:18px;padding-top:30px}
+.carga-linea{display:block;height:16px;width:100%;max-width:420px;background:linear-gradient(100deg,#ece8e2 30%,#f6f4f1 50%,#ece8e2 70%);background-size:200% 100%;animation:carga-brillo 1.4s linear infinite}
+.carga-linea.corta{width:120px;height:12px}
+.carga-linea.titulo{height:38px;max-width:360px}
+.carga-linea.precio{width:110px;height:24px}
+.carga-linea.boton{height:52px;margin-top:16px}
+@keyframes carga-brillo{to{background-position:-200% 0}}
+@media (max-width:800px){
+  .carga-producto{grid-template-columns:1fr;gap:24px;padding:24px 20px}
+}
+@media (prefers-reduced-motion:reduce){
+  .carga-producto-img,.carga-linea{animation:none}
+}

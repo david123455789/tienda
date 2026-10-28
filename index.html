@@ -20,8 +20,29 @@
       var ruta = location.pathname.replace(/\/+$/, '').replace(/\/index\.html$/, '');
       if (ruta) {
         document.documentElement.classList.add('cargando-ruta');
+        if (ruta === '/producto') document.documentElement.classList.add('ruta-producto');
         setTimeout(function () { document.documentElement.classList.remove('cargando-ruta'); }, 15000);
       }
+    })();
+  </script>
+  <script>
+    // Pide el catálogo a Google Sheets desde el primer instante (sin esperar a que cargue el resto del código).
+    // operaciones.js usa estas respuestas en su primer intento.
+    (function () {
+      var urls = [
+        'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QGmUxpghfQ4ksUmtL-79fJkke-pq7xBI7Pbv63H9DiJzksny0XSyOJzgJxKlxgM0ALjFD2FegOS/pub?gid=0&single=true&output=csv',
+        'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QGmUxpghfQ4ksUmtL-79fJkke-pq7xBI7Pbv63H9DiJzksny0XSyOJzgJxKlxgM0ALjFD2FegOS/pub?gid=1834938244&single=true&output=csv'
+      ];
+      window.__catalogoTemprano = {};
+      urls.forEach(function (u) {
+        try {
+          window.__catalogoTemprano[u] = fetch(u).then(function (r) {
+            if (!r.ok) throw new Error('csv');
+            return r.text();
+          });
+          window.__catalogoTemprano[u].catch(function () {});
+        } catch (e) {}
+      });
     })();
   </script>
   <!-- SDK de pago con tarjeta (Mercado Pago y Clip): desactivados porque frenaban la carga de la página.
@@ -160,6 +181,24 @@
     </button>
   </nav>
 </header>
+
+<div class="barra-anuncios" id="barra-anuncios" role="region" aria-label="Avisos de la tienda">
+  <p class="anuncio activo">Recoge gratis en la boutique</p>
+  <p class="anuncio">Envíos a todo México</p>
+</div>
+
+<div id="carga-producto" class="carga-producto" aria-hidden="true">
+  <div class="carga-producto-img"></div>
+  <div class="carga-producto-info">
+    <span class="carga-linea corta"></span>
+    <span class="carga-linea titulo"></span>
+    <span class="carga-linea precio"></span>
+    <span class="carga-linea"></span>
+    <span class="carga-linea"></span>
+    <span class="carga-linea boton"></span>
+  </div>
+</div>
+
 
 <div id="busqueda-panel" class="search-panel oculto" aria-hidden="true">
   <div class="search-inner">
