@@ -1,4 +1,5 @@
 const { enviarCorreosDePedido } = require('./_correo');
+const { cotizarEnvios, resumenCotizaciones } = require('./_envia');
 const crypto = require('crypto');
 const { COSTO_ENVIO } = require('./_catalogo');
 
@@ -215,6 +216,10 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
   );
   const envio = (productos || []).length ? COSTO_ENVIO : 0;
 
+  // Cotización interna en Envia.com (solo para ustedes; el cliente paga el envío fijo).
+  // Nunca bloquea el pedido: si Envia falla o tarda, se registra igual.
+  const cotizaciones = await cotizarEnvios({ nombre, telefono, direccion, productos, subtotal });
+
   await agregarFilas('Envio', [[
     idEnvio,
     nombre || '',
@@ -232,7 +237,8 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
     envio,                 // P Envío (no reembolsable)
     subtotal + envio,      // Q Total cobrado
     fechaPedido(),         // R Fecha del pedido (hora de Ciudad de México)
-    ''                     // S Cancelada (la llenas tú con "Sí" para cancelar)
+    '',                    // S Cancelada (la llenas tú con "Sí" para cancelar)
+    resumenCotizaciones(cotizaciones) // T Cotización de envío (Envia.com, de la más barata a la más cara)
   ]]);
 
   const filasProducto = (productos || []).map(producto => [
@@ -259,7 +265,8 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
       productos: productos || [],
       subtotal,
       envio,
-      total: subtotal + envio
+      total: subtotal + envio,
+      cotizaciones
     });
   } catch (error) {
     console.error('Error al enviar correos del pedido:', error);

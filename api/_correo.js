@@ -85,6 +85,21 @@ function correoCliente(pedido) {
   };
 }
 
+function bloqueCotizaciones(opciones) {
+  if (!opciones || !opciones.length) {
+    return `<p style="margin:22px 0 0;font-size:13px;color:${COLOR.suave}">Cotización de envío (Envia.com): no disponible para este pedido.</p>`;
+  }
+
+  const filas = opciones.slice(0, 6).map((o, i) => `
+    <tr>
+      <td style="padding:6px 0;border-bottom:1px solid ${COLOR.borde};font-size:14px;color:${COLOR.texto}">${i === 0 ? '<strong>' : ''}${esc(o.paqueteria)} ${esc(o.servicio)}${i === 0 ? '</strong>' : ''}${o.entrega ? `<br><span style="font-size:12px;color:${COLOR.suave}">${esc(o.entrega)}</span>` : ''}</td>
+      <td style="padding:6px 0;border-bottom:1px solid ${COLOR.borde};font-size:14px;color:${COLOR.texto};text-align:right;white-space:nowrap">${i === 0 ? '<strong>' : ''}${dinero(o.precio)}${i === 0 ? '</strong>' : ''}</td>
+    </tr>`).join('');
+
+  return `<p style="margin:24px 0 6px;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:${COLOR.suave}">Cotización de envío (Envia.com)</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">${filas}</table>`;
+}
+
 function correoTienda(pedido) {
   const d = pedido.direccion || {};
   const fila = (etiqueta, valor) => `
@@ -111,6 +126,7 @@ function correoTienda(pedido) {
     </table>
     ${tablaProductos(pedido.productos)}
     ${totales(pedido)}
+    ${bloqueCotizaciones(pedido.cotizaciones)}
     <p style="margin:24px 0 0;font-size:13px;color:${COLOR.suave}">El pedido ya está en tu hoja de Pedidos con estatus "Aceptado".</p>`;
 
   return {
@@ -143,6 +159,7 @@ async function enviar({ para, asunto, html, responderA }) {
 
 // Manda los dos correos de un pedido. Nunca lanza error: si falla el correo, el pedido ya quedó guardado.
 async function enviarCorreosDePedido(pedido) {
+  console.log('Correos: preparando envío del pedido', pedido.idEnvio, '| llave de Resend:', process.env.RESEND_API_KEY ? 'sí' : 'NO');
   if (!process.env.RESEND_API_KEY) {
     console.warn('Correos desactivados: falta RESEND_API_KEY.');
     return;
@@ -162,6 +179,7 @@ async function enviarCorreosDePedido(pedido) {
   const resultados = await Promise.allSettled(tareas);
   resultados.forEach(r => {
     if (r.status === 'rejected') console.error('No se pudo enviar un correo del pedido:', r.reason && r.reason.message);
+    else console.log('Correo enviado correctamente (pedido ' + pedido.idEnvio + ').');
   });
 }
 
