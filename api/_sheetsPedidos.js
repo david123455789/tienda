@@ -1,5 +1,5 @@
 const { enviarCorreosDePedido } = require('./_correo');
-const { cotizarEnvios, resumenCotizaciones } = require('./_envia');
+const { cotizarEnvios, resumenMasBarata } = require('./_envia');
 const crypto = require('crypto');
 const { COSTO_ENVIO } = require('./_catalogo');
 
@@ -238,8 +238,32 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
     subtotal + envio,      // Q Total cobrado
     fechaPedido(),         // R Fecha del pedido (hora de Ciudad de México)
     '',                    // S Cancelada (la llenas tú con "Sí" para cancelar)
-    resumenCotizaciones(cotizaciones) // T Cotización de envío (Envia.com, de la más barata a la más cara)
+    resumenMasBarata(cotizaciones) // T Opción más barata (el detalle completo va en la hoja "Cotizaciones")
   ]]);
+
+  // Hoja "Cotizaciones": una fila por opción de envío, de la más barata a la más cara.
+  // Si la hoja no existe o falla, el pedido ya quedó guardado y solo se omite el detalle.
+  if (cotizaciones.length) {
+    try {
+      const fecha = fechaPedido();
+      const d = direccion || {};
+      await agregarFilas('Cotizaciones', cotizaciones.map((o, i) => [
+        idEnvio,
+        fecha,
+        nombre || '',
+        d.ciudad || '',
+        d.estado || '',
+        d.cp || '',
+        o.paqueteria,
+        o.servicio,
+        o.precio,
+        o.entrega,
+        i === 0 ? 'Sí' : ''
+      ]));
+    } catch (error) {
+      console.error('No se pudo escribir en la hoja Cotizaciones:', error.message);
+    }
+  }
 
   const filasProducto = (productos || []).map(producto => [
     idEnvio,

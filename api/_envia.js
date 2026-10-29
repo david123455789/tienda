@@ -172,4 +172,11 @@ function resumenCotizaciones(opciones) {
     .join(' | ');
 }
 
-module.exports = { cotizarEnvios, resumenCotizaciones };
+// Texto corto para la columna T de "Envio": solo la opción más barata.
+function resumenMasBarata(opciones) {
+  if (!opciones.length) return 'Sin cotización';
+  const o = opciones[0];
+  return `${o.paqueteria} ${o.servicio} ${dinero(o.precio)}${o.entrega ? ' (' + o.entrega + ')' : ''} · ${opciones.length} opciones en la hoja Cotizaciones`;
+}
+
+module.exports = { cotizarEnvios, resumenCotizaciones, resumenMasBarata };
