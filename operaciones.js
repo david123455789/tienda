@@ -447,7 +447,9 @@ async function leerCsvDirecto(url) {
     }
   }
 
-  const response = await fetch(url);
+  // Siempre se pide una copia nueva: sin el parámetro t, el navegador puede reutilizar hasta 5 minutos
+  // una respuesta vieja del Sheet y un cambio de precio tardaría en verse.
+  const response = await fetch(url.includes('&t=') ? url : url + '&t=' + Date.now());
 
   if (!response.ok) {
     throw new Error('No se pudo leer Google Sheets');
