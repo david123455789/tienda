@@ -139,6 +139,23 @@ async function leerFilas(hoja) {
   return datos.values || [];
 }
 
+// Fila donde debe escribirse el siguiente pedido: deja UNA fila en blanco después del último
+// pedido para que sea fácil distinguir una compra de otra. "valores" es la columna A de la hoja
+// (la API no devuelve las filas vacías del final, así que su largo es la última fila con datos).
+function calcularFilaSiguiente(valores) {
+  const ultima = (valores || []).length;
+  // Hoja vacía o solo con encabezado: se escribe justo debajo, sin fila en blanco.
+  if (ultima <= 1) return 2;
+  return ultima + 2;
+}
+
+// Escribe las filas de un pedido dejando una fila en blanco entre pedido y pedido.
+async function agregarFilasConSeparador(hoja, filas) {
+  const columnaA = await leerFilas(`${hoja}!A:A`);
+  const fila = calcularFilaSiguiente(columnaA);
+  return actualizarCeldas(`${hoja}!A${fila}`, filas);
+}
+
 async function actualizarCeldas(rango, filas) {
   const token = await obtenerTokenSheets();
   const spreadsheetId = idHojaPedidos();
@@ -220,7 +237,7 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
   // Nunca bloquea el pedido: si Envia falla o tarda, se registra igual.
   const cotizaciones = await cotizarEnvios({ nombre, telefono, direccion, productos, subtotal });
 
-  await agregarFilas('Envio', [[
+  await agregarFilasConSeparador('Envio', [[
     idEnvio,
     nombre || '',
     correo || '',
@@ -247,7 +264,7 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
     try {
       const fecha = fechaPedido();
       const d = direccion || {};
-      await agregarFilas('Cotizaciones', cotizaciones.map((o, i) => [
+      await agregarFilasConSeparador('Cotizaciones', cotizaciones.map((o, i) => [
         idEnvio,
         fecha,
         nombre || '',
@@ -275,7 +292,7 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
   ]);
 
   if (filasProducto.length) {
-    await agregarFilas('Producto', filasProducto);
+    await agregarFilasConSeparador('Producto', filasProducto);
   }
 
   // Correos: confirmación para el cliente y aviso para la tienda. Si fallan, el pedido ya quedó guardado.
@@ -299,4 +316,4 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
   return idEnvio;
 }
 
-module.exports = { agregarFilas, leerFilas, actualizarCeldas, limpiarRango, crearPedidoEnSheets };
+module.exports = { agregarFilasConSeparador, calcularFilaSiguiente, agregarFilas, leerFilas, actualizarCeldas, limpiarRango, crearPedidoEnSheets };
