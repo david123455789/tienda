@@ -1,7 +1,6 @@
 const { enviarCorreosDePedido } = require('./_correo');
-const { cotizarEnvios, resumenMasBarata } = require('./_envia');
 const crypto = require('crypto');
-const { COSTO_ENVIO } = require('./_catalogo');
+const { calcularEnvio, normalizarTipoEntrega } = require('./_catalogo');
 
 /*
  * Lee y escribe en tu Google Sheet "Pedidos" (hojas "Envio" y "Producto").
@@ -223,7 +222,8 @@ function generarIdEnvio() {
   return `PED-${partes}-${azar}`;
 }
 
-async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, productos }) {
+async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, productos, tipo: tipoEntrega }) {
+  const tipo = normalizarTipoEntrega(tipoEntrega);
   const idEnvio = generarIdEnvio();
 
   // Desglose del cobro: productos + envío fijo (columnas O, P y Q de "Envio").
@@ -231,11 +231,7 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
     (suma, p) => suma + Number(p.precio || 0) * Number(p.cantidad || 1),
     0
   );
-  const envio = (productos || []).length ? COSTO_ENVIO : 0;
-
-  // Cotización interna en Envia.com (solo para ustedes; el cliente paga el envío fijo).
-  // Nunca bloquea el pedido: si Envia falla o tarda, se registra igual.
-  const cotizaciones = await cotizarEnvios({ nombre, telefono, direccion, productos, subtotal });
+  const envio = (productos || []).length ? calcularEnvio(subtotal, tipo) : 0;
 
   await agregarFilasConSeparador('Envio', [[
     idEnvio,
@@ -255,32 +251,8 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
     subtotal + envio,      // Q Total cobrado
     fechaPedido(),         // R Fecha del pedido (hora de Ciudad de México)
     '',                    // S Cancelada (la llenas tú con "Sí" para cancelar)
-    resumenMasBarata(cotizaciones) // T Opción más barata (el detalle completo va en la hoja "Cotizaciones")
+    tipo === 'tienda' ? 'Tienda' : 'Envio' // T Tipo: Envio (a domicilio) o Tienda (recoge en la boutique)
   ]]);
-
-  // Hoja "Cotizaciones": una fila por opción de envío, de la más barata a la más cara.
-  // Si la hoja no existe o falla, el pedido ya quedó guardado y solo se omite el detalle.
-  if (cotizaciones.length) {
-    try {
-      const fecha = fechaPedido();
-      const d = direccion || {};
-      await agregarFilasConSeparador('Cotizaciones', cotizaciones.map((o, i) => [
-        idEnvio,
-        fecha,
-        nombre || '',
-        d.ciudad || '',
-        d.estado || '',
-        d.cp || '',
-        o.paqueteria,
-        o.servicio,
-        o.precio,
-        o.entrega,
-        i === 0 ? 'Sí' : ''
-      ]));
-    } catch (error) {
-      console.error('No se pudo escribir en la hoja Cotizaciones:', error.message);
-    }
-  }
 
   const filasProducto = (productos || []).map(producto => [
     idEnvio,
@@ -307,7 +279,7 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
       subtotal,
       envio,
       total: subtotal + envio,
-      cotizaciones
+      tipo
     });
   } catch (error) {
     console.error('Error al enviar correos del pedido:', error);

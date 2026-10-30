@@ -121,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
   cargarProductos();
   confirmarPedidoSiAplica();
   confirmarLinkClipSiAplica();
+  confirmarStripeSiAplica();
 });
 
 function configurarMenu() {
@@ -1416,9 +1417,15 @@ function mostrarCheckout(items) {
 }
 
 // Costo fijo de envío por pedido (el servidor lo vuelve a calcular; esto solo se muestra).
-// ENVÍO DESACTIVADO PARA PRUEBAS. Para volver a cobrarlo: borra la línea de 0 y quita el comentario de la de 280.
-// const COSTO_ENVIO = 280;
-const COSTO_ENVIO = 0;
+const COSTO_ENVIO = 210;
+const ENVIO_GRATIS_DESDE = 5000;
+let tipoEntrega = 'envio'; // 'envio' (a domicilio) o 'tienda' (recoger en la boutique)
+
+function costoEnvioPara(subtotal) {
+  if (tipoEntrega === 'tienda') return 0;
+  if (!(subtotal > 0)) return 0;
+  return subtotal >= ENVIO_GRATIS_DESDE ? 0 : COSTO_ENVIO;
+}
 
 function renderizarResumenCheckout() {
   const lista = document.getElementById('checkout-resumen-lista');
@@ -1452,11 +1459,24 @@ function renderizarResumenCheckout() {
     `;
   }).join('');
 
-  const envio = itemsCheckout.length ? COSTO_ENVIO : 0;
+  const envio = itemsCheckout.length ? costoEnvioPara(total) : 0;
   const subEl = document.getElementById('checkout-subtotal');
   const envEl = document.getElementById('checkout-envio');
+  const notaEnvio = document.getElementById('checkout-envio-nota');
   if (subEl) subEl.textContent = dinero(total);
-  if (envEl) envEl.textContent = dinero(envio);
+  if (envEl) envEl.textContent = envio > 0 ? dinero(envio) : 'Gratis';
+
+  if (notaEnvio) {
+    if (tipoEntrega === 'tienda') {
+      notaEnvio.textContent = 'Recoges en la boutique, sin costo de envío.';
+    } else if (envio === 0 && total >= ENVIO_GRATIS_DESDE) {
+      notaEnvio.textContent = '¡Tu compra tiene envío gratis!';
+    } else if (total > 0) {
+      notaEnvio.textContent = `Te faltan ${dinero(ENVIO_GRATIS_DESDE - total)} para envío gratis.`;
+    } else {
+      notaEnvio.textContent = '';
+    }
+  }
 
   totalEl.textContent = dinero(total + envio);
   actualizarBotonClip();
@@ -1619,12 +1639,15 @@ function obtenerDireccionCheckout() {
 
   const direccion = {};
   let faltante = null;
+  const soloDatos = tipoEntrega === 'tienda';
 
   Object.entries(campos).forEach(([clave, input]) => {
-    const valor = input ? input.value.trim() : '';
+    // Al recoger en tienda solo se piden nombre y teléfono; la dirección se manda vacía.
+    const aplica = !soloDatos || clave === 'nombre' || clave === 'telefono';
+    const valor = input && aplica ? input.value.trim() : '';
     direccion[clave] = valor;
 
-    if (input && input.required && !valor && !faltante) {
+    if (input && aplica && input.required && !valor && !faltante) {
       faltante = input;
     }
   });
@@ -1645,14 +1668,14 @@ async function procesarPagoCheckout(metodo) {
   const direccion = obtenerDireccionCheckout();
 
   if (!direccion) {
-    if (mensaje) mensaje.textContent = 'Completa tu dirección de entrega antes de pagar.';
+    if (mensaje) mensaje.textContent = (tipoEntrega === 'tienda' ? 'Completa tu nombre y teléfono antes de pagar.' : 'Completa tu dirección de entrega antes de pagar.');
     return;
   }
 
   if (mensaje) mensaje.textContent = '';
 
   const campoGuardar = document.getElementById('checkout-guardar-direccion');
-  if (campoGuardar && campoGuardar.checked) {
+  if (tipoEntrega === 'envio' && campoGuardar && campoGuardar.checked) {
     await guardarDireccionDesdeCheckout();
   }
 
@@ -2064,7 +2087,7 @@ function totalCheckout() {
     0
   );
 
-  return productos + (itemsCheckout.length ? COSTO_ENVIO : 0);
+  return productos + (itemsCheckout.length ? costoEnvioPara(productos) : 0);
 }
 
 function actualizarBotonClip() {
@@ -2120,7 +2143,7 @@ async function pagarConTarjetaClip() {
   const direccion = obtenerDireccionCheckout();
 
   if (!direccion) {
-    if (mensaje) mensaje.textContent = 'Completa tu dirección de entrega antes de pagar.';
+    if (mensaje) mensaje.textContent = (tipoEntrega === 'tienda' ? 'Completa tu nombre y teléfono antes de pagar.' : 'Completa tu dirección de entrega antes de pagar.');
     return;
   }
 
@@ -2154,7 +2177,7 @@ async function pagarConTarjetaClip() {
     }
 
     const campoGuardar = document.getElementById('checkout-guardar-direccion');
-    if (campoGuardar && campoGuardar.checked) {
+    if (tipoEntrega === 'envio' && campoGuardar && campoGuardar.checked) {
       await guardarDireccionDesdeCheckout();
     }
 
@@ -2498,7 +2521,7 @@ async function confirmarPagoTarjetaGuardada() {
   const direccion = obtenerDireccionCheckout();
 
   if (!direccion) {
-    if (mensaje) mensaje.textContent = 'Completa tu dirección de entrega antes de pagar.';
+    if (mensaje) mensaje.textContent = (tipoEntrega === 'tienda' ? 'Completa tu nombre y teléfono antes de pagar.' : 'Completa tu dirección de entrega antes de pagar.');
     return;
   }
 
@@ -2506,7 +2529,7 @@ async function confirmarPagoTarjetaGuardada() {
   if (mensaje) mensaje.textContent = '';
 
   const campoGuardar = document.getElementById('checkout-guardar-direccion');
-  if (campoGuardar && campoGuardar.checked) {
+  if (tipoEntrega === 'envio' && campoGuardar && campoGuardar.checked) {
     await guardarDireccionDesdeCheckout();
   }
 
@@ -2786,9 +2809,10 @@ function renderizarCarrito() {
   });
 
   if (subC) subC.textContent = dinero(total);
-  if (envC) envC.textContent = dinero(COSTO_ENVIO);
+  // El envío se elige y se calcula en el checkout (a domicilio o recoger en tienda).
+  if (envC) envC.textContent = 'Se calcula al pagar';
 
-  carritoTotal.textContent = dinero(total + COSTO_ENVIO);
+  carritoTotal.textContent = dinero(total);
 
   carritoContenido.querySelectorAll('[data-accion]').forEach(boton => {
     boton.addEventListener('click', () => {
@@ -2987,7 +3011,7 @@ async function pagarConClip() {
   const direccion = obtenerDireccionCheckout();
 
   if (!direccion) {
-    if (mensaje) mensaje.textContent = 'Completa tu dirección de entrega antes de pagar.';
+    if (mensaje) mensaje.textContent = (tipoEntrega === 'tienda' ? 'Completa tu nombre y teléfono antes de pagar.' : 'Completa tu dirección de entrega antes de pagar.');
     return;
   }
 
@@ -3002,7 +3026,7 @@ async function pagarConClip() {
 
   try {
     const campoGuardar = document.getElementById('checkout-guardar-direccion');
-    if (campoGuardar && campoGuardar.checked) {
+    if (tipoEntrega === 'envio' && campoGuardar && campoGuardar.checked) {
       await guardarDireccionDesdeCheckout();
     }
 
@@ -3017,6 +3041,7 @@ async function pagarConClip() {
       body: JSON.stringify({
         productos: itemsCheckout,
         direccion,
+        tipoEntrega,
         urlRetorno: window.location.origin + window.location.pathname
       })
     });
@@ -3457,6 +3482,7 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion
       body: JSON.stringify({
         productos: productosParaPagar,
         direccion,
+        tipoEntrega,
         urlRetorno: window.location.origin + window.location.pathname
       })
     });
@@ -3593,3 +3619,266 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
   else iniciar();
 })();
+
+
+/* PAGO CON TARJETA DENTRO DE LA PÁGINA (Stripe) */
+
+let stripeInstancia = null;
+let stripeElementos = null;
+let stripeIntentId = null;
+let stripeTotal = 0;
+
+function cargarStripeJs() {
+  if (window.Stripe) return Promise.resolve();
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://js.stripe.com/v3/';
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('No se pudo cargar Stripe. Revisa tu conexión.'));
+    document.head.appendChild(script);
+  });
+}
+
+function cerrarPanelStripe() {
+  const panel = document.getElementById('panel-stripe');
+  const abrir = document.getElementById('btn-tarjeta-stripe');
+
+  if (panel) panel.classList.add('oculto');
+  if (abrir) abrir.classList.remove('oculto');
+
+  if (stripeElementos) {
+    try {
+      const elemento = stripeElementos.getElement('payment');
+      if (elemento) elemento.destroy();
+    } catch (error) { /* ya estaba cerrado */ }
+  }
+
+  stripeElementos = null;
+  stripeIntentId = null;
+}
+
+async function abrirTarjetaStripe() {
+  const mensaje = document.getElementById('checkout-mensaje');
+  const boton = document.getElementById('btn-tarjeta-stripe');
+
+  if (!itemsCheckout.length) return;
+
+  if (!window.usuarioActual) {
+    pedirInicioSesion('Inicia sesión para pagar con tarjeta.');
+    return;
+  }
+
+  const direccion = obtenerDireccionCheckout();
+
+  if (!direccion) {
+    if (mensaje) mensaje.textContent = (tipoEntrega === 'tienda' ? 'Completa tu nombre y teléfono antes de pagar.' : 'Completa tu dirección de entrega antes de pagar.');
+    return;
+  }
+
+  if (mensaje) mensaje.textContent = '';
+
+  const textoOriginal = boton.innerHTML;
+  boton.disabled = true;
+  boton.textContent = 'Preparando pago seguro...';
+
+  try {
+    const campoGuardar = document.getElementById('checkout-guardar-direccion');
+    if (tipoEntrega === 'envio' && campoGuardar && campoGuardar.checked) {
+      await guardarDireccionDesdeCheckout();
+    }
+
+    await cargarStripeJs();
+
+    const idToken = await window.obtenerTokenSesion();
+
+    const respuesta = await fetch(obtenerBaseApi() + '/api/stripe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`
+      },
+      body: JSON.stringify({ accion: 'crear', productos: itemsCheckout, direccion, tipoEntrega })
+    });
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok || !datos.ok) {
+      throw new Error(datos.message || datos.error || 'No se pudo iniciar el pago con tarjeta.');
+    }
+
+    stripeInstancia = window.Stripe(datos.publishableKey);
+    stripeIntentId = datos.paymentIntentId;
+    stripeTotal = Number(datos.total);
+
+    stripeElementos = stripeInstancia.elements({
+      clientSecret: datos.clientSecret,
+      locale: 'es',
+      appearance: {
+        theme: 'flat',
+        variables: {
+          fontFamily: '"Times New Roman", Times, serif',
+          colorPrimary: '#1f1f1f',
+          colorBackground: '#f6f4f1',
+          colorText: '#1f1f1f',
+          colorDanger: '#a33a3a',
+          borderRadius: '0px',
+          spacingUnit: '4px'
+        },
+        rules: {
+          '.Input': { border: '1px solid #ddd6ca', padding: '14px' },
+          '.Input:focus': { border: '1px solid #1f1f1f', boxShadow: 'none' },
+          '.Label': { color: '#6b5d52' }
+        }
+      }
+    });
+
+    stripeElementos.create('payment', { layout: 'tabs' }).mount('#stripe-element');
+
+    const botonPagar = document.getElementById('btn-confirmar-stripe');
+    botonPagar.textContent = 'Pagar ' + dinero(stripeTotal);
+    botonPagar.disabled = false;
+
+    document.getElementById('panel-stripe').classList.remove('oculto');
+    boton.classList.add('oculto');
+    document.getElementById('panel-stripe').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } catch (error) {
+    console.error('No se pudo abrir el pago con tarjeta:', error);
+    if (mensaje) mensaje.textContent = error.message || 'No se pudo iniciar el pago con tarjeta.';
+  } finally {
+    boton.disabled = false;
+    boton.innerHTML = textoOriginal;
+  }
+}
+
+async function confirmarCobroStripeEnServidor(paymentIntentId) {
+  const respuesta = await fetch(obtenerBaseApi() + '/api/stripe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accion: 'confirmar', paymentIntentId })
+  });
+
+  return { respuesta, datos: await respuesta.json() };
+}
+
+async function pagarConStripe() {
+  const mensaje = document.getElementById('checkout-mensaje');
+  const boton = document.getElementById('btn-confirmar-stripe');
+
+  if (!stripeInstancia || !stripeElementos) return;
+
+  if (mensaje) mensaje.textContent = '';
+
+  const textoOriginal = boton.textContent;
+  boton.disabled = true;
+  boton.textContent = 'Procesando pago...';
+
+  try {
+    const resultado = await stripeInstancia.confirmPayment({
+      elements: stripeElementos,
+      confirmParams: {
+        return_url: window.location.origin + window.location.pathname + '?pago=stripe'
+      },
+      redirect: 'if_required'
+    });
+
+    if (resultado.error) {
+      throw new Error(resultado.error.message || 'No se pudo procesar la tarjeta.');
+    }
+
+    const intento = resultado.paymentIntent;
+
+    if (intento && intento.status === 'succeeded') {
+      const { respuesta, datos } = await confirmarCobroStripeEnServidor(intento.id);
+
+      if (respuesta.ok && datos.ok) {
+        pagoClipExitoso();
+        return;
+      }
+
+      // El cobro sí se hizo; el aviso automático de Stripe terminará de registrar el pedido.
+      mostrarAviso('Pago recibido', 'Tu pago se realizó correctamente. Tu pedido aparecerá en "Mi cuenta → Pedidos" en unos minutos.');
+      return;
+    }
+
+    throw new Error('El pago no se completó. No se hizo ningún cobro.');
+  } catch (error) {
+    console.error('No se pudo pagar con tarjeta:', error);
+    if (mensaje) mensaje.textContent = error.message || 'No se pudo procesar el pago.';
+    boton.disabled = false;
+    boton.textContent = textoOriginal;
+  }
+}
+
+// Cuando el banco pide verificación extra (3D Secure) el cliente sale de la página y regresa aquí.
+async function confirmarStripeSiAplica() {
+  const parametros = new URLSearchParams(window.location.search);
+
+  if (parametros.get('pago') !== 'stripe') return;
+
+  const intentId = parametros.get('payment_intent');
+  const estado = parametros.get('redirect_status');
+
+  window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
+
+  if (!intentId) return;
+
+  if (estado && estado !== 'succeeded') {
+    mostrarAviso('Pago no completado', 'No se completó el pago con tarjeta. No se hizo ningún cobro. Puedes intentar de nuevo.');
+    return;
+  }
+
+  try {
+    const { respuesta, datos } = await confirmarCobroStripeEnServidor(intentId);
+
+    if (respuesta.ok && datos.ok) {
+      carrito = [];
+      guardarCarrito();
+      actualizarContadorCarrito();
+      mostrarAviso('¡Gracias por tu compra!', 'Tu pedido ya quedó registrado y lo puedes ver en "Mi cuenta → Pedidos".');
+      return;
+    }
+
+    mostrarAviso('Pago en revisión', 'Tu pago todavía no se confirma. Revisa "Mi cuenta → Pedidos" en unos minutos.');
+  } catch (error) {
+    console.error('No se pudo confirmar el pago con tarjeta:', error);
+  }
+}
+
+(function configurarStripe() {
+  const abrir = document.getElementById('btn-tarjeta-stripe');
+  const pagar = document.getElementById('btn-confirmar-stripe');
+  const cancelar = document.getElementById('btn-cancelar-stripe');
+
+  if (abrir) abrir.addEventListener('click', abrirTarjetaStripe);
+  if (pagar) pagar.addEventListener('click', pagarConStripe);
+  if (cancelar) cancelar.addEventListener('click', cerrarPanelStripe);
+})();
+
+
+/* TIPO DE ENTREGA (envío a domicilio / recoger en tienda) */
+
+const camposRequeridosSoloEnvio = ['checkout-cp', 'checkout-calle', 'checkout-ciudad', 'checkout-estado'];
+
+function aplicarTipoEntrega(tipo) {
+  tipoEntrega = tipo === 'tienda' ? 'tienda' : 'envio';
+
+  const contenedor = document.querySelector('.checkout-direccion');
+  if (contenedor) contenedor.classList.toggle('entrega-tienda', tipoEntrega === 'tienda');
+
+  camposRequeridosSoloEnvio.forEach(id => {
+    const campo = document.getElementById(id);
+    if (campo) campo.required = tipoEntrega === 'envio';
+  });
+
+  const mensaje = document.getElementById('checkout-mensaje');
+  if (mensaje) mensaje.textContent = '';
+
+  renderizarResumenCheckout();
+}
+
+document.querySelectorAll('input[name="tipo-entrega"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    if (radio.checked) aplicarTipoEntrega(radio.value);
+  });
+});

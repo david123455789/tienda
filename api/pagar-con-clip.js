@@ -33,17 +33,17 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { token, productos, direccion, prevention_data: prevencion } = req.body || {};
+    const { token, productos, direccion, tipoEntrega, prevention_data: prevencion } = req.body || {};
 
     if (!token) {
       return res.status(400).json({ mensaje: 'Falta el token de la tarjeta.' });
     }
 
-    if (!direccion || !direccion.calle || !direccion.cp) {
+    const verificado = await validarProductos(productos, tipoEntrega);
+
+    if (verificado.tipo !== 'tienda' && (!direccion || !direccion.calle || !direccion.cp)) {
       return res.status(400).json({ mensaje: 'Falta la dirección de entrega.' });
     }
-
-    const verificado = await validarProductos(productos);
 
     const descripcion = verificado.productos
       .map(producto => producto.nombre)
@@ -86,6 +86,7 @@ module.exports = async function handler(req, res) {
       correo: usuario.email,
       telefono: direccion.telefono || '',
       direccion,
+      tipo: verificado.tipo,
       productos: verificado.productos
     };
 

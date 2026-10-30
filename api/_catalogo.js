@@ -113,12 +113,23 @@ function errorCatalogo(mensaje, status = 400) {
   return error;
 }
 
-// Costo fijo de envío por pedido, sin importar cuántos productos se compren.
-// ENVÍO DESACTIVADO PARA PRUEBAS. Para volver a cobrarlo: borra la línea de 0 y quita el comentario de la de 280.
-// const COSTO_ENVIO = 280;
-const COSTO_ENVIO = 0;
+// Reglas de envío:
+//  - Entrega "envio" (a domicilio): $210 por pedido, gratis si los productos suman $5,000 o más.
+//  - Entrega "tienda" (recoger en la boutique): sin costo y sin dirección.
+const COSTO_ENVIO = 210;
+const ENVIO_GRATIS_DESDE = 5000;
 
-async function validarProductos(productosCliente) {
+function normalizarTipoEntrega(tipo) {
+  return String(tipo || '').toLowerCase() === 'tienda' ? 'tienda' : 'envio';
+}
+
+function calcularEnvio(subtotal, tipo) {
+  if (normalizarTipoEntrega(tipo) === 'tienda') return 0;
+  if (!(Number(subtotal) > 0)) return 0;
+  return Number(subtotal) >= ENVIO_GRATIS_DESDE ? 0 : COSTO_ENVIO;
+}
+
+async function validarProductos(productosCliente, tipoEntrega) {
   if (!Array.isArray(productosCliente) || productosCliente.length === 0) {
     throw errorCatalogo('Tu carrito está vacío.');
   }
@@ -188,10 +199,11 @@ async function validarProductos(productosCliente) {
   }
 
   const subtotal = Number(total.toFixed(2));
-  const envio = verificados.length ? COSTO_ENVIO : 0;
+  const tipo = normalizarTipoEntrega(tipoEntrega);
+  const envio = verificados.length ? calcularEnvio(subtotal, tipo) : 0;
 
   // total = productos + envío (un solo envío por pedido)
-  return { productos: verificados, subtotal, envio, total: Number((subtotal + envio).toFixed(2)) };
+  return { productos: verificados, subtotal, tipo, envio, total: Number((subtotal + envio).toFixed(2)) };
 }
 
-module.exports = { validarProductos, parsearCsv, COSTO_ENVIO };
+module.exports = { validarProductos, parsearCsv, COSTO_ENVIO, ENVIO_GRATIS_DESDE, calcularEnvio, normalizarTipoEntrega };

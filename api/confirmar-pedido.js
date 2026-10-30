@@ -147,6 +147,7 @@ async function confirmarPaypal(orderId, db) {
     correo: datos.correo_cuenta || '',
     telefono: datos.direccion ? datos.direccion.telefono : '',
     direccion: datos.direccion || {},
+    tipo: datos.tipo || 'envio',
     productos: datos.productos || []
   };
 }
@@ -179,6 +180,29 @@ async function handler(req, res) {
 
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
+  }
+
+  // Aviso (webhook) de Mercado Pago. Antes vivía en api/webhook-mercadopago.js; se juntó aquí
+  // para no pasar el límite de 12 funciones de Vercel Hobby (vercel.json redirige la ruta vieja).
+  if (req.query && req.query.webhook === 'mp') {
+    try {
+      const query = req.query || {};
+      const cuerpoAviso = req.body || {};
+      const tipo = cuerpoAviso.type || cuerpoAviso.topic || query.type || query.topic;
+      const id = (cuerpoAviso.data && cuerpoAviso.data.id) || query['data.id'] || query.id;
+
+      // Solo nos interesan los avisos de pagos.
+      if ((tipo && tipo !== 'payment') || !id) {
+        return res.status(200).json({ ignorado: true });
+      }
+
+      const resultadoAviso = await procesarPagoMercadoPago(String(id), obtenerFirestoreAdmin());
+      return res.status(200).json(resultadoAviso);
+    } catch (error) {
+      console.error('Error en el aviso de Mercado Pago:', error);
+      // Un error 500 hace que Mercado Pago reintente el aviso más tarde.
+      return res.status(500).json({ error: error.message });
+    }
   }
 
   if (req.method !== 'POST') {

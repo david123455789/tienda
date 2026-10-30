@@ -75,6 +75,7 @@ function correoCliente(pedido) {
   const nombre = (pedido.nombre || '').split(' ')[0];
   const contenido = `
     <p style="margin:0 0 18px;font-size:16px;line-height:1.6">${nombre ? esc(nombre) + ', gracias' : 'Gracias'} por tu compra. Recibimos tu pedido <strong>${esc(pedido.idEnvio)}</strong> y ya lo estamos preparando.</p>
+    ${pedido.tipo === 'tienda' ? `<p style="margin:0 0 18px;font-size:15px;line-height:1.6">Elegiste <strong>recoger en tienda</strong>: Prol. P.º de la Reforma 413, Lomas de Santa Fe, 01219 Ciudad de México.</p>` : ''}
     ${tablaProductos(pedido.productos)}
     ${totales(pedido)}
     <p style="margin:24px 0 0;font-size:14px;line-height:1.6;color:${COLOR.suave}">Puedes ver el estatus de tu pedido en <a href="${SITIO}/cuenta" style="color:${COLOR.negro}">Mi cuenta → Pedidos</a>. Si tienes alguna duda, responde a este correo o escríbenos a contacto@in-equestrian.com.</p>`;
@@ -83,21 +84,6 @@ function correoCliente(pedido) {
     asunto: 'Gracias por tu compra en In Equestrian Shop',
     html: plantilla('Gracias por tu compra', contenido)
   };
-}
-
-function bloqueCotizaciones(opciones) {
-  if (!opciones || !opciones.length) {
-    return `<p style="margin:22px 0 0;font-size:13px;color:${COLOR.suave}">Cotización de envío (Envia.com): no disponible para este pedido.</p>`;
-  }
-
-  const filas = opciones.slice(0, 6).map((o, i) => `
-    <tr>
-      <td style="padding:6px 0;border-bottom:1px solid ${COLOR.borde};font-size:14px;color:${COLOR.texto}">${i === 0 ? '<strong>' : ''}${esc(o.paqueteria)} ${esc(o.servicio)}${i === 0 ? '</strong>' : ''}${o.entrega ? `<br><span style="font-size:12px;color:${COLOR.suave}">${esc(o.entrega)}</span>` : ''}</td>
-      <td style="padding:6px 0;border-bottom:1px solid ${COLOR.borde};font-size:14px;color:${COLOR.texto};text-align:right;white-space:nowrap">${i === 0 ? '<strong>' : ''}${dinero(o.precio)}${i === 0 ? '</strong>' : ''}</td>
-    </tr>`).join('');
-
-  return `<p style="margin:24px 0 6px;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:${COLOR.suave}">Cotización de envío (Envia.com)</p>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">${filas}</table>`;
 }
 
 function correoTienda(pedido) {
@@ -122,11 +108,11 @@ function correoTienda(pedido) {
       ${fila('Nombre', esc(pedido.nombre))}
       ${fila('Correo', pedido.correo ? `<a href="mailto:${esc(pedido.correo)}" style="color:${COLOR.negro}">${esc(pedido.correo)}</a>` : '')}
       ${fila('Teléfono', esc(pedido.telefono))}
-      ${fila('Dirección', direccion)}
+      ${fila('Entrega', pedido.tipo === 'tienda' ? '<strong>Recoge en tienda</strong>' : 'Envío a domicilio')}
+      ${pedido.tipo === 'tienda' ? '' : fila('Dirección', direccion)}
     </table>
     ${tablaProductos(pedido.productos)}
     ${totales(pedido)}
-    ${bloqueCotizaciones(pedido.cotizaciones)}
     <p style="margin:24px 0 0;font-size:13px;color:${COLOR.suave}">El pedido ya está en tu hoja de Pedidos con estatus "Aceptado".</p>`;
 
   return {

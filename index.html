@@ -405,8 +405,8 @@
           <span id="carrito-subtotal">$0.00</span>
         </div>
         <div class="carrito-resumen-fila">
-          <span>Envío <small>(un solo envío por pedido)</small></span>
-          <span id="carrito-envio">$280.00</span>
+          <span>Envío <small>(gratis desde $5,000 · o recoge en tienda)</small></span>
+          <span id="carrito-envio">Se calcula al pagar</span>
         </div>
 
         <div class="carrito-resumen-total">
@@ -424,7 +424,7 @@
     <div class="cart-header">
       <p class="eyebrow">Un paso más</p>
       <h1>Finalizar compra</h1>
-      <p>Confirma tu dirección de entrega y elige cómo quieres pagar.</p>
+      <p>Elige cómo recibir tu pedido y cómo quieres pagar.</p>
     </div>
 
     <div class="checkout-layout">
@@ -432,7 +432,8 @@
         <h3>Resumen del pedido</h3>
         <div id="checkout-resumen-lista" class="checkout-resumen-lista"></div>
         <div class="checkout-resumen-linea"><span>Subtotal</span><span id="checkout-subtotal">$0.00</span></div>
-        <div class="checkout-resumen-linea"><span>Envío</span><span id="checkout-envio">$280.00</span></div>
+        <div class="checkout-resumen-linea"><span>Envío</span><span id="checkout-envio">$210.00</span></div>
+        <p id="checkout-envio-nota" class="checkout-envio-nota"></p>
         <div class="checkout-resumen-total">
           <p>Total</p>
           <strong id="checkout-total">$0.00</strong>
@@ -440,7 +441,26 @@
       </div>
 
       <div class="checkout-direccion">
-        <h3><span class="checkout-num">1</span>Dirección de entrega</h3>
+        <h3><span class="checkout-num">1</span>Entrega</h3>
+
+        <div class="entrega-opciones" role="radiogroup" aria-label="Tipo de entrega">
+          <label class="entrega-opcion">
+            <input type="radio" name="tipo-entrega" value="envio" checked>
+            <span class="entrega-opcion-caja">
+              <strong>Envío a domicilio</strong>
+              <small>$210.00 · gratis en compras de $5,000 o más</small>
+            </span>
+          </label>
+          <label class="entrega-opcion">
+            <input type="radio" name="tipo-entrega" value="tienda">
+            <span class="entrega-opcion-caja">
+              <strong>Recoger en tienda</strong>
+              <small>Sin costo · no necesitas dirección</small>
+            </span>
+          </label>
+        </div>
+
+        <p class="entrega-tienda-nota solo-tienda">Recogerás tu pedido en nuestra boutique: Prol. P.º de la Reforma 413, Lomas de Santa Fe, 01219 Ciudad de México, CDMX.</p>
 
         <div id="checkout-direcciones-guardadas-wrap" class="oculto">
           <label class="campo-tarjeta-label" for="checkout-direccion-guardada">Usar una dirección guardada</label>
@@ -451,19 +471,19 @@
 
         <form id="form-checkout-direccion" class="form-direccion">
           <input type="text" id="checkout-nombre" placeholder="Nombre completo" required>
-          <input type="text" id="checkout-cp" placeholder="Código postal" inputmode="numeric" maxlength="5" required>
-          <p id="checkout-cp-estado" class="dir-cp-estado"></p>
-          <div class="tarjeta-fila">
+          <input type="text" id="checkout-cp" class="solo-envio" placeholder="Código postal" inputmode="numeric" maxlength="5" required>
+          <p id="checkout-cp-estado" class="dir-cp-estado solo-envio"></p>
+          <div class="tarjeta-fila solo-envio">
             <input type="text" id="checkout-calle" placeholder="Calle" required>
             <input type="text" id="checkout-numero" placeholder="Número">
           </div>
-          <input type="text" id="checkout-colonia" list="checkout-colonias-lista" placeholder="Colonia" autocomplete="off">
+          <input type="text" id="checkout-colonia" class="solo-envio" list="checkout-colonias-lista" placeholder="Colonia" autocomplete="off">
           <datalist id="checkout-colonias-lista"></datalist>
-          <input type="text" id="checkout-ciudad" placeholder="Ciudad" required>
-          <input type="text" id="checkout-estado" placeholder="Estado" required>
+          <input type="text" id="checkout-ciudad" class="solo-envio" placeholder="Ciudad" required>
+          <input type="text" id="checkout-estado" class="solo-envio" placeholder="Estado" required>
           <input type="tel" id="checkout-telefono" placeholder="Teléfono" required>
 
-          <label class="checkout-guardar-direccion">
+          <label class="checkout-guardar-direccion solo-envio">
             <input type="checkbox" id="checkout-guardar-direccion">
             Guardar esta dirección en mi cuenta
           </label>
@@ -493,6 +513,24 @@
               <p>Cualquier duda comunícate con nosotros y con gusto la resolveremos: <a href="tel:+522219395055">+52 221 939 5055</a></p>
             </div>
           </aside>
+
+          <div class="stripe-bloque">
+            <button id="btn-tarjeta-stripe" type="button" class="stripe-btn-abrir">
+              <span class="stripe-btn-icono" aria-hidden="true">
+                <svg width="22" height="16" viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="20" height="14" rx="2.5"/><path d="M1 5.5h20"/><path d="M4.5 11h4"/></svg>
+              </span>
+              Pagar con tarjeta de crédito o débito
+            </button>
+
+            <div id="panel-stripe" class="panel-stripe oculto">
+              <div id="stripe-element" class="stripe-element"></div>
+              <button id="btn-confirmar-stripe" type="button" class="stripe-btn-pagar">Pagar</button>
+              <button id="btn-cancelar-stripe" type="button" class="stripe-btn-cancelar">Cancelar</button>
+              <p class="stripe-nota">Tus datos de tarjeta los recibe Stripe directamente. Esta tienda nunca los ve ni los guarda.</p>
+            </div>
+
+            <div class="stripe-separador"><span>o paga con</span></div>
+          </div>
 
           <div class="metodos-pago-botones">
             <!-- Mercado Pago está oculto por ahora. Para volver a mostrarlo, quita la palabra "oculto" de la clase. -->

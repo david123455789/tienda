@@ -47,13 +47,17 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { productos, direccion, urlRetorno } = req.body || {};
+    const { productos, direccion, urlRetorno, tipoEntrega } = req.body || {};
 
-    if (!direccion || !direccion.calle || !direccion.cp) {
+    const verificado = await validarProductos(productos, tipoEntrega);
+
+    if (verificado.tipo === 'tienda') {
+      if (!direccion || !direccion.nombre || !direccion.telefono) {
+        return res.status(400).json({ mensaje: 'Faltan tu nombre y teléfono.' });
+      }
+    } else if (!direccion || !direccion.calle || !direccion.cp) {
       return res.status(400).json({ mensaje: 'Falta la dirección de entrega.' });
     }
-
-    const verificado = await validarProductos(productos);
 
     if (verificado.total < 1) {
       return res.status(400).json({ mensaje: 'El monto mínimo para pagar con Clip es de $1.00.' });
@@ -131,6 +135,7 @@ module.exports = async function handler(req, res) {
         correo: usuario.email,
         telefono: direccion.telefono || '',
         direccion,
+        tipo: verificado.tipo,
         productos: verificado.productos
       }
     });

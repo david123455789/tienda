@@ -79,7 +79,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { productos, direccion, urlRetorno } = req.body;
+    const { productos, direccion, urlRetorno, tipoEntrega } = req.body;
     const base = obtenerUrlRetorno(urlRetorno);
 
     if (!Array.isArray(productos) || productos.length === 0) {
@@ -88,7 +88,7 @@ module.exports = async function handler(req, res) {
 
     // Los precios y el total los calcula el servidor con tu catálogo (Google Sheets),
     // nunca se toman del navegador.
-    const verificado = await validarProductos(productos);
+    const verificado = await validarProductos(productos, tipoEntrega);
 
     const items = verificado.productos.map((producto) => ({
       name: String(producto.nombre || 'Producto').slice(0, 127),
@@ -133,7 +133,7 @@ module.exports = async function handler(req, res) {
       items
     };
 
-    if (direccion && direccion.calle) {
+    if (verificado.tipo !== 'tienda' && direccion && direccion.calle) {
       purchaseUnit.shipping = {
         name: { full_name: direccion.nombre || undefined },
         address: {
@@ -193,6 +193,7 @@ module.exports = async function handler(req, res) {
       correo_cuenta: usuario ? usuario.email : '',
       productos: verificado.productos,
       direccion: direccion || {},
+      tipo: verificado.tipo,
       creado: Date.now()
     });
 
