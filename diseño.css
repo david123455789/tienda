@@ -3755,3 +3755,71 @@ html.cargando-ruta.ruta-producto .carga-producto{display:grid}
 .site-header .cuenta-icon{display:block}
 .site-header .cuenta-texto{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
 .site-header .cuenta-btn{padding-left:6px;padding-right:6px}
+
+
+/* AVISO DE ENTREGA (checkout) */
+.aviso-entrega {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin: 0 0 18px;
+  padding: 16px 18px;
+  background: var(--ivory);
+  border: 1px solid var(--khaki);
+  border-left: 3px solid var(--black);
+  color: var(--charcoal);
+  font-family: 'Times New Roman', Times, serif;
+}
+.aviso-entrega-icono {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--black);
+  color: var(--ivory);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+.aviso-entrega-texto { min-width: 0; }
+.aviso-entrega-texto strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  color: var(--black);
+}
+.aviso-entrega-texto p {
+  margin: 0 0 6px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.aviso-entrega-texto p:last-child { margin-bottom: 0; }
+.aviso-entrega-texto a {
+  color: var(--black);
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: underline;
+}
+@media (max-width: 600px) {
+  .aviso-entrega { gap: 10px; padding: 14px; }
+  .aviso-entrega-icono { width: 28px; height: 28px; font-size: 13px; }
+  .aviso-entrega-texto strong { font-size: 15px; }
+  .aviso-entrega-texto p { font-size: 13.5px; }
+}
+
+
+/* PRÓXIMAMENTE (colección sin productos) */
+.proximamente {
+  grid-column: 1 / -1;
+  width: 100%;
+  max-width: 1100px;
+  margin: 10px auto 0;
+}
+.proximamente img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--khaki);
+}

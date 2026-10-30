@@ -958,13 +958,17 @@ function configurarSelectorEdad() {
 }
 configurarSelectorEdad();
 
-function mostrarProductos(lista) {
+function mostrarProductos(lista, esBusqueda) {
   if (!contenedorProductos) return;
 
   contenedorProductos.innerHTML = '';
 
   if (!lista || lista.length === 0) {
-    contenedorProductos.innerHTML = '<p class="mensaje-vacio">Proximamente.</p>';
+    if (esBusqueda) {
+      contenedorProductos.innerHTML = '<p class="mensaje-vacio">No se encontraron productos.</p>';
+      return;
+    }
+    contenedorProductos.innerHTML = '<div class="mensaje-vacio proximamente"><img src="imagenes/proximo.jpg" alt="Próximamente" loading="lazy"></div>';
     return;
   }
 
@@ -3273,7 +3277,7 @@ function aplicarFiltrosColeccion() {
 }
 
 function actualizarVistaConFiltros() {
-  mostrarProductos(aplicarFiltrosColeccion());
+  mostrarProductos(aplicarFiltrosColeccion(), true);
 }
 function configurarBusqueda() {
   if (!btnBuscar || !busquedaPanel || !inputBusqueda || !resultadosBusqueda) return;
@@ -3418,7 +3422,7 @@ function mostrarBusquedaComoColeccion(resultados, termino) {
 
   resetearFiltros();
   renderizarFiltros(productosColeccionActual);
-  mostrarProductos(productosColeccionActual);
+  mostrarProductos(productosColeccionActual, true);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
