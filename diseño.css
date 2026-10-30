@@ -3953,3 +3953,13 @@ html.cargando-ruta.ruta-producto .carga-producto{display:grid}
 @media (max-width: 600px) {
   .entrega-opciones { grid-template-columns: 1fr; }
 }
+
+/* Colores centrados en el celular */
+@media (max-width: 700px) {
+  .color-options {
+    justify-content: center;
+    gap: 20px 22px;
+  }
+  .color-card { text-align: center; }
+  .color-card span { display: inline-block; }
+}

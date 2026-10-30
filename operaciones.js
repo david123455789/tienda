@@ -3071,6 +3071,30 @@ if (btnPagarClip) {
   btnPagarClip.addEventListener('click', pagarConClip);
 }
 
+// Si el cliente regresa con la flecha "atrás" desde Clip o PayPal, el navegador puede devolver la
+// página tal como se quedó (con el botón en "Abriendo Clip..." y bloqueado). Aquí se restaura.
+const contenidoOriginalBtnClip = btnPagarClip ? btnPagarClip.innerHTML : '';
+
+function restaurarBotonesDePago() {
+  if (btnPagarClip) {
+    btnPagarClip.disabled = false;
+    btnPagarClip.innerHTML = contenidoOriginalBtnClip;
+  }
+
+  if (btnPagarPaypal) btnPagarPaypal.disabled = false;
+
+  const btnStripe = document.getElementById('btn-tarjeta-stripe');
+  if (btnStripe) btnStripe.disabled = false;
+}
+
+window.addEventListener('pageshow', evento => {
+  if (evento.persisted) restaurarBotonesDePago();
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') restaurarBotonesDePago();
+});
+
 if (btnPagarPaypal) {
   btnPagarPaypal.addEventListener('click', () => {
     procesarPagoCheckout('paypal');
