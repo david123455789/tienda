@@ -203,7 +203,7 @@ async function crearCobro(req, res, cuerpo) {
   const intento = await llamarStripe('/payment_intents', {
     amount: String(centavos),
     currency: 'mxn',
-    'payment_method_types[]': 'card',
+    'automatic_payment_methods[enabled]': 'true',
     description: 'Pedido In Equestrian Shop',
     'metadata[uid]': usuario.uid || ''
   });
