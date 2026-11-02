@@ -54,8 +54,6 @@ let productoActual = null;
 let varianteActual = null;
 let carrito = [];
 
-/* CARRITO POR CUENTA: cada usuario tiene su propio carrito */
-
 function claveCarritoUsuario() {
   const usuario = window.usuarioActual;
   return usuario ? `carrito_${usuario.uid}` : null;
@@ -89,10 +87,8 @@ function pedirInicioSesion(mensaje) {
   document.dispatchEvent(new CustomEvent('pedir-login', { detail: { mensaje } }));
 }
 
-// El carrito antiguo (compartido por todos) ya no se usa
 localStorage.removeItem('carrito');
 
-// Cada vez que alguien inicia o cierra sesión, se carga SU carrito
 document.addEventListener('usuario-actualizado', cargarCarritoUsuario);
 let itemsCheckout = [];
 let productosColeccionActual = [];
@@ -219,7 +215,6 @@ function configurarMenu() {
 function configurarDetalleProducto() {
   if (btnVolverColeccion) {
     btnVolverColeccion.addEventListener('click', () => {
-      // Si se entró directo al producto por un link, no hay colección previa: se usa la del producto.
       if (!ultimaCategoria && productoActual && productoActual.categoria) {
         filtrarProductos(productoActual.categoria, productoActual.subcategoria);
         return;
@@ -288,8 +283,6 @@ const PRODUCTOS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5Q
 
 const VARIANTES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QGmUxpghfQ4ksUmtL-79fJkke-pq7xBI7Pbv63H9DiJzksny0XSyOJzgJxKlxgM0ALjFD2FegOS/pub?gid=1834938244&single=true&output=csv';
 
-// Un producto es válido si trae nombre, precio e imagen. Google Sheets a veces entrega
-// el CSV con celdas vacías por un instante; esos productos se ven rotos (sin foto, sin nombre, $0).
 function productoCompleto(producto) {
   const variantes = producto.variantes || [];
   const imagenOk = Boolean(producto.image_url) && variantes.every(v => Boolean(v.image_url));
@@ -297,8 +290,6 @@ function productoCompleto(producto) {
   return Boolean(producto.nombre) && Number(producto.precio) > 0 && imagenOk;
 }
 
-// El catálogo se guarda en el navegador: la próxima visita muestra los productos al instante
-// y en segundo plano se actualiza con lo más reciente del Sheet.
 const CLAVE_CATALOGO = 'catalogo_v1';
 const VIGENCIA_CATALOGO = 7 * 24 * 60 * 60 * 1000;
 
@@ -306,7 +297,7 @@ function leerCatalogoGuardado() {
   try {
     const datos = JSON.parse(localStorage.getItem(CLAVE_CATALOGO));
     if (datos && datos.p && datos.v && Date.now() - datos.t < VIGENCIA_CATALOGO) return datos;
-  } catch (error) { /* sin catálogo guardado */ }
+  } catch (error) {  }
 
   return null;
 }
@@ -314,7 +305,7 @@ function leerCatalogoGuardado() {
 function guardarCatalogo(productosRows, variantesRows) {
   try {
     localStorage.setItem(CLAVE_CATALOGO, JSON.stringify({ t: Date.now(), p: productosRows, v: variantesRows }));
-  } catch (error) { /* si no hay espacio o está bloqueado, no pasa nada */ }
+  } catch (error) {  }
 }
 
 function vistaListaVisible() {
@@ -328,7 +319,6 @@ async function cargarProductos() {
   let lista = [];
   let filas = null;
 
-  // 1) Si hay catálogo guardado, se muestra de inmediato.
   const guardado = leerCatalogoGuardado();
   let usoGuardado = false;
 
@@ -343,8 +333,6 @@ async function cargarProductos() {
     }
   }
 
-  // 1b) Primera visita (sin catálogo guardado en el navegador): se usa la copia del catálogo
-  // que vive en la propia tienda, que llega mucho más rápido que Google Sheets.
   if (!usoGuardado && window.__snapshotTemprano) {
     try {
       const copia = await Promise.race([
@@ -362,13 +350,11 @@ async function cargarProductos() {
           precalentarImagenes();
         }
       }
-    } catch (error) { /* si la copia no sirve, se usa el Sheet en vivo */ }
+    } catch (error) {  }
   }
 
-  // 2) Se pide el catálogo actual al Sheet (con reintentos si llega incompleto).
   for (let intento = 0; intento < INTENTOS; intento++) {
     try {
-      // En los reintentos se agrega un parámetro distinto para saltarse cualquier copia a medias en caché.
       const extra = intento === 0 ? '' : `&t=${Date.now()}`;
 
       const [productosRows, variantesRows] = await Promise.all([
@@ -391,7 +377,6 @@ async function cargarProductos() {
   }
 
   if (ultimoError && !lista.length) {
-    // Sin internet o Sheets caído: si ya se mostró el catálogo guardado, se deja así.
     if (usoGuardado) return;
 
     console.error('Error cargando productos:', ultimoError);
@@ -409,7 +394,6 @@ async function cargarProductos() {
     return;
   }
 
-  // Lo que siga incompleto después de reintentar no se muestra, para que el cliente nunca vea tarjetas rotas.
   const incompletos = lista.filter(producto => !productoCompleto(producto));
   if (incompletos.length) {
     console.warn('Productos ocultos por datos incompletos en el Sheet:', incompletos.map(p => p.slug || p.id));
@@ -422,7 +406,6 @@ async function cargarProductos() {
   }
 
   if (usoGuardado) {
-    // Solo se vuelve a dibujar si algo cambió y el cliente está viendo el inicio o una colección.
     if (JSON.stringify(nuevos) !== JSON.stringify(productos)) {
       productos = nuevos;
       if (vistaListaVisible()) aplicarRutaActual();
@@ -437,19 +420,15 @@ async function cargarProductos() {
 }
 
 async function leerCsvDirecto(url) {
-  // Si la página ya pidió este CSV al arrancar (script del <head>), se usa esa respuesta una sola vez.
   const temprano = window.__catalogoTemprano && window.__catalogoTemprano[url];
   if (temprano) {
     delete window.__catalogoTemprano[url];
     try {
       return parsearCsv(await temprano);
     } catch (error) {
-      // Si esa petición falló, se vuelve a pedir normalmente.
     }
   }
 
-  // Siempre se pide una copia nueva: sin el parámetro t, el navegador puede reutilizar hasta 5 minutos
-  // una respuesta vieja del Sheet y un cambio de precio tardaría en verse.
   const response = await fetch(url.includes('&t=') ? url : url + '&t=' + Date.now());
 
   if (!response.ok) {
@@ -582,8 +561,6 @@ function crearProductosDesdeSheets(productosRows, variantesRows) {
     });
 }
 
-/* RUTAS: cada sección tiene su propia URL (ej. /maximilian-hombre-jackets-hoodies) */
-
 let aplicandoRuta = false;
 
 function slugTexto(texto) {
@@ -635,7 +612,6 @@ function actualizarRuta(ruta, reemplazar) {
   if (aplicandoRuta) return;
 
   try {
-    // En el inicio se conserva la URL tal cual (por ejemplo, el ?pago=... al volver de pagar).
     if (ruta === '/' && window.location.pathname === '/') return;
 
     if (window.location.pathname + window.location.search === ruta) return;
@@ -646,11 +622,9 @@ function actualizarRuta(ruta, reemplazar) {
       window.history.pushState({}, '', ruta);
     }
   } catch (error) {
-    // Si el navegador no permite cambiar la URL (por ejemplo, abriendo el archivo directo), no pasa nada.
   }
 }
 
-// Ejecuta una acción de ruta sin que cambie la URL (la URL ya es la correcta).
 function conRutaAplicada(accion) {
   aplicandoRuta = true;
 
@@ -662,7 +636,6 @@ function conRutaAplicada(accion) {
   }
 }
 
-// Espera a que Firebase diga si hay sesión o no (tarda un instante al cargar la página).
 function esperarSesion(accion) {
   if (window.usuarioActual !== undefined) {
     accion();
@@ -684,15 +657,12 @@ function esperarSesion(accion) {
 
 const RUTAS_ESPECIALES = ['/producto', '/buscar', '/carrito', '/checkout', '/cuenta'];
 
-// Al entrar directo a un link de categoría, se muestra de inmediato la vista de colección
-// (con su título) mientras llega el catálogo, en lugar de mostrar el inicio un momento.
 function prepararRutaInicial() {
   const ruta = window.location.pathname.replace(/\/+$/, '').replace(/\/index\.html$/, '');
   if (!ruta) return;
 
   const destino = tablaDeRutas()[ruta];
   if (!destino) {
-    // Producto, búsqueda, carrito o cuenta: solo se oculta el inicio mientras carga.
     if (!RUTAS_ESPECIALES.includes(ruta)) {
       document.documentElement.classList.remove('cargando-ruta');
     }
@@ -716,7 +686,6 @@ function aplicarRutaActual() {
   const params = new URLSearchParams(window.location.search);
   const destino = ruta === '/' ? null : tablaDeRutas()[ruta];
 
-  // Cuenta, carrito y checkout necesitan saber si hay sesión: se resuelven más abajo.
   if (ruta === '/cuenta' || ruta === '/carrito' || ruta === '/checkout') {
     esperarSesion(() => conRutaAplicada(() => aplicarRutaPrivada(ruta, params)));
     return;
@@ -731,7 +700,7 @@ function aplicarRutaActual() {
       aplicarRutaBusqueda(params);
     } else {
       if (ruta !== '/') {
-        try { window.history.replaceState({}, '', '/' + window.location.search); } catch (error) { /* sin cambios */ }
+        try { window.history.replaceState({}, '', '/' + window.location.search); } catch (error) {  }
       }
       mostrarInicio();
     }
@@ -739,11 +708,10 @@ function aplicarRutaActual() {
 }
 
 function volverAlInicioPorRuta() {
-  try { window.history.replaceState({}, '', '/'); } catch (error) { /* sin cambios */ }
+  try { window.history.replaceState({}, '', '/'); } catch (error) {  }
   mostrarInicio();
 }
 
-// /producto?p=slug&color=negro&talla=M
 function aplicarRutaProducto(params) {
   const slug = params.get('p');
   const producto = productos.find(item => item.slug === slug);
@@ -775,7 +743,6 @@ function aplicarRutaProducto(params) {
   }
 }
 
-// /buscar?q=negro
 function aplicarRutaBusqueda(params) {
   const termino = (params.get('q') || '').trim();
 
@@ -788,7 +755,6 @@ function aplicarRutaBusqueda(params) {
   mostrarBusquedaComoColeccion(obtenerResultadosBusqueda(termino), termino);
 }
 
-// /cuenta?seccion=pedidos, /carrito, /checkout
 function aplicarRutaPrivada(ruta, params) {
   if (!window.usuarioActual) {
     volverAlInicioPorRuta();
@@ -801,9 +767,8 @@ function aplicarRutaPrivada(ruta, params) {
     return;
   }
 
-  // El checkout no se puede reconstruir al recargar: se muestra el carrito.
   if (ruta === '/checkout') {
-    try { window.history.replaceState({}, '', '/carrito'); } catch (error) { /* sin cambios */ }
+    try { window.history.replaceState({}, '', '/carrito'); } catch (error) {  }
   }
 
   mostrarCarrito();
@@ -813,7 +778,6 @@ window.addEventListener('popstate', () => {
   if (productos && productos.length) aplicarRutaActual();
 });
 
-// El video solo se descarga cuando se va a ver el inicio (no si entran directo a una categoría o producto).
 function cargarVideoInicio(forzar) {
   const video = document.querySelector('.video-bg[data-src]');
   if (!video) return;
@@ -892,7 +856,6 @@ function filtrarProductos(categoria, subcategoria) {
 
   mostrarColeccionActual();
 
-  // Solo en IN Collection > Socks: selector Adultos / YR
   const esSocks = normalizar(categoria) === 'propio' && normalizar(subcategoria) === 'socks';
   coleccionSocksBase = esSocks ? filtrados : null;
   edadSocks = 'adultos';
@@ -904,7 +867,6 @@ function filtrarProductos(categoria, subcategoria) {
   mostrarProductos(productosColeccionActual);
 }
 
-/* SOCKS: adultos / YR */
 let coleccionSocksBase = null;
 let edadSocks = 'adultos';
 
@@ -973,15 +935,12 @@ function mostrarProductos(lista, esBusqueda) {
     return;
   }
 
-  // Las primeras fotos (lo que se ve sin hacer scroll) se piden con prioridad alta.
   lista.forEach((product, indice) => {
     const card = crearCardProducto(product, indice < 10);
     contenedorProductos.appendChild(card);
   });
 }
 
-// Descarga en segundo plano la foto principal de todos los productos (cuando el navegador está libre),
-// así al entrar a cualquier categoría las fotos ya están en caché y aparecen al instante.
 const imagenesPrecalentadas = new Set();
 function precalentarImagenes() {
   if (navigator.connection && navigator.connection.saveData) return;
@@ -1066,8 +1025,6 @@ function crearCardProducto(product, prioridad) {
 
   const imagenProducto = card.querySelector('.producto-imagen');
 
-  // Las miniaturas de color se descargan hasta que la foto principal termina,
-  // para que las fotos grandes no compitan con ellas y la tarjeta aparezca primero.
   const cargarMiniaturas = () => {
     card.querySelectorAll('.variante-mini img[data-src]').forEach(img => {
       img.src = img.dataset.src;
@@ -1164,7 +1121,6 @@ function mostrarDetalleProducto(product) {
   });
 }
 
-// La URL del producto incluye el color y la talla elegidos, para poder compartirlos.
 function rutaDeProducto() {
   if (!productoActual || !productoActual.slug) return null;
 
@@ -1391,8 +1347,6 @@ function mostrarCarrito() {
   });
 }
 
-/* CHECKOUT */
-
 function mostrarCheckout(items) {
   itemsCheckout = items;
   actualizarRuta('/checkout');
@@ -1416,10 +1370,9 @@ function mostrarCheckout(items) {
   });
 }
 
-// Costo fijo de envío por pedido (el servidor lo vuelve a calcular; esto solo se muestra).
 const COSTO_ENVIO = 210;
 const ENVIO_GRATIS_DESDE = 5000;
-let tipoEntrega = 'envio'; // 'envio' (a domicilio) o 'tienda' (recoger en la boutique)
+let tipoEntrega = 'envio';
 
 function costoEnvioPara(subtotal) {
   if (tipoEntrega === 'tienda') return 0;
@@ -1530,7 +1483,6 @@ async function cargarDireccionesGuardadasCheckout() {
 
   wrap.classList.remove('oculto');
 
-  // Si solo tiene una dirección guardada, se la proponemos de una vez.
   if (direccionesGuardadasCheckout.length === 1) {
     selector.value = direccionesGuardadasCheckout[0].id;
     aplicarDireccionGuardadaCheckout(direccionesGuardadasCheckout[0].id);
@@ -1567,7 +1519,6 @@ function aplicarDireccionGuardadaCheckout(id) {
   const estadoTexto = document.getElementById('checkout-cp-estado');
   if (estadoTexto) estadoTexto.textContent = '';
 
-  // Ya es una dirección guardada, no hace falta volver a guardarla.
   if (campoGuardar) {
     campoGuardar.checked = false;
     campoGuardar.closest('label').classList.add('oculto');
@@ -1642,7 +1593,6 @@ function obtenerDireccionCheckout() {
   const soloDatos = tipoEntrega === 'tienda';
 
   Object.entries(campos).forEach(([clave, input]) => {
-    // Al recoger en tienda solo se piden nombre y teléfono; la dirección se manda vacía.
     const aplica = !soloDatos || clave === 'nombre' || clave === 'telefono';
     const valor = input && aplica ? input.value.trim() : '';
     direccion[clave] = valor;
@@ -1697,7 +1647,6 @@ function mostrarCuenta(seccion) {
   renderizarInformacionCuenta();
   renderizarDirecciones();
 
-  // Si la sección no existe (o está desactivada), se abre la información de cuenta.
   const nombre = typeof seccion === 'string' && SECCIONES_CUENTA.includes(seccion) &&
     document.getElementById(`cuenta-panel-${seccion}`)
     ? seccion
@@ -1732,8 +1681,6 @@ function activarSeccionCuenta(nombre) {
 
   actualizarRuta('/cuenta?seccion=' + nombre);
 }
-
-/* MIS PEDIDOS */
 
 const PASOS_ESTATUS = ['Aceptado', 'En proceso', 'Pedido Aceptado', 'Enviado', 'Entregado'];
 
@@ -1775,8 +1722,6 @@ function armarBloqueReembolso(pedido) {
     </div>
   `;
 }
-
-/* SOLICITAR REEMBOLSO */
 
 let pedidoReembolsoActual = null;
 
@@ -1910,7 +1855,6 @@ async function renderizarPedidos() {
   }
 }
 
-/* AVISOS (reemplazan a alert): misma ventana que los términos de servicio */
 function mostrarAviso(titulo, texto, alCerrar) {
   const previo = document.getElementById('aviso-modal');
   if (previo) previo.remove();
@@ -1947,9 +1891,6 @@ function mostrarAviso(titulo, texto, alCerrar) {
   modal.querySelector('.aviso-aceptar').focus();
 }
 
-/* CONFIRMAR PEDIDO AL VOLVER DE PAGAR CON CLIP */
-
-// Ejecuta la función cuando ya se sabe si hay una sesión iniciada (Firebase tarda un instante).
 function cuandoHayUsuario(funcion) {
   if (window.usuarioActual) {
     funcion();
@@ -2022,8 +1963,6 @@ async function confirmarLinkClipSiAplica() {
   }
 }
 
-/* CONFIRMAR PEDIDO AL VOLVER DE PAGAR (Mercado Pago / PayPal) */
-
 async function confirmarPedidoSiAplica() {
   const parametros = new URLSearchParams(window.location.search);
 
@@ -2061,11 +2000,6 @@ async function confirmarPedidoSiAplica() {
   }
 }
 
-/* PAGO DIRECTO CON TARJETA (Clip) */
-
-
-// Esta es tu API Key de Clip (la pública, NO la clave secreta). La sacas de tu panel
-// de desarrollador de Clip. La clave secreta va solo en Vercel, nunca aquí.
 const CLIP_API_KEY = '03de9677-7a6d-4100-bd5a-9b25fe8f8ab0';
 
 let clipTarjeta = null;
@@ -2108,7 +2042,6 @@ function configurarPagoClip() {
 
       if (!panel.classList.contains('oculto')) {
         actualizarBotonClip();
-        // El formulario se monta ya con el panel visible para que tome bien su tamaño.
         obtenerTarjetaClip();
       }
     });
@@ -2218,8 +2151,6 @@ async function pagarConTarjetaClip() {
   }
 }
 
-// Muestra la ventana donde el banco pide validar la identidad (código por SMS o app)
-// y, cuando termina, le pregunta al servidor si el pago quedó aprobado.
 function validar3dsClip(url, paymentId) {
   return new Promise(resolver => {
     const mensaje = document.getElementById('checkout-mensaje');
@@ -2285,11 +2216,6 @@ function validar3dsClip(url, paymentId) {
   });
 }
 
-/* TARJETAS GUARDADAS (Mercado Pago) */
-
-// Esta es la llave PÚBLICA de Mercado Pago (no es secreta, está pensada para
-// vivir en el navegador). Reemplázala por la tuya desde tu panel de
-// Mercado Pago → Credenciales → Llave pública.
 const MERCADO_PAGO_PUBLIC_KEY = 'TU_LLAVE_PUBLICA_DE_MERCADO_PAGO';
 
 let instanciaMP = null;
@@ -2442,8 +2368,6 @@ async function eliminarTarjetaGuardada(id) {
     console.error('No se pudo eliminar la tarjeta:', error);
   }
 }
-
-/* PAGAR CON TARJETA GUARDADA (desde el checkout) */
 
 function configurarPagoTarjetaGuardada() {
   const btnMostrar = document.getElementById('btn-mostrar-tarjetas-guardadas');
@@ -2619,8 +2543,6 @@ function renderizarInformacionCuenta() {
   if (infoNombre) infoNombre.textContent = usuario.displayName || 'Sin nombre registrado';
   if (infoCorreo) infoCorreo.textContent = usuario.email || '-';
 }
-
-/* CODIGO POSTAL */
 
 async function buscarDatosPorCP() {
   const inputCp = document.getElementById('dir-cp');
@@ -2809,7 +2731,6 @@ function renderizarCarrito() {
   });
 
   if (subC) subC.textContent = dinero(total);
-  // El envío se elige y se calcula en el checkout (a domicilio o recoger en tienda).
   if (envC) envC.textContent = 'Se calcula al pagar';
 
   carritoTotal.textContent = dinero(total);
@@ -2938,7 +2859,6 @@ function renderizarGrip(gripTexto) {
     gripGrid.appendChild(boton);
   });
 }
-// La imagen solo se usa para mostrar el resumen; no es enumerable, así que no se envía al servidor.
 function conImagen(item, src) {
   Object.defineProperty(item, 'imagen', { value: src || '', enumerable: false, writable: true });
   return item;
@@ -2989,9 +2909,6 @@ if (btnPagarMercadoPago) {
     procesarPagoCheckout('mercadopago');
   });
 }
-
-// Antes este botón abría un link fijo de Clip (https://pago.clip.mx/6272e5d6-...), que cobraba
-// siempre el mismo monto. Ahora el servidor genera un link por pedido, con el monto exacto.
 
 function irA(url) {
   window.location.href = url;
@@ -3052,7 +2969,6 @@ async function pagarConClip() {
       throw new Error(datos.mensaje || 'No se pudo generar el link de pago.');
     }
 
-    // Guardamos el identificador para confirmar el pago cuando el cliente regrese.
     sessionStorage.setItem('clip_payment_request_id', datos.paymentRequestId);
 
     irA(datos.url);
@@ -3071,8 +2987,6 @@ if (btnPagarClip) {
   btnPagarClip.addEventListener('click', pagarConClip);
 }
 
-// Si el cliente regresa con la flecha "atrás" desde Clip o PayPal, el navegador puede devolver la
-// página tal como se quedó (con el botón en "Abriendo Clip..." y bloqueado). Aquí se restaura.
 const contenidoOriginalBtnClip = btnPagarClip ? btnPagarClip.innerHTML : '';
 
 function restaurarBotonesDePago() {
@@ -3108,7 +3022,6 @@ function obtenerCategoria(producto) {
   return producto.categoria || producto['categorÃ­a'] || '';
 }
 
-// Colores de un producto (de todas sus variantes), normalizados para comparar.
 function claveColor(color) {
   return String(color || '').trim().toLowerCase();
 }
@@ -3183,7 +3096,6 @@ function renderizarFiltros(lista) {
       .filter(Boolean)
   )];
 
-  // Lista de colores disponibles en esta colección (sin repetir, con su nombre tal como viene en el catálogo).
   const nombresColor = new Map();
   lista.forEach(producto => {
     (producto.variantes || []).forEach(variante => {
@@ -3389,8 +3301,6 @@ function obtenerResultadosBusqueda(termino) {
   const texto = normalizarBusqueda(termino);
   if (!texto) return productos.slice(0, 6);
 
-  // Cada palabra escrita debe aparecer en el producto (nombre, categoría, colores, etc.),
-  // así "negro" encuentra todo lo que tenga ese color y "chamarra negro" lo afina.
   const palabras = texto.split(' ').filter(Boolean);
 
   return productos.filter(producto => {
@@ -3480,9 +3390,6 @@ const URL_BACKEND_VERCEL = 'https://www.inequestrian.com.mx';
 function obtenerBaseApi() {
   const host = window.location.hostname;
 
-  // Solo en GitHub Pages (hosting estático, sin servidor) se usa el backend de Vercel.
-  // En localhost, en Vercel y en tu dominio propio (inequestrian.com.mx), la API
-  // vive en el mismo dominio que la página.
   if (host.endsWith('github.io')) {
     return URL_BACKEND_VERCEL;
   }
@@ -3523,7 +3430,6 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion
   }
 }
 
-/* POLÍTICAS (ventana desde el pie de página) */
 (function configurarPoliticas() {
   const POLITICAS = {
     'link-reembolso': {
@@ -3572,9 +3478,6 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion
   else iniciar();
 })();
 
-/* REINTENTO AUTOMÁTICO DE IMÁGENES
-   Si una imagen falla al cargar (red lenta, servidor saturado), se vuelve a intentar
-   hasta 3 veces antes de mostrar la imagen de respaldo. */
 (function configurarReintentoImagenes() {
   const MAX_REINTENTOS = 3;
   const RESPALDO = 'imagenes/productos/placeholder.jpg';
@@ -3604,7 +3507,6 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion
   }, true);
 })();
 
-/* BARRA DE ANUNCIOS: cambia sola entre sus mensajes cada pocos segundos */
 (function iniciarBarraAnuncios() {
   const INTERVALO = 4000;
 
@@ -3632,7 +3534,6 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion
       temporizador = null;
     };
 
-    // No gasta recursos cuando la pestaña no se está viendo.
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) detener(); else arrancar();
     });
@@ -3643,9 +3544,6 @@ async function iniciarPago(productosParaPagar, metodo = 'mercadopago', direccion
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
   else iniciar();
 })();
-
-
-/* PAGO CON TARJETA DENTRO DE LA PÁGINA (Stripe) */
 
 let stripeInstancia = null;
 let stripeElementos = null;
@@ -3675,7 +3573,7 @@ function cerrarPanelStripe() {
     try {
       const elemento = stripeElementos.getElement('payment');
       if (elemento) elemento.destroy();
-    } catch (error) { /* ya estaba cerrado */ }
+    } catch (error) {  }
   }
 
   stripeElementos = null;
@@ -3757,7 +3655,16 @@ async function abrirTarjetaStripe() {
       }
     });
 
-    stripeElementos.create('payment', { layout: 'tabs' }).mount('#stripe-element');
+    const elementoPago = stripeElementos.create('payment', { layout: 'tabs' });
+
+    elementoPago.on('loaderror', evento => {
+      const texto = evento && evento.error && evento.error.message
+        ? evento.error.message
+        : 'No se pudo cargar el formulario de tarjeta.';
+      if (mensaje) mensaje.textContent = texto;
+    });
+
+    elementoPago.mount('#stripe-element');
 
     const botonPagar = document.getElementById('btn-confirmar-stripe');
     botonPagar.textContent = 'Pagar ' + dinero(stripeTotal);
@@ -3820,7 +3727,6 @@ async function pagarConStripe() {
         return;
       }
 
-      // El cobro sí se hizo; el aviso automático de Stripe terminará de registrar el pedido.
       mostrarAviso('Pago recibido', 'Tu pago se realizó correctamente. Tu pedido aparecerá en "Mi cuenta → Pedidos" en unos minutos.');
       return;
     }
@@ -3834,7 +3740,6 @@ async function pagarConStripe() {
   }
 }
 
-// Cuando el banco pide verificación extra (3D Secure) el cliente sale de la página y regresa aquí.
 async function confirmarStripeSiAplica() {
   const parametros = new URLSearchParams(window.location.search);
 
@@ -3878,9 +3783,6 @@ async function confirmarStripeSiAplica() {
   if (pagar) pagar.addEventListener('click', pagarConStripe);
   if (cancelar) cancelar.addEventListener('click', cerrarPanelStripe);
 })();
-
-
-/* TIPO DE ENTREGA (envío a domicilio / recoger en tienda) */
 
 const camposRequeridosSoloEnvio = ['checkout-cp', 'checkout-calle', 'checkout-ciudad', 'checkout-estado'];
 

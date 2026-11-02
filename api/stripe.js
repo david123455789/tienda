@@ -3,19 +3,6 @@ const { obtenerUsuarioDesdeToken, obtenerFirestoreAdmin } = require('./_firebase
 const { validarProductos } = require('./_catalogo');
 const { crearPedidoEnSheets } = require('./_sheetsPedidos');
 
-/*
- * Pagos con tarjeta con Stripe, todo en un solo archivo (Vercel Hobby limita las funciones):
- *
- *   POST { accion: 'crear' }      -> crea el cobro (PaymentIntent) con el total calculado aquí en el
- *                                    servidor y devuelve lo necesario para mostrar el formulario de tarjeta.
- *   POST { accion: 'confirmar' }  -> el navegador avisa que pagó; aquí se le pregunta a Stripe si es cierto
- *                                    antes de crear el pedido en el Sheet.
- *   POST con firma de Stripe      -> aviso (webhook) de Stripe, por si el cliente cierra la pestaña.
- *
- * El número de la tarjeta nunca pasa por este servidor: lo recibe Stripe directo desde el navegador.
- * Variables en Vercel: STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET.
- */
-
 const ORIGENES_PERMITIDOS = [
   'https://david123455789.github.io',
   'https://tienda-alpha-red.vercel.app',
@@ -36,7 +23,6 @@ function aplicarCors(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
-// Se lee el cuerpo "crudo" porque la firma del webhook se calcula sobre el texto exacto que manda Stripe.
 function leerCuerpoCrudo(req) {
   return new Promise((resolve, reject) => {
     const partes = [];
@@ -86,11 +72,9 @@ async function liberarDedup(db, clave) {
   try {
     await db.collection('pedidos_creados').doc(clave).delete();
   } catch (error) {
-    // nada más que hacer
   }
 }
 
-// Crea el pedido en el Sheet una sola vez por cobro (el navegador y el webhook pueden llegar los dos).
 async function procesarPagoStripe(db, paymentIntentId) {
   const intento = await llamarStripe(`/payment_intents/${encodeURIComponent(paymentIntentId)}`);
 
@@ -102,13 +86,11 @@ async function procesarPagoStripe(db, paymentIntentId) {
   const pendienteSnap = await pendienteRef.get();
 
   if (!pendienteSnap.exists) {
-    // Ya se procesó antes (se borra al terminar) o nunca fue de esta tienda.
     return { ok: true, repetido: true };
   }
 
   const datos = pendienteSnap.data();
 
-  // El monto cobrado debe coincidir con el calculado por el servidor al crear el cobro.
   if (Number(intento.amount_received) !== Number(datos.centavos)) {
     throw new Error('El monto cobrado no coincide con el pedido.');
   }
@@ -154,7 +136,6 @@ function firmaValida(cuerpoCrudo, encabezado) {
 
   if (!partes.t || !partes.v1) return false;
 
-  // Se rechazan avisos de hace más de 5 minutos (evita reenvíos copiados).
   if (Math.abs(Date.now() / 1000 - Number(partes.t)) > 300) return false;
 
   const esperada = crypto
@@ -180,6 +161,13 @@ async function crearCobro(req, res, cuerpo) {
     throw new Error('Falta STRIPE_PUBLISHABLE_KEY en Vercel.');
   }
 
+  const pkReal = String(process.env.STRIPE_PUBLISHABLE_KEY).startsWith('pk_live');
+  const skReal = /^(sk|rk)_live/.test(String(process.env.STRIPE_SECRET_KEY || ''));
+
+  if (pkReal !== skReal) {
+    throw new Error('Las llaves de Stripe en Vercel no coinciden: una es de prueba y la otra es real.');
+  }
+
   let usuario = null;
   try {
     usuario = await obtenerUsuarioDesdeToken(req);
@@ -191,7 +179,6 @@ async function crearCobro(req, res, cuerpo) {
     return res.status(401).json({ error: 'Inicia sesión para pagar.' });
   }
 
-  // Los precios y el total salen de tu catálogo, nunca del navegador.
   const verificado = await validarProductos(productos, tipoEntrega);
   const total = Number(verificado.total);
   const centavos = Math.round(total * 100);
@@ -243,7 +230,6 @@ module.exports = async function handler(req, res) {
   try {
     const cuerpoCrudo = await leerCuerpoCrudo(req);
 
-    // Aviso (webhook) de Stripe: trae firma.
     if (req.headers['stripe-signature']) {
       if (!firmaValida(cuerpoCrudo, req.headers['stripe-signature'])) {
         return res.status(400).json({ error: 'Firma inválida.' });
@@ -290,5 +276,4 @@ module.exports = async function handler(req, res) {
   }
 };
 
-// Necesario para poder verificar la firma de Stripe.
 module.exports.config = { api: { bodyParser: false } };
