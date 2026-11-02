@@ -991,8 +991,17 @@ function mostrarProductosAleatorios() {
 function crearCardProducto(product, prioridad) {
   const nombre = product.name || product.nombre;
   const precio = product.price || product.precio;
-  const imagen = product.image_url || 'imagenes/productos/placeholder.jpg';
   const variantes = product.variantes || [];
+
+  let indiceColor = 0;
+  if (variantes.length > 1) {
+    let suma = 0;
+    for (const letra of String(nombre)) suma = (suma * 31 + letra.charCodeAt(0)) >>> 0;
+    indiceColor = suma % variantes.length;
+    if (!variantes[indiceColor].image_url) indiceColor = 0;
+  }
+
+  const imagen = (variantes[indiceColor] && variantes[indiceColor].image_url) || product.image_url || 'imagenes/productos/placeholder.jpg';
 
   const card = document.createElement('div');
   card.classList.add('producto');
@@ -1000,9 +1009,9 @@ function crearCardProducto(product, prioridad) {
   const variantesHtml = variantes.length > 0
     ? `
       <div class="producto-variantes">
-        ${variantes.map(variant => `
+        ${variantes.map((variant, posicion) => `
           <button
-            class="variante-mini"
+            class="variante-mini${posicion === indiceColor && variantes.length > 1 ? ' selected' : ''}"
             type="button"
             title="${variant.color}"
             data-imagen="${variant.image_url}"
