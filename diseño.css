@@ -3989,3 +3989,19 @@ html.cargando-ruta.ruta-producto .carga-producto{display:grid}
     object-fit: cover;
   }
 }
+
+@media (max-width: 900px) {
+  .site-header { min-height: 64px; }
+  .site-header .brand-logo-img { height: 46px; }
+  .site-header .dropdown-menu { top: 64px; }
+  .search-panel { top: 64px; }
+}
+
+@media (max-width: 560px) {
+  .site-header { min-height: 58px; }
+  .site-header .brand-logo-img { height: 40px; }
+  .site-header .dropdown-menu { top: 58px; }
+  .search-panel { top: 58px; }
+}
+
+#btn-maximilian .menu-label { font-weight: 700; }

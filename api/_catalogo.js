@@ -1,9 +1,3 @@
-/*
- * Valida lo que el cliente quiere comprar contra tu catálogo real (tu Google Sheet
- * de productos), para que el monto a cobrar lo calcule el SERVIDOR y no el navegador.
- * Así nadie puede cambiar un precio desde las herramientas del navegador y pagar de menos.
- */
-
 const PRODUCTOS_CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QGmUxpghfQ4ksUmtL-79fJkke-pq7xBI7Pbv63H9DiJzksny0XSyOJzgJxKlxgM0ALjFD2FegOS/pub?gid=0&single=true&output=csv';
 
@@ -113,10 +107,7 @@ function errorCatalogo(mensaje, status = 400) {
   return error;
 }
 
-// Reglas de envío:
-//  - Entrega "envio" (a domicilio): $210 por pedido, gratis si los productos suman $5,000 o más.
-//  - Entrega "tienda" (recoger en la boutique): sin costo y sin dirección.
-const COSTO_ENVIO = 210;
+const COSTO_ENVIO = 280;
 const ENVIO_GRATIS_DESDE = 5000;
 
 function normalizarTipoEntrega(tipo) {
@@ -202,7 +193,6 @@ async function validarProductos(productosCliente, tipoEntrega) {
   const tipo = normalizarTipoEntrega(tipoEntrega);
   const envio = verificados.length ? calcularEnvio(subtotal, tipo) : 0;
 
-  // total = productos + envío (un solo envío por pedido)
   return { productos: verificados, subtotal, tipo, envio, total: Number((subtotal + envio).toFixed(2)) };
 }
 

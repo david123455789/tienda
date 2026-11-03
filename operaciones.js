@@ -1379,7 +1379,7 @@ function mostrarCheckout(items) {
   });
 }
 
-const COSTO_ENVIO = 210;
+const COSTO_ENVIO = 280;
 const ENVIO_GRATIS_DESDE = 5000;
 let tipoEntrega = 'envio';
 
