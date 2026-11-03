@@ -3963,3 +3963,25 @@ html.cargando-ruta.ruta-producto .carga-producto{display:grid}
   .color-card { text-align: center; }
   .color-card span { display: inline-block; }
 }
+
+.category-tile img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+@media (max-width: 700px) {
+  .category-tile {
+    height: auto;
+    aspect-ratio: auto;
+  }
+
+  .category-tile::before {
+    content: '';
+    display: block;
+    padding-top: 80%;
+  }
+}
