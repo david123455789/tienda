@@ -3975,13 +3975,17 @@ html.cargando-ruta.ruta-producto .carga-producto{display:grid}
 
 @media (max-width: 700px) {
   .category-tile {
+    display: block;
     height: auto;
     aspect-ratio: auto;
   }
 
-  .category-tile::before {
-    content: '';
+  .category-tile img {
+    position: static;
     display: block;
-    padding-top: 80%;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 5 / 4;
+    object-fit: cover;
   }
 }
