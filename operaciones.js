@@ -1082,6 +1082,14 @@ function mostrarDetalleProducto(product) {
   const imagen = product.image_url || 'imagenes/productos/placeholder.jpg';
   const descripcion = product.description || product.descripcion || 'Producto ecuestre seleccionado para comodidad, estilo y rendimiento.';
 
+  metaEvento('ViewContent', {
+    content_ids: [String(product.id)],
+    content_type: 'product',
+    content_name: nombre,
+    value: Number(precio),
+    currency: 'MXN'
+  });
+
   if (detalleImagen) {
     detalleImagen.src = imagen;
     detalleImagen.alt = nombre;
@@ -1299,6 +1307,7 @@ function renderizarTallas(tallasTexto) {
 }
 
 function agregarAlCarrito(product) {
+  const cantidadMeta = cantidadProducto;
   const id = product.id;
   const nombre = product.name || product.nombre;
 
@@ -1337,6 +1346,15 @@ function agregarAlCarrito(product) {
 
   guardarCarrito();
   actualizarContadorCarrito();
+
+  metaEvento('AddToCart', {
+    content_ids: [String(id)],
+    content_type: 'product',
+    content_name: nombre,
+    value: precio * cantidadMeta,
+    currency: 'MXN',
+    contents: [{ id: String(id), quantity: cantidadMeta }]
+  });
 }
 
 function mostrarCarrito() {
@@ -1358,6 +1376,7 @@ function mostrarCarrito() {
 
 function mostrarCheckout(items) {
   itemsCheckout = items;
+  metaInitiateCheckout(items);
   actualizarRuta('/checkout');
 
   if (vistaInicio) vistaInicio.classList.add('oculto');
@@ -1638,6 +1657,7 @@ async function procesarPagoCheckout(metodo) {
     await guardarDireccionDesdeCheckout();
   }
 
+  guardarCompraMeta();
   await iniciarPago(itemsCheckout, metodo, direccion);
 }
 
@@ -1948,6 +1968,7 @@ async function confirmarLinkClipSiAplica() {
 
     if (respuesta.ok && datos.ok) {
       sessionStorage.removeItem('clip_payment_request_id');
+      registrarCompraMeta();
 
       cuandoHayUsuario(() => {
         carrito = [];
@@ -1996,6 +2017,7 @@ async function confirmarPedidoSiAplica() {
     const datos = await respuesta.json();
 
     if (respuesta.ok && datos.ok) {
+      registrarCompraMeta();
       carrito = [];
       guardarCarrito();
       actualizarContadorCarrito();
@@ -2062,6 +2084,7 @@ function configurarPagoClip() {
 }
 
 function pagoClipExitoso() {
+  registrarCompraMeta();
   carrito = [];
   guardarCarrito();
   actualizarContadorCarrito();
@@ -2956,6 +2979,8 @@ async function pagarConClip() {
       await guardarDireccionDesdeCheckout();
     }
 
+    guardarCompraMeta();
+
     const idToken = await window.obtenerTokenSesion();
 
     const respuesta = await fetch(obtenerBaseApi() + '/api/crear-link-clip', {
@@ -3641,6 +3666,7 @@ async function abrirTarjetaStripe() {
     stripeInstancia = window.Stripe(datos.publishableKey);
     stripeIntentId = datos.paymentIntentId;
     stripeTotal = Number(datos.total);
+    guardarCompraMeta();
 
     stripeElementos = stripeInstancia.elements({
       clientSecret: datos.clientSecret,
@@ -3770,6 +3796,7 @@ async function confirmarStripeSiAplica() {
     const { respuesta, datos } = await confirmarCobroStripeEnServidor(intentId);
 
     if (respuesta.ok && datos.ok) {
+      registrarCompraMeta();
       carrito = [];
       guardarCarrito();
       actualizarContadorCarrito();
@@ -3801,6 +3828,9 @@ function aplicarTipoEntrega(tipo) {
   const contenedor = document.querySelector('.checkout-direccion');
   if (contenedor) contenedor.classList.toggle('entrega-tienda', tipoEntrega === 'tienda');
 
+  const panelStripeAbierto = document.getElementById('panel-stripe');
+  if (panelStripeAbierto && !panelStripeAbierto.classList.contains('oculto')) cerrarPanelStripe();
+
   camposRequeridosSoloEnvio.forEach(id => {
     const campo = document.getElementById(id);
     if (campo) campo.required = tipoEntrega === 'envio';
@@ -3817,3 +3847,61 @@ document.querySelectorAll('input[name="tipo-entrega"]').forEach(radio => {
     if (radio.checked) aplicarTipoEntrega(radio.value);
   });
 });
+
+
+function metaEvento(nombre, datos) {
+  try {
+    if (typeof window.fbq === 'function') window.fbq('track', nombre, datos);
+  } catch (error) {}
+}
+
+function metaContenidos(items) {
+  return (items || []).map(item => ({ id: String(item.id), quantity: Number(item.cantidad) || 1 }));
+}
+
+function metaInitiateCheckout(items) {
+  if (!items || !items.length) return;
+
+  const valor = items.reduce((suma, item) => suma + Number(item.precio) * Number(item.cantidad), 0);
+
+  metaEvento('InitiateCheckout', {
+    content_ids: items.map(item => String(item.id)),
+    content_type: 'product',
+    contents: metaContenidos(items),
+    num_items: items.reduce((suma, item) => suma + Number(item.cantidad), 0),
+    value: valor,
+    currency: 'MXN'
+  });
+}
+
+function guardarCompraMeta() {
+  try {
+    if (!itemsCheckout.length) return;
+
+    sessionStorage.setItem('meta_compra', JSON.stringify({
+      value: totalCheckout(),
+      ids: itemsCheckout.map(item => String(item.id)),
+      contents: metaContenidos(itemsCheckout),
+      num: itemsCheckout.reduce((suma, item) => suma + Number(item.cantidad), 0)
+    }));
+  } catch (error) {}
+}
+
+function registrarCompraMeta() {
+  try {
+    const guardada = sessionStorage.getItem('meta_compra');
+    if (!guardada) return;
+
+    sessionStorage.removeItem('meta_compra');
+    const compra = JSON.parse(guardada);
+
+    metaEvento('Purchase', {
+      content_ids: compra.ids,
+      content_type: 'product',
+      contents: compra.contents,
+      num_items: compra.num,
+      value: compra.value,
+      currency: 'MXN'
+    });
+  } catch (error) {}
+}

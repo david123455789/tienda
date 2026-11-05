@@ -14,8 +14,6 @@
   <noscript><link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet"></noscript>
   <link rel="stylesheet" href="diseño.css">
     <script>
-    // Si entran directo a un link de categoría (ej. /maximilian-mujer-jackets-hoodies),
-    // no mostramos el inicio mientras carga el catálogo.
     (function () {
       var ruta = location.pathname.replace(/\/+$/, '').replace(/\/index\.html$/, '');
       if (ruta) {
@@ -26,21 +24,17 @@
     })();
   </script>
   <script>
-    // Pide el catálogo a Google Sheets desde el primer instante (sin esperar a que cargue el resto del código).
-    // operaciones.js usa estas respuestas en su primer intento.
     (function () {
       var urls = [
         'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QGmUxpghfQ4ksUmtL-79fJkke-pq7xBI7Pbv63H9DiJzksny0XSyOJzgJxKlxgM0ALjFD2FegOS/pub?gid=0&single=true&output=csv',
         'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QGmUxpghfQ4ksUmtL-79fJkke-pq7xBI7Pbv63H9DiJzksny0XSyOJzgJxKlxgM0ALjFD2FegOS/pub?gid=1834938244&single=true&output=csv'
       ];
-      // Copia del catálogo guardada en la propia tienda (cargada desde el servidor de la tienda, es rápida).
       window.__snapshotTemprano = fetch('/catalogo-snapshot.json')
         .then(function (r) { return r.ok ? r.json() : null; })
         .catch(function () { return null; });
       window.__catalogoTemprano = {};
       urls.forEach(function (u) {
         try {
-          // El parámetro t evita que el navegador reutilice una copia vieja del catálogo.
           window.__catalogoTemprano[u] = fetch(u + '&t=' + Date.now()).then(function (r) {
             if (!r.ok) throw new Error('csv');
             return r.text();
@@ -55,6 +49,21 @@
   <script src="https://sdk.mercadopago.com/js/v2"></script>
   <script src="https://sdk.clip.mx/js/clip-sdk.js"></script>
   -->
+  <script>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '1649063049956092');
+  fbq('track', 'PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=1649063049956092&ev=PageView&noscript=1"
+  /></noscript>
 </head>
 <body>
 
@@ -205,7 +214,6 @@
   </div>
 </div>
 
-
 <div id="busqueda-panel" class="search-panel oculto" aria-hidden="true">
   <div class="search-inner">
     <div class="search-box">
@@ -220,7 +228,6 @@
     <section class="video-section">
       <video class="video-bg" autoplay muted loop playsinline preload="auto" data-src="imagenes/video.mp4"></video>
       <script>
-        // En el inicio el video empieza a descargarse de inmediato; en otras rutas se carga solo si hace falta.
         (function () {
           var v = document.querySelector('.video-bg[data-src]');
           if (v && (location.pathname === '/' || location.pathname === '/index.html')) {
@@ -533,7 +540,6 @@
           </div>
 
           <div class="metodos-pago-botones">
-            <!-- Mercado Pago está oculto por ahora. Para volver a mostrarlo, quita la palabra "oculto" de la clase. -->
             <button id="btn-pagar-mercadopago" type="button" class="pago-btn pago-btn-mercadopago oculto">
               Mercado Pago
             </button>
