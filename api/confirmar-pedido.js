@@ -1,14 +1,6 @@
 const { obtenerFirestoreAdmin } = require('./_firebaseAdmin');
 const { crearPedidoEnSheets } = require('./_sheetsPedidos');
 
-/*
- * El cliente llega aquí cuando Mercado Pago o PayPal lo regresan a la tienda
- * después de pagar. Este archivo NUNCA confía en lo que diga el navegador:
- * vuelve a preguntarle directamente a Mercado Pago / PayPal si ese pago
- * de verdad se completó antes de crear el pedido en el Sheet. Así nadie
- * puede "inventarse" un pedido solo entrando a la URL de éxito.
- */
-
 const ORIGENES_PERMITIDOS = [
   'https://david123455789.github.io',
   'https://tienda-alpha-red.vercel.app',
@@ -34,8 +26,6 @@ async function reclamarDedup(db, clave) {
     await db.collection('pedidos_creados').doc(clave).create({ creado: Date.now() });
     return true;
   } catch (error) {
-    // Ya existe: este pago ya generó su pedido antes (por ejemplo, si el
-    // cliente recargó la página de "pago aprobado").
     return false;
   }
 }
@@ -44,7 +34,6 @@ async function liberarDedup(db, clave) {
   try {
     await db.collection('pedidos_creados').doc(clave).delete();
   } catch (error) {
-    // si no se pudo liberar, no hay nada más que hacer
   }
 }
 
@@ -148,6 +137,8 @@ async function confirmarPaypal(orderId, db) {
     telefono: datos.direccion ? datos.direccion.telefono : '',
     direccion: datos.direccion || {},
     tipo: datos.tipo || 'envio',
+    codigo: datos.codigo || '',
+    descuento: datos.descuento || 0,
     productos: datos.productos || []
   };
 }
@@ -182,8 +173,6 @@ async function handler(req, res) {
     return res.status(204).end();
   }
 
-  // Aviso (webhook) de Mercado Pago. Antes vivía en api/webhook-mercadopago.js; se juntó aquí
-  // para no pasar el límite de 12 funciones de Vercel Hobby (vercel.json redirige la ruta vieja).
   if (req.query && req.query.webhook === 'mp') {
     try {
       const query = req.query || {};
@@ -191,7 +180,6 @@ async function handler(req, res) {
       const tipo = cuerpoAviso.type || cuerpoAviso.topic || query.type || query.topic;
       const id = (cuerpoAviso.data && cuerpoAviso.data.id) || query['data.id'] || query.id;
 
-      // Solo nos interesan los avisos de pagos.
       if ((tipo && tipo !== 'payment') || !id) {
         return res.status(200).json({ ignorado: true });
       }
@@ -200,7 +188,6 @@ async function handler(req, res) {
       return res.status(200).json(resultadoAviso);
     } catch (error) {
       console.error('Error en el aviso de Mercado Pago:', error);
-      // Un error 500 hace que Mercado Pago reintente el aviso más tarde.
       return res.status(500).json({ error: error.message });
     }
   }
@@ -241,8 +228,6 @@ async function handler(req, res) {
     try {
       idEnvio = await crearPedidoEnSheets(datosPedido);
     } catch (errorSheets) {
-      // Si no se pudo escribir en el Sheet, liberamos la marca para que un
-      // reintento (recargar la página, o el aviso de Mercado Pago) lo vuelva a intentar.
       await liberarDedup(db, claveDedup);
       throw errorSheets;
     }

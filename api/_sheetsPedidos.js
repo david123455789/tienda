@@ -2,21 +2,6 @@ const { enviarCorreosDePedido } = require('./_correo');
 const crypto = require('crypto');
 const { calcularEnvio, normalizarTipoEntrega } = require('./_catalogo');
 
-/*
- * Lee y escribe en tu Google Sheet "Pedidos" (hojas "Envio" y "Producto").
- *
- * Usa la MISMA cuenta de servicio que ya configuraste para Firebase
- * (variable de entorno FIREBASE_SERVICE_ACCOUNT), así que no necesitas una
- * credencial nueva — solo tienes que:
- *   1) Activar la "Google Sheets API" en tu proyecto de Google Cloud (el
- *      mismo proyecto de tu Firebase).
- *   2) Abrir tu Sheet "Pedidos" → botón "Compartir" → pegar el correo de la
- *      cuenta de servicio (el campo "client_email" dentro del JSON que
- *      descargaste de Firebase) → darle permiso de Editor.
- *   3) Poner el ID de ese Sheet (lo que va en la URL entre /d/ y /edit) en
- *      la variable de entorno PEDIDOS_SHEET_ID.
- */
-
 let tokenCache = { valor: null, expira: 0 };
 
 function base64url(datos) {
@@ -138,17 +123,12 @@ async function leerFilas(hoja) {
   return datos.values || [];
 }
 
-// Fila donde debe escribirse el siguiente pedido: deja UNA fila en blanco después del último
-// pedido para que sea fácil distinguir una compra de otra. "valores" es la columna A de la hoja
-// (la API no devuelve las filas vacías del final, así que su largo es la última fila con datos).
 function calcularFilaSiguiente(valores) {
   const ultima = (valores || []).length;
-  // Hoja vacía o solo con encabezado: se escribe justo debajo, sin fila en blanco.
   if (ultima <= 1) return 2;
   return ultima + 2;
 }
 
-// Escribe las filas de un pedido dejando una fila en blanco entre pedido y pedido.
 async function agregarFilasConSeparador(hoja, filas) {
   const columnaA = await leerFilas(`${hoja}!A:A`);
   const fila = calcularFilaSiguiente(columnaA);
@@ -197,7 +177,6 @@ async function limpiarRango(rango) {
 }
 
 function fechaPedido() {
-  // Ej. 19/10/2026 15:34 en hora de Ciudad de México
   const partes = new Intl.DateTimeFormat('es-MX', {
     timeZone: 'America/Mexico_City',
     day: '2-digit', month: '2-digit', year: 'numeric',
@@ -222,16 +201,17 @@ function generarIdEnvio() {
   return `PED-${partes}-${azar}`;
 }
 
-async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, productos, tipo: tipoEntrega }) {
+async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, productos, tipo: tipoEntrega, codigo, descuento: descuentoPedido }) {
   const tipo = normalizarTipoEntrega(tipoEntrega);
   const idEnvio = generarIdEnvio();
 
-  // Desglose del cobro: productos + envío fijo (columnas O, P y Q de "Envio").
   const subtotal = (productos || []).reduce(
     (suma, p) => suma + Number(p.precio || 0) * Number(p.cantidad || 1),
     0
   );
   const envio = (productos || []).length ? calcularEnvio(subtotal, tipo) : 0;
+  const descuento = Math.min(Number(descuentoPedido) || 0, subtotal);
+  const subtotalCobrado = Number((subtotal - descuento).toFixed(2));
 
   await agregarFilasConSeparador('Envio', [[
     idEnvio,
@@ -245,13 +225,15 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
     direccion ? direccion.cp || '' : '',
     direccion ? direccion.estado || '' : '',
     'Aceptado',
-    '', '', '',            // L Devolucion, M Razon, N Estatus Dev (se llenan después)
-    subtotal,              // O Subtotal productos (esto sí se reembolsa)
-    envio,                 // P Envío (no reembolsable)
-    subtotal + envio,      // Q Total cobrado
-    fechaPedido(),         // R Fecha del pedido (hora de Ciudad de México)
-    '',                    // S Cancelada (la llenas tú con "Sí" para cancelar)
-    tipo === 'tienda' ? 'Tienda' : 'Envio' // T Tipo: Envio (a domicilio) o Tienda (recoge en la boutique)
+    '', '', '',            
+    subtotalCobrado,       
+    envio,                 
+    subtotalCobrado + envio, 
+    fechaPedido(),         
+    '',                    
+    tipo === 'tienda' ? 'Tienda' : 'Envio', 
+    codigo || '',          
+    descuento || ''        
   ]]);
 
   const filasProducto = (productos || []).map(producto => [
@@ -267,7 +249,6 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
     await agregarFilasConSeparador('Producto', filasProducto);
   }
 
-  // Correos: confirmación para el cliente y aviso para la tienda. Si fallan, el pedido ya quedó guardado.
   try {
     await enviarCorreosDePedido({
       idEnvio,
@@ -277,8 +258,10 @@ async function crearPedidoEnSheets({ nombre, correo, telefono, direccion, produc
       direccion: direccion || {},
       productos: productos || [],
       subtotal,
+      descuento,
+      codigo: codigo || '',
       envio,
-      total: subtotal + envio,
+      total: subtotalCobrado + envio,
       tipo
     });
   } catch (error) {

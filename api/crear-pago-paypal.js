@@ -61,7 +61,6 @@ function obtenerUrlRetorno(urlRetorno) {
       return url.origin + url.pathname;
     }
   } catch (error) {
-    // se usa la URL por defecto
   }
 
   return URL_RETORNO_POR_DEFECTO;
@@ -79,16 +78,14 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { productos, direccion, urlRetorno, tipoEntrega } = req.body;
+    const { productos, direccion, urlRetorno, tipoEntrega, codigo } = req.body;
     const base = obtenerUrlRetorno(urlRetorno);
 
     if (!Array.isArray(productos) || productos.length === 0) {
       return res.status(400).json({ error: 'Carrito vacio' });
     }
 
-    // Los precios y el total los calcula el servidor con tu catálogo (Google Sheets),
-    // nunca se toman del navegador.
-    const verificado = await validarProductos(productos, tipoEntrega);
+    const verificado = await validarProductos(productos, tipoEntrega, codigo);
 
     const items = verificado.productos.map((producto) => ({
       name: String(producto.nombre || 'Producto').slice(0, 127),
@@ -110,10 +107,9 @@ module.exports = async function handler(req, res) {
 
     const token = await obtenerTokenPaypal();
 
-    // Productos + envío ($280, un solo envío por pedido). El envío va como
-    // concepto aparte para que el reembolso pueda devolver solo los productos.
     const envio = Number(verificado.envio);
-    const totalPedido = totalItems + envio;
+    const descuento = Number(verificado.descuento || 0);
+    const totalPedido = totalItems - descuento + envio;
 
     const purchaseUnit = {
       amount: {
@@ -127,6 +123,10 @@ module.exports = async function handler(req, res) {
           shipping: {
             currency_code: 'MXN',
             value: envio.toFixed(2)
+          },
+          discount: {
+            currency_code: 'MXN',
+            value: descuento.toFixed(2)
           }
         }
       },
@@ -176,9 +176,6 @@ module.exports = async function handler(req, res) {
       throw new Error('PayPal no devolvió un link de aprobación.');
     }
 
-    // PayPal no tiene un campo de metadata grande como Mercado Pago, así que
-    // guardamos aquí qué se compró y a quién pertenece, para poder crear el
-    // pedido en Sheets cuando confirmemos que el pago sí se completó.
     let usuario = null;
     try {
       usuario = await obtenerUsuarioDesdeToken(req);
@@ -194,6 +191,8 @@ module.exports = async function handler(req, res) {
       productos: verificado.productos,
       direccion: direccion || {},
       tipo: verificado.tipo,
+      codigo: verificado.codigo || '',
+      descuento: verificado.descuento || 0,
       creado: Date.now()
     });
 

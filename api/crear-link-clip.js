@@ -2,14 +2,6 @@ const { obtenerUsuarioDesdeToken, obtenerFirestoreAdmin } = require('./_firebase
 const { validarProductos } = require('./_catalogo');
 const { aplicarCors, llamarClip, urlBaseSegura } = require('./_clip');
 
-/*
- * Crea un link de pago de Clip con el monto EXACTO del pedido. El cliente paga en la
- * página de Clip (tarjeta, efectivo en OXXO o Mi Clip) y regresa a tu tienda.
- *
- * El monto lo calcula este servidor desde tu catálogo, no el navegador. Cuando Clip
- * avisa que el pago se completó, otro archivo (webhook-clip.js) crea el pedido.
- */
-
 function soloDigitos(valor) {
   return String(valor || '').replace(/\D/g, '').slice(-10);
 }
@@ -23,7 +15,6 @@ function nombreSeguro(nombre) {
 }
 
 function referenciaPedido() {
-  // Clip solo permite letras, números, guion medio y guion bajo (máximo 36 caracteres).
   return `IES-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
@@ -47,9 +38,9 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { productos, direccion, urlRetorno, tipoEntrega } = req.body || {};
+    const { productos, direccion, urlRetorno, tipoEntrega, codigo } = req.body || {};
 
-    const verificado = await validarProductos(productos, tipoEntrega);
+    const verificado = await validarProductos(productos, tipoEntrega, codigo);
 
     if (verificado.tipo === 'tienda') {
       if (!direccion || !direccion.nombre || !direccion.telefono) {
@@ -109,8 +100,6 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify(conCliente)
       });
     } catch (error) {
-      // Si Clip rechazó los datos del cliente (formato raro en nombre o teléfono),
-      // reintentamos sin ellos: el cliente los escribe en la página de Clip.
       if (error.status !== 400) throw error;
 
       link = await llamarClip('/v2/checkout', {
@@ -123,7 +112,6 @@ module.exports = async function handler(req, res) {
       throw new Error('Clip no devolvió el link de pago.');
     }
 
-    // Guardamos lo que se compró para crear el pedido cuando Clip avise que ya se pagó.
     const db = obtenerFirestoreAdmin();
 
     await db.collection('pedidos_pendientes_clip_link').doc(link.payment_request_id).set({
@@ -136,6 +124,8 @@ module.exports = async function handler(req, res) {
         telefono: direccion.telefono || '',
         direccion,
         tipo: verificado.tipo,
+        codigo: verificado.codigo || '',
+        descuento: verificado.descuento || 0,
         productos: verificado.productos
       }
     });

@@ -1,11 +1,3 @@
-// Correos de la tienda: confirmación al cliente y aviso de nueva compra para la tienda.
-// Usa Resend (https://resend.com) por HTTP, sin instalar nada.
-// Variables de entorno en Vercel:
-//   RESEND_API_KEY   (obligatoria) la llave de Resend
-//   CORREO_DE        (opcional) remitente, ej: In Equestrian Shop <contacto@in-equestrian.com>
-//   CORREO_AVISO     (opcional) a dónde llega el aviso de compra; por defecto contacto@in-equestrian.com
-// Si falta RESEND_API_KEY, simplemente no se envían correos (el pedido se registra igual).
-
 const COLOR = { fondo: '#f6f4f1', borde: '#ddd6ca', texto: '#393634', suave: '#6b5d52', negro: '#1f1f1f' };
 const SITIO = 'https://www.inequestrian.com.mx';
 
@@ -43,7 +35,7 @@ function tablaProductos(productos) {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">${filas}</table>`;
 }
 
-function totales({ subtotal, envio, total }) {
+function totales({ subtotal, envio, total, descuento, codigo }) {
   const linea = (nombre, valor, fuerte) => `
     <tr>
       <td style="padding:4px 0;font-size:${fuerte ? 17 : 14}px;color:${fuerte ? COLOR.negro : COLOR.suave};${fuerte ? 'font-weight:bold;' : ''}">${nombre}</td>
@@ -51,7 +43,7 @@ function totales({ subtotal, envio, total }) {
     </tr>`;
 
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px">
-    ${linea('Subtotal', subtotal)}${linea('Envío', envio)}${linea('Total', total, true)}
+    ${linea('Subtotal', subtotal)}${Number(descuento) > 0 ? linea('Descuento' + (codigo ? ' (' + esc(codigo) + ')' : ''), -Number(descuento)) : ''}${linea('Envío', envio)}${linea('Total', total, true)}
   </table>`;
 }
 
@@ -143,7 +135,6 @@ async function enviar({ para, asunto, html, responderA }) {
   }
 }
 
-// Manda los dos correos de un pedido. Nunca lanza error: si falla el correo, el pedido ya quedó guardado.
 async function enviarCorreosDePedido(pedido) {
   console.log('Correos: preparando envío del pedido', pedido.idEnvio, '| llave de Resend:', process.env.RESEND_API_KEY ? 'sí' : 'NO');
   if (!process.env.RESEND_API_KEY) {

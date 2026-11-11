@@ -108,6 +108,8 @@ async function procesarPagoStripe(db, paymentIntentId) {
       telefono: datos.direccion ? datos.direccion.telefono : '',
       direccion: datos.direccion || {},
       tipo: datos.tipo || 'envio',
+      codigo: datos.codigo || '',
+      descuento: datos.descuento || 0,
       productos: datos.productos || []
     });
 
@@ -151,7 +153,7 @@ function firmaValida(cuerpoCrudo, encabezado) {
 }
 
 async function crearCobro(req, res, cuerpo) {
-  const { productos, direccion, tipoEntrega } = cuerpo;
+  const { productos, direccion, tipoEntrega, codigo } = cuerpo;
 
   if (!Array.isArray(productos) || productos.length === 0) {
     return res.status(400).json({ error: 'Carrito vacio' });
@@ -179,7 +181,7 @@ async function crearCobro(req, res, cuerpo) {
     return res.status(401).json({ error: 'Inicia sesión para pagar.' });
   }
 
-  const verificado = await validarProductos(productos, tipoEntrega);
+  const verificado = await validarProductos(productos, tipoEntrega, codigo);
   const total = Number(verificado.total);
   const centavos = Math.round(total * 100);
 
@@ -203,6 +205,8 @@ async function crearCobro(req, res, cuerpo) {
     productos: verificado.productos,
     direccion: direccion || {},
     tipo: verificado.tipo,
+    codigo: verificado.codigo || '',
+    descuento: verificado.descuento || 0,
     centavos,
     creado: Date.now()
   });
