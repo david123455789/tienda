@@ -130,6 +130,9 @@
             <a href="#" data-categoria="Accesorios" data-subcategoria="Socks">Socks</a>
             <a href="#" data-categoria="Accesorios" data-subcategoria="Caps">Caps</a>
             <a href="#" data-categoria="Accesorios" data-subcategoria="Guantes">Riding Gloves</a>
+              <a href="#" data-categoria="Accesorios" data-subcategoria="Cinturones">Belts</a>
+             <a href="#" data-categoria="Accesorios" data-subcategoria="Bolsas">Bags</a>
+             <a href="#" data-categoria="Accesorios" data-subcategoria="Head Bands">Head Bands</a>
             </div>
         </div>
 
@@ -227,6 +230,12 @@
 <main>
   <section id="vista-inicio">
     <section class="video-section">
+      <!-- PROMO BUEN FIN - AQUÍ EMPIEZA -->
+      <img class="video-bg promo-img" src="imagenes/buen-fin.jpg" width="1280" height="720" alt="Buen Fin: 10% de descuento en toda la tienda">
+      <h1 class="solo-lectores">Ride Beyond Limits</h1>
+      <!-- PROMO BUEN FIN - AQUÍ TERMINA -->
+
+      <!-- VIDEO ORIGINAL: al terminar la promo, borra el bloque de arriba y quita las marcas de este comentario
       <video class="video-bg" autoplay muted loop playsinline preload="auto" data-src="imagenes/video.mp4"></video>
       <script>
         (function () {
@@ -243,6 +252,7 @@
       <div class="video-content">
         <h1>Ride Beyond <span class="video-destacado">Limits</span></h1>
       </div>
+      FIN VIDEO ORIGINAL -->
     </section>
 
     <section class="home-categories">
@@ -440,6 +450,9 @@
         <h3>Resumen del pedido</h3>
         <div id="checkout-resumen-lista" class="checkout-resumen-lista"></div>
         <div class="checkout-resumen-linea"><span>Subtotal</span><span id="checkout-subtotal">$0.00</span></div>
+        <!-- PROMO BUEN FIN - AQUÍ EMPIEZA -->
+        <div class="checkout-resumen-linea checkout-descuento-fila" id="checkout-descuento-fila" hidden><span>Descuento Buen Fin (10%)</span><span id="checkout-descuento">-$0.00</span></div>
+        <!-- PROMO BUEN FIN - AQUÍ TERMINA -->
         <div class="checkout-resumen-linea"><span>Envío</span><span id="checkout-envio">$280.00</span></div>
         <p id="checkout-envio-nota" class="checkout-envio-nota"></p>
         <div class="checkout-resumen-total">

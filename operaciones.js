@@ -1408,6 +1408,20 @@ function costoEnvioPara(subtotal) {
   return subtotal >= ENVIO_GRATIS_DESDE ? 0 : COSTO_ENVIO;
 }
 
+// PROMO BUEN FIN - AQUÍ EMPIEZA
+const PROMO = {
+  porcentaje: 10,
+  desde: '2026-11-13T00:00:00-06:00',
+  hasta: '2026-11-16T00:00:00-06:00'
+};
+
+function descuentoPromo(subtotal) {
+  const ahora = Date.now();
+  if (ahora < Date.parse(PROMO.desde) || ahora >= Date.parse(PROMO.hasta)) return 0;
+  return Number((Number(subtotal) * PROMO.porcentaje / 100).toFixed(2));
+}
+// PROMO BUEN FIN - AQUÍ TERMINA
+
 function renderizarResumenCheckout() {
   const lista = document.getElementById('checkout-resumen-lista');
   const totalEl = document.getElementById('checkout-total');
@@ -1441,6 +1455,11 @@ function renderizarResumenCheckout() {
   }).join('');
 
   const envio = itemsCheckout.length ? costoEnvioPara(total) : 0;
+  const descuento = typeof descuentoPromo === 'function' ? descuentoPromo(total) : 0;
+  const filaDescuento = document.getElementById('checkout-descuento-fila');
+  const descEl = document.getElementById('checkout-descuento');
+  if (filaDescuento) filaDescuento.hidden = !(descuento > 0);
+  if (descEl) descEl.textContent = '-' + dinero(descuento);
   const subEl = document.getElementById('checkout-subtotal');
   const envEl = document.getElementById('checkout-envio');
   const notaEnvio = document.getElementById('checkout-envio-nota');
@@ -1459,7 +1478,7 @@ function renderizarResumenCheckout() {
     }
   }
 
-  totalEl.textContent = dinero(total + envio);
+  totalEl.textContent = dinero(total - descuento + envio);
   actualizarBotonClip();
 }
 
@@ -2052,7 +2071,9 @@ function totalCheckout() {
     0
   );
 
-  return productos + (itemsCheckout.length ? costoEnvioPara(productos) : 0);
+  const descuento = typeof descuentoPromo === 'function' ? descuentoPromo(productos) : 0;
+
+  return productos - descuento + (itemsCheckout.length ? costoEnvioPara(productos) : 0);
 }
 
 function actualizarBotonClip() {
