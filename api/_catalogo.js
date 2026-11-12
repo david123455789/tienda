@@ -120,22 +120,7 @@ function calcularEnvio(subtotal, tipo) {
   return Number(subtotal) >= ENVIO_GRATIS_DESDE ? 0 : COSTO_ENVIO;
 }
 
-// PROMO 11.11 - AQUÍ EMPIEZA
-const PROMO = {
-  nombre: 'PROMO 11.11',
-  porcentaje: 11,
-  desde: '2026-11-11T00:00:00-06:00',
-  hasta: '2026-11-12T00:00:00-06:00'
-};
-
-function calcularDescuento(subtotal) {
-  const ahora = Date.now();
-  if (ahora < Date.parse(PROMO.desde) || ahora >= Date.parse(PROMO.hasta)) return 0;
-  return Number((Number(subtotal) * PROMO.porcentaje / 100).toFixed(2));
-}
-// PROMO 11.11 - AQUÍ TERMINA
-
-async function validarProductos(productosCliente, tipoEntrega, codigoPromo) {
+async function validarProductos(productosCliente, tipoEntrega) {
   if (!Array.isArray(productosCliente) || productosCliente.length === 0) {
     throw errorCatalogo('Tu carrito está vacío.');
   }
@@ -208,17 +193,12 @@ async function validarProductos(productosCliente, tipoEntrega, codigoPromo) {
   const tipo = normalizarTipoEntrega(tipoEntrega);
   const envio = verificados.length ? calcularEnvio(subtotal, tipo) : 0;
 
-  const descuento = typeof calcularDescuento === 'function' ? calcularDescuento(subtotal) : 0;
-  const codigo = descuento > 0 && typeof PROMO !== 'undefined' ? PROMO.nombre : '';
-
   return {
     productos: verificados,
     subtotal,
     tipo,
     envio,
-    descuento,
-    codigo,
-    total: Number((subtotal - descuento + envio).toFixed(2))
+    total: Number((subtotal + envio).toFixed(2))
   };
 }
 

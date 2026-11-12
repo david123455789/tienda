@@ -123,10 +123,6 @@ module.exports = async function handler(req, res) {
           shipping: {
             currency_code: 'MXN',
             value: envio.toFixed(2)
-          },
-          discount: {
-            currency_code: 'MXN',
-            value: descuento.toFixed(2)
           }
         }
       },
