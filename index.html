@@ -231,7 +231,16 @@
   <section id="vista-inicio">
     <section class="video-section">
       <!-- PROMO BUEN FIN - AQUÍ EMPIEZA -->
-      <img class="video-bg promo-img" src="imagenes/buen-fin.jpg" width="1280" height="720" alt="Buen Fin: 10% de descuento en toda la tienda">
+      <video class="video-bg" autoplay muted loop playsinline preload="auto" data-src="imagenes/buen-fin.mp4" aria-label="Buen Fin: 10% de descuento en toda la tienda"></video>
+      <script>
+        (function () {
+          var v = document.querySelector('.video-bg[data-src]');
+          if (v && (location.pathname === '/' || location.pathname === '/index.html')) {
+            v.src = v.getAttribute('data-src');
+            v.removeAttribute('data-src');
+          }
+        })();
+      </script>
       <h1 class="solo-lectores">Ride Beyond Limits</h1>
       <!-- PROMO BUEN FIN - AQUÍ TERMINA -->
 
