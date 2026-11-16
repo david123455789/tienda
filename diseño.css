@@ -3898,7 +3898,6 @@ html.cargando-ruta.ruta-producto .carga-producto{display:grid}
 
 #btn-maximilian .menu-label { font-weight: 700; }
 
-/* PROMO BUEN FIN - AQUÍ EMPIEZA */
-.checkout-descuento-fila { color: #3f6b3a; }
-.checkout-descuento-fila[hidden] { display: none; }
-/* PROMO BUEN FIN - AQUÍ TERMINA */
+/* PAYPAL DESACTIVADO - AQUÍ EMPIEZA (borra este bloque al reactivar PayPal) */
+.checkout-direccion .pago-btn-clip { grid-column: 1 / -1; }
+/* PAYPAL DESACTIVADO - AQUÍ TERMINA */
