@@ -3901,3 +3901,23 @@ html.cargando-ruta.ruta-producto .carga-producto{display:grid}
 /* PAYPAL DESACTIVADO - AQUÍ EMPIEZA (borra este bloque al reactivar PayPal) */
 .checkout-direccion .pago-btn-clip { grid-column: 1 / -1; }
 /* PAYPAL DESACTIVADO - AQUÍ TERMINA */
+
+.producto-imagen,
+#productos-destacados .producto-card img {
+  object-fit: contain;
+  object-position: center;
+  background: var(--pearl);
+}
+.detalle-galeria img,
+.detalle-galeria #detalle-imagen,
+.detalle-galeria .galeria-extra {
+  height: auto;
+  aspect-ratio: auto;
+  object-fit: contain;
+}
+.carrito-item-img,
+.checkout-item-foto img,
+.search-result img {
+  object-fit: contain;
+  background: var(--pearl);
+}
