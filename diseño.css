@@ -3896,7 +3896,7 @@ html.cargando-ruta.ruta-producto .carga-producto{display:grid}
   .search-panel { top: 58px; }
 }
 
-#btn-maximilian .menu-label { font-weight: 700; }
+#btn-maximilian .menu-label, #btn-ta-tchau .menu-label { font-weight: 700; }
 
 /* PAYPAL DESACTIVADO - AQUÍ EMPIEZA (borra este bloque al reactivar PayPal) */
 .checkout-direccion .pago-btn-clip { grid-column: 1 / -1; }
