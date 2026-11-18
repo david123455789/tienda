@@ -581,10 +581,13 @@ function etiquetaMenuColeccion(categoria, subcategoria) {
 }
 
 function rutaDeColeccion(categoria, subcategoria) {
-  const esPropio = String(categoria).toLowerCase() === 'propio';
-  const partes = [esPropio ? 'in-collection' : 'maximilian'];
+  const marca = marcaDeCategoria(categoria);
+  const partes = [];
 
-  if (!esPropio) partes.push(slugTexto(categoria));
+  if (marca === 'IN Collection') partes.push('in-collection');
+  else if (marca === 'Maximilian') partes.push('maximilian', slugTexto(categoria));
+  else partes.push(slugTexto(categoria));
+
   if (subcategoria) partes.push(slugTexto(etiquetaMenuColeccion(categoria, subcategoria)));
 
   return '/' + partes.filter(Boolean).join('-');
@@ -675,7 +678,8 @@ function prepararRutaInicial() {
 
   if (tituloCatalogo) tituloCatalogo.textContent = destino.subcategoria || destino.categoria;
   if (descripcionCatalogo) {
-    descripcionCatalogo.textContent = (esPropio ? 'IN Collection' : 'Maximilian' + ' - ' + destino.categoria) +
+    const marca = marcaDeCategoria(destino.categoria);
+    descripcionCatalogo.textContent = marca + (marca === 'Maximilian' ? ' - ' + destino.categoria : '') +
       (destino.subcategoria ? ' - ' + etiquetaMenuColeccion(destino.categoria, destino.subcategoria) : '');
   }
   if (contenedorProductos) contenedorProductos.innerHTML = '<p class="mensaje-vacio">Cargando...</p>';
@@ -850,7 +854,7 @@ function filtrarProductos(categoria, subcategoria) {
   }
 
   if (descripcionCatalogo) {
-    const marcaCatalogo = normalizar(categoria) === 'propio' ? 'IN Collection' : 'Maximilian';
+    const marcaCatalogo = marcaDeCategoria(categoria);
     descripcionCatalogo.textContent = marcaCatalogo + (categoria && marcaCatalogo === 'Maximilian' ? ' - ' + categoria : '') + (subcategoria ? ' - ' + subcategoria : '');
   }
 
@@ -1406,6 +1410,13 @@ function costoEnvioPara(subtotal) {
   if (tipoEntrega === 'tienda') return 0;
   if (!(subtotal > 0)) return 0;
   return subtotal >= ENVIO_GRATIS_DESDE ? 0 : COSTO_ENVIO;
+}
+
+function marcaDeCategoria(categoria) {
+  const texto = String(categoria || '').trim().toLowerCase();
+  if (texto === 'propio') return 'IN Collection';
+  if (texto === 'tá, tchau') return 'Tá, Tchau';
+  return 'Maximilian';
 }
 
 function renderizarResumenCheckout() {
