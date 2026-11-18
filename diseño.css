@@ -3898,10 +3898,6 @@ html.cargando-ruta.ruta-producto .carga-producto{display:grid}
 
 #btn-maximilian .menu-label { font-weight: 700; }
 
-/* PAYPAL DESACTIVADO - AQUÍ EMPIEZA (borra este bloque al reactivar PayPal) */
-.checkout-direccion .pago-btn-clip { grid-column: 1 / -1; }
-/* PAYPAL DESACTIVADO - AQUÍ TERMINA */
-
 .producto-imagen,
 #productos-destacados .producto-card img {
   object-fit: contain;
