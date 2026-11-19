@@ -3,7 +3,7 @@ const productosDestacados = document.getElementById('productos-destacados');
 
 const tituloCatalogo = document.getElementById('titulo-catalogo');
 const descripcionCatalogo = document.getElementById('descripcion-catalogo');
-const tallas = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '2XS', '3XS', '4XS', '5XS'];
+const tallas = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '2XS', '3XS', '4XS', '5XS','Talla Grande(Hombre)','Talla Mediana(Mujer)','Talla Chica(Niños)'];
 
 const vistaInicio = document.getElementById('vista-inicio');
 const vistaColeccion = document.getElementById('vista-coleccion');
@@ -860,70 +860,11 @@ function filtrarProductos(categoria, subcategoria) {
 
   mostrarColeccionActual();
 
-  const esSocks = normalizar(categoria) === 'propio' && normalizar(subcategoria) === 'socks';
-  coleccionSocksBase = esSocks ? filtrados : null;
-  edadSocks = 'adultos';
-  actualizarSelectorEdad();
-
-  productosColeccionActual = esSocks ? filtrarSocksPorEdad(filtrados, edadSocks) : filtrados;
+  productosColeccionActual = filtrados;
   resetearFiltros();
   renderizarFiltros(productosColeccionActual);
   mostrarProductos(productosColeccionActual);
 }
-
-let coleccionSocksBase = null;
-let edadSocks = 'adultos';
-
-function esProductoYR(product) {
-  return /^\s*yr\b/i.test(String(product.name || product.nombre || ''));
-}
-
-function filtrarSocksPorEdad(lista, edad) {
-  return lista.filter(p => (edad === 'yr') === esProductoYR(p));
-}
-
-function actualizarSelectorEdad() {
-  const selector = document.getElementById('selector-edad');
-  const etiqueta = document.getElementById('edad-etiqueta');
-  const menu = document.getElementById('menu-edad');
-  const boton = document.getElementById('btn-edad');
-  if (!selector) return;
-
-  selector.classList.toggle('oculto', !coleccionSocksBase);
-  if (etiqueta) etiqueta.textContent = edadSocks === 'yr' ? 'YR' : 'Adultos';
-  if (menu) menu.classList.add('oculto');
-  if (boton) boton.setAttribute('aria-expanded', 'false');
-}
-
-function configurarSelectorEdad() {
-  const boton = document.getElementById('btn-edad');
-  const menu = document.getElementById('menu-edad');
-  if (!boton || !menu) return;
-
-  boton.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const abierto = menu.classList.toggle('oculto') === false;
-    boton.setAttribute('aria-expanded', String(abierto));
-  });
-
-  menu.querySelectorAll('[data-edad]').forEach(opcion => {
-    opcion.addEventListener('click', () => {
-      if (!coleccionSocksBase) return;
-      edadSocks = opcion.dataset.edad === 'yr' ? 'yr' : 'adultos';
-      actualizarSelectorEdad();
-      productosColeccionActual = filtrarSocksPorEdad(coleccionSocksBase, edadSocks);
-      resetearFiltros();
-      renderizarFiltros(productosColeccionActual);
-      mostrarProductos(productosColeccionActual);
-    });
-  });
-
-  document.addEventListener('click', () => {
-    menu.classList.add('oculto');
-    boton.setAttribute('aria-expanded', 'false');
-  });
-}
-configurarSelectorEdad();
 
 function mostrarProductos(lista, esBusqueda) {
   if (!contenedorProductos) return;
@@ -3409,8 +3350,6 @@ function renderizarResultadosBusqueda(termino) {
 function mostrarBusquedaComoColeccion(resultados, termino) {
   actualizarRuta('/buscar?q=' + encodeURIComponent(termino));
   productosColeccionActual = resultados;
-  coleccionSocksBase = null;
-  actualizarSelectorEdad();
   ultimaCategoria = 'Busqueda';
   ultimaSubcategoria = termino;
 
