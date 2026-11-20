@@ -1,5 +1,7 @@
 const { obtenerUsuarioDesdeToken } = require('./_firebaseAdmin');
 const { leerFilas, actualizarCeldas } = require('./_sheetsPedidos');
+const { enviarCorreoEstatus } = require('./_correo');
+const crypto = require('crypto');
 
 /*
  * Lista los pedidos del cliente que inició sesión, leyendo directo tu Sheet
@@ -33,7 +35,7 @@ const COL_ENVIO = {
   id: 0, nombre: 1, correo: 2, telefono: 3, calle: 4, numero: 5,
   colonia: 6, ciudad: 7, cp: 8, estado: 9, estatus: 10,
   devolucion: 11, razon: 12, estatusDev: 13,
-  fecha: 17, cancelada: 18
+  fecha: 17, cancelada: 18, tipo: 19
 };
 
 // Razones que el cliente puede elegir al pedir un reembolso.
@@ -114,6 +116,56 @@ async function solicitarReembolso(req, res, usuario) {
 // A=ID Envio B=Nombre producto C=Cantidad D=Talla E=Color F=Grip
 const COL_PRODUCTO = { idEnvio: 0, nombre: 1, cantidad: 2, talla: 3, color: 4, grip: 5 };
 
+function secretoValido(req) {
+  const esperado = process.env.NOTIFICACION_SECRETO || '';
+  const recibido = String(req.headers['x-secreto'] || '');
+  if (!esperado || !recibido) return false;
+
+  const a = Buffer.from(esperado);
+  const b = Buffer.from(recibido);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+async function notificarCambioEstatus(req, res) {
+  if (!secretoValido(req)) {
+    return res.status(401).json({ error: 'No autorizado.' });
+  }
+
+  const { idEnvio } = leerCuerpo(req);
+
+  if (!idEnvio) {
+    return res.status(400).json({ error: 'Falta el pedido.' });
+  }
+
+  const [filasEnvio, filasProducto] = await Promise.all([leerFilas('Envio'), leerFilas('Producto')]);
+  const fila = filasEnvio.find((f, i) => i > 0 && f[COL_ENVIO.id] === idEnvio);
+
+  if (!fila) {
+    return res.status(404).json({ error: 'No encontramos ese pedido.' });
+  }
+
+  const productos = filasProducto
+    .filter((f, i) => i > 0 && f[COL_PRODUCTO.idEnvio] === idEnvio)
+    .map(f => ({
+      nombre: f[COL_PRODUCTO.nombre] || '',
+      cantidad: f[COL_PRODUCTO.cantidad] || 1,
+      talla: f[COL_PRODUCTO.talla] || '',
+      color: f[COL_PRODUCTO.color] || '',
+      grip: f[COL_PRODUCTO.grip] || ''
+    }));
+
+  const enviado = await enviarCorreoEstatus({
+    idEnvio,
+    nombre: fila[COL_ENVIO.nombre] || '',
+    correo: (fila[COL_ENVIO.correo] || '').trim(),
+    estatus: fila[COL_ENVIO.estatus] || '',
+    tipo: String(fila[COL_ENVIO.tipo] || '').trim().toLowerCase() === 'tienda' ? 'tienda' : 'envio',
+    productos
+  });
+
+  return res.status(200).json({ ok: true, enviado });
+}
+
 module.exports = async function handler(req, res) {
   aplicarCors(req, res);
 
@@ -123,6 +175,15 @@ module.exports = async function handler(req, res) {
 
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Metodo no permitido' });
+  }
+
+  if (req.method === 'POST' && req.query && req.query.accion === 'notificar') {
+    try {
+      return await notificarCambioEstatus(req, res);
+    } catch (error) {
+      console.error('Error al notificar cambio de estatus:', error);
+      return res.status(500).json({ error: 'No se pudo enviar la notificación.' });
+    }
   }
 
   let usuario;
