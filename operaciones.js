@@ -3836,7 +3836,6 @@ function guardarCompraMeta() {
   } catch (error) {}
 }
 
-
 function registrarCompraMeta() {
   try {
     const guardada = sessionStorage.getItem('meta_compra');
