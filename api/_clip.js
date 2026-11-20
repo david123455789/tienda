@@ -1,14 +1,13 @@
-const { crearPedidoEnSheets } = require('./_sheetsPedidos');
+const { obtenerUsuarioDesdeToken } = require('./_firebaseAdmin');
+const { leerFilas, actualizarCeldas } = require('./_sheetsPedidos');
+const { enviarCorreoEstatus } = require('./_correo');
+const crypto = require('crypto');
 
 /*
- * Ayudantes para cobrar con el Checkout Transparente de Clip.
- *
- * Variables de entorno necesarias (las sacas de tu panel de desarrollador de Clip):
- *   CLIP_API_KEY     → tu API Key
- *   CLIP_API_SECRET  → tu Clave Secreta (nunca va en el navegador)
+ * Lista los pedidos del cliente que inició sesión, leyendo directo tu Sheet
+ * "Pedidos" (hojas "Envio" y "Producto"). El estatus que ve el cliente es el
+ * que tú pones a mano en la columna "Estatus" de la hoja "Envio".
  */
-
-const CLIP_API_BASE = 'https://api.payclip.com';
 
 const ORIGENES_PERMITIDOS = [
   'https://david123455789.github.io',
@@ -18,7 +17,7 @@ const ORIGENES_PERMITIDOS = [
   'http://localhost:3000'
 ];
 
-function aplicarCors(req, res, metodos = 'POST, OPTIONS') {
+function aplicarCors(req, res) {
   const origen = req.headers.origin;
 
   if (origen && ORIGENES_PERMITIDOS.includes(origen)) {
@@ -26,155 +25,243 @@ function aplicarCors(req, res, metodos = 'POST, OPTIONS') {
     res.setHeader('Vary', 'Origin');
   }
 
-  res.setHeader('Access-Control-Allow-Methods', metodos);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
-function encabezadoAutorizacion() {
-  const llave = process.env.CLIP_API_KEY;
-  const secreto = process.env.CLIP_API_SECRET;
+// Columnas de la hoja "Envio":
+// A=ID ENVIO B=Nombre C=Correo D=Numero E=Calle F=Numero G=Colonia H=Ciudad I=CP J=Estado K=Estatus
+const COL_ENVIO = {
+  id: 0, nombre: 1, correo: 2, telefono: 3, calle: 4, numero: 5,
+  colonia: 6, ciudad: 7, cp: 8, estado: 9, estatus: 10,
+  devolucion: 11, razon: 12, estatusDev: 13,
+  fecha: 17, cancelada: 18, tipo: 19
+};
 
-  if (!llave || !secreto) {
-    throw new Error('Faltan las variables CLIP_API_KEY y CLIP_API_SECRET en el servidor.');
-  }
+// Razones que el cliente puede elegir al pedir un reembolso.
+const RAZONES_REEMBOLSO = [
+  'Me equivoqué',
+  'Quería otro producto',
+  'No me quedó el producto'
+];
 
-  return 'Basic ' + Buffer.from(`${llave}:${secreto}`).toString('base64');
+// El estatus de la devolución se escribe a mano en la columna N del Sheet;
+// aquí se normaliza el texto para mostrarlo bonito al cliente.
+function textoEstatusDevolucion(valor) {
+  const texto = String(valor || '').trim();
+  if (!texto) return '';
+
+  const minusculas = texto.toLowerCase();
+
+  if (minusculas.includes('complet')) return 'Devolución completada';
+  if (minusculas.includes('proces') || minusculas.includes('porces')) return 'Devolución en proceso';
+  if (minusculas.includes('acept')) return 'Devolución aceptada';
+
+  return texto;
 }
 
-async function llamarClip(ruta, opciones = {}) {
-  const respuesta = await fetch(`${CLIP_API_BASE}${ruta}`, {
-    ...opciones,
-    headers: {
-      Authorization: encabezadoAutorizacion(),
-      'Content-Type': 'application/json',
-      ...(opciones.headers || {})
-    }
+// "Sí", "si", "SI", "sí " → verdadero
+function esSi(valor) {
+  return String(valor || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'si';
+}
+
+function leerCuerpo(req) {
+  if (req.body && typeof req.body === 'object') return req.body;
+
+  try {
+    return JSON.parse(req.body || '{}');
+  } catch (error) {
+    return {};
+  }
+}
+
+async function solicitarReembolso(req, res, usuario) {
+  const { idEnvio, razon } = leerCuerpo(req);
+
+  if (!idEnvio || !RAZONES_REEMBOLSO.includes(razon)) {
+    return res.status(400).json({ error: 'Datos de reembolso no válidos.' });
+  }
+
+  const filasEnvio = await leerFilas('Envio');
+  const correo = (usuario.email || '').trim().toLowerCase();
+
+  const indice = filasEnvio.findIndex((fila, i) =>
+    i > 0 &&
+    fila[COL_ENVIO.id] === idEnvio &&
+    (fila[COL_ENVIO.correo] || '').trim().toLowerCase() === correo
+  );
+
+  if (indice === -1) {
+    return res.status(404).json({ error: 'No encontramos ese pedido en tu cuenta.' });
+  }
+
+  if (esSi(filasEnvio[indice][COL_ENVIO.cancelada])) {
+    return res.status(409).json({ error: 'Este pedido está cancelado.' });
+  }
+
+  const yaSolicitado = String(filasEnvio[indice][COL_ENVIO.devolucion] || '').trim();
+
+  if (yaSolicitado) {
+    return res.status(409).json({ error: 'Este pedido ya tiene una devolución solicitada.' });
+  }
+
+  // Columnas L (Devolucion) y M (Razon) de la fila del pedido.
+  const fila = indice + 1;
+  await actualizarCeldas(`Envio!L${fila}:M${fila}`, [['Sí', razon]]);
+
+  return res.status(200).json({ ok: true });
+}
+
+// Columnas de la hoja "Producto":
+// A=ID Envio B=Nombre producto C=Cantidad D=Talla E=Color F=Grip
+const COL_PRODUCTO = { idEnvio: 0, nombre: 1, cantidad: 2, talla: 3, color: 4, grip: 5 };
+
+function secretoValido(req) {
+  const esperado = process.env.NOTIFICACION_SECRETO || '';
+  const recibido = String(req.headers['x-secreto'] || '');
+  if (!esperado || !recibido) return false;
+
+  const a = Buffer.from(esperado);
+  const b = Buffer.from(recibido);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+async function notificarCambioEstatus(req, res) {
+  if (!secretoValido(req)) {
+    return res.status(401).json({ error: 'No autorizado.' });
+  }
+
+  const { idEnvio } = leerCuerpo(req);
+
+  if (!idEnvio) {
+    return res.status(400).json({ error: 'Falta el pedido.' });
+  }
+
+  const [filasEnvio, filasProducto] = await Promise.all([leerFilas('Envio'), leerFilas('Producto')]);
+  const fila = filasEnvio.find((f, i) => i > 0 && f[COL_ENVIO.id] === idEnvio);
+
+  if (!fila) {
+    return res.status(404).json({ error: 'No encontramos ese pedido.' });
+  }
+
+  const productos = filasProducto
+    .filter((f, i) => i > 0 && f[COL_PRODUCTO.idEnvio] === idEnvio)
+    .map(f => ({
+      nombre: f[COL_PRODUCTO.nombre] || '',
+      cantidad: f[COL_PRODUCTO.cantidad] || 1,
+      talla: f[COL_PRODUCTO.talla] || '',
+      color: f[COL_PRODUCTO.color] || '',
+      grip: f[COL_PRODUCTO.grip] || ''
+    }));
+
+  const enviado = await enviarCorreoEstatus({
+    idEnvio,
+    nombre: fila[COL_ENVIO.nombre] || '',
+    correo: (fila[COL_ENVIO.correo] || '').trim(),
+    estatus: fila[COL_ENVIO.estatus] || '',
+    tipo: String(fila[COL_ENVIO.tipo] || '').trim().toLowerCase() === 'tienda' ? 'tienda' : 'envio',
+    productos
   });
 
-  const texto = await respuesta.text();
-  let datos = {};
-
-  try {
-    datos = texto ? JSON.parse(texto) : {};
-  } catch (error) {
-    datos = { message: texto };
-  }
-
-  if (!respuesta.ok) {
-    const error = new Error(datos.message || datos.error || 'Clip rechazó la operación.');
-    error.status = respuesta.status;
-    error.detalle = datos;
-    throw error;
-  }
-
-  return datos;
+  return res.status(200).json({ ok: true, enviado });
 }
 
-function mensajeRechazo(codigo) {
-  const mensajes = {
-    'RE-ISS01': 'Tu tarjeta no tiene fondos suficientes.',
-    'RE-ISS03': 'Tu tarjeta tiene restricciones. Contacta a tu banco.',
-    'RE-ISS07': 'Tu tarjeta está vencida.',
-    'RE-ISS16': 'El número de tarjeta no es válido.',
-    'RE-3DS01': 'No se pudo validar tu identidad con el banco. Intenta de nuevo.',
-    'RE-ERI05': 'Tu comercio aún no completó la verificación de identidad en Clip.'
-  };
+module.exports = async function handler(req, res) {
+  aplicarCors(req, res);
 
-  return mensajes[codigo] || 'El banco rechazó el pago. Intenta con otra tarjeta o contacta a tu banco.';
-}
-
-async function reclamarDedup(db, clave) {
-  try {
-    await db.collection('pedidos_creados').doc(clave).create({ creado: Date.now() });
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
-async function liberarDedup(db, clave) {
-  try {
-    await db.collection('pedidos_creados').doc(clave).delete();
-  } catch (error) {
-    // nada que hacer
-  }
-}
-
-// Crea el pedido en tu Sheet una sola vez por pago, aunque la función se llame dos veces.
-async function registrarPedidoUnaVez(db, clave, datosPedido) {
-  const esNuevo = await reclamarDedup(db, clave);
-
-  if (!esNuevo) {
-    return { repetido: true };
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
   }
 
-  try {
-    const idEnvio = await crearPedidoEnSheets(datosPedido);
-    return { idEnvio };
-  } catch (error) {
-    await liberarDedup(db, clave);
-    throw error;
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    return res.status(405).json({ error: 'Metodo no permitido' });
   }
-}
 
-// Devuelve la dirección de tu tienda a la que Clip regresará al cliente después de pagar.
-// Solo se aceptan las direcciones de la lista de arriba, para que nadie desvíe al cliente.
-function urlBaseSegura(urlRetorno) {
-  const porDefecto = 'https://www.inequestrian.com.mx/';
-
-  try {
-    const url = new URL(urlRetorno);
-
-    if (ORIGENES_PERMITIDOS.includes(url.origin)) {
-      return url.origin + url.pathname;
+  if (req.method === 'POST' && req.query && req.query.accion === 'notificar') {
+    try {
+      return await notificarCambioEstatus(req, res);
+    } catch (error) {
+      console.error('Error al notificar cambio de estatus:', error);
+      return res.status(500).json({ error: 'No se pudo enviar la notificación.' });
     }
+  }
+
+  let usuario;
+
+  try {
+    usuario = await obtenerUsuarioDesdeToken(req);
   } catch (error) {
-    // se usa la dirección por defecto
+    return res.status(error.status || 401).json({ error: error.message });
   }
 
-  return porDefecto;
-}
-
-// Revisa con Clip si un link de pago ya se completó y, solo entonces, crea el pedido.
-async function procesarLinkClip(db, paymentRequestId) {
-  const link = await llamarClip(`/v2/checkout/${encodeURIComponent(paymentRequestId)}`);
-
-  if (link.status !== 'CHECKOUT_COMPLETED') {
-    return { ok: false, estado: link.status || 'DESCONOCIDO' };
+  if (req.method === 'POST') {
+    try {
+      return await solicitarReembolso(req, res, usuario);
+    } catch (error) {
+      console.error('Error al solicitar reembolso:', error);
+      return res.status(500).json({
+        error: 'No se pudo registrar tu solicitud. Intenta de nuevo.',
+        message: error.message
+      });
+    }
   }
 
-  const referencia = db.collection('pedidos_pendientes_clip_link').doc(String(paymentRequestId));
-  const pendiente = await referencia.get();
+  try {
+    const [filasEnvio, filasProducto] = await Promise.all([
+      leerFilas('Envio'),
+      leerFilas('Producto')
+    ]);
 
-  if (!pendiente.exists) {
-    const yaRegistrado = await db.collection('pedidos_creados').doc(`cliplink_${paymentRequestId}`).get();
+    const correo = (usuario.email || '').trim().toLowerCase();
 
-    return yaRegistrado.exists
-      ? { ok: true, repetido: true }
-      : { ok: false, estado: link.status, mensaje: 'No encontramos ese pedido.' };
+    const misEnvios = filasEnvio
+      .slice(1) // quita el encabezado
+      .filter(fila => (fila[COL_ENVIO.correo] || '').trim().toLowerCase() === correo);
+
+    const pedidos = misEnvios.map(fila => {
+      const idEnvio = fila[COL_ENVIO.id] || '';
+
+      const productos = filasProducto
+        .slice(1)
+        .filter(filaProducto => filaProducto[COL_PRODUCTO.idEnvio] === idEnvio)
+        .map(filaProducto => ({
+          nombre: filaProducto[COL_PRODUCTO.nombre] || '',
+          cantidad: filaProducto[COL_PRODUCTO.cantidad] || '',
+          talla: filaProducto[COL_PRODUCTO.talla] || '',
+          color: filaProducto[COL_PRODUCTO.color] || '',
+          grip: filaProducto[COL_PRODUCTO.grip] || ''
+        }));
+
+      return {
+        idEnvio,
+        estatus: fila[COL_ENVIO.estatus] || 'Aceptado',
+        fecha: fila[COL_ENVIO.fecha] || '',
+        cancelada: esSi(fila[COL_ENVIO.cancelada]),
+        devolucion: String(fila[COL_ENVIO.devolucion] || '').trim() !== '',
+        razonDevolucion: fila[COL_ENVIO.razon] || '',
+        estatusDevolucion: textoEstatusDevolucion(fila[COL_ENVIO.estatusDev]),
+        direccion: {
+          calle: fila[COL_ENVIO.calle] || '',
+          numero: fila[COL_ENVIO.numero] || '',
+          colonia: fila[COL_ENVIO.colonia] || '',
+          ciudad: fila[COL_ENVIO.ciudad] || '',
+          cp: fila[COL_ENVIO.cp] || '',
+          estado: fila[COL_ENVIO.estado] || ''
+        },
+        productos
+      };
+    });
+
+    // Los IDs se generan con la fecha por delante, así que ordenarlos al
+    // revés deja primero los pedidos más recientes.
+    pedidos.sort((a, b) => (a.idEnvio < b.idEnvio ? 1 : -1));
+
+    return res.status(200).json(pedidos);
+  } catch (error) {
+    console.error('Error en /api/pedidos:', error);
+    return res.status(500).json({
+      error: 'No se pudieron cargar tus pedidos.',
+      message: error.message
+    });
   }
-
-  const datos = pendiente.data();
-
-  // Doble revisión: lo que Clip cobró debe ser lo que nosotros calculamos.
-  if (link.amount !== undefined && Math.abs(Number(link.amount) - Number(datos.total)) > 0.01) {
-    const error = new Error('El monto cobrado por Clip no coincide con el del pedido.');
-    error.status = 409;
-    throw error;
-  }
-
-  const resultado = await registrarPedidoUnaVez(db, `cliplink_${paymentRequestId}`, datos.datosPedido);
-
-  await referencia.delete();
-
-  return { ok: true, idEnvio: resultado.idEnvio || null, repetido: Boolean(resultado.repetido) };
-}
-
-module.exports = {
-  aplicarCors,
-  llamarClip,
-  mensajeRechazo,
-  registrarPedidoUnaVez,
-  urlBaseSegura,
-  procesarLinkClip
 };

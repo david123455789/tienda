@@ -160,4 +160,93 @@ async function enviarCorreosDePedido(pedido) {
   });
 }
 
-module.exports = { enviarCorreosDePedido, correoCliente, correoTienda };
+const MENSAJES_ESTATUS = {
+  'aceptado': {
+    titulo: 'Recibimos tu pedido',
+    asunto: 'Recibimos tu pedido',
+    texto: 'Recibimos tu pedido y ya lo estamos preparando.'
+  },
+  'en proceso': {
+    titulo: 'Tu pedido está en proceso',
+    asunto: 'Tu pedido está en proceso',
+    texto: 'Tu pedido está en proceso. Estamos trabajando en él y te avisaremos en cuanto avance.'
+  },
+  'pedido aceptado': {
+    titulo: 'Tu pedido fue aceptado',
+    asunto: 'Tu pedido fue aceptado',
+    texto: 'Tu pedido fue aceptado y confirmado. Pronto lo tendrás listo.'
+  },
+  'enviado': {
+    titulo: 'Tu pedido va en camino',
+    asunto: 'Tu pedido fue enviado',
+    texto: 'Tu pedido ya fue enviado y va en camino.',
+    textoTienda: 'Tu pedido ya está listo para que lo recojas en la boutique.',
+    tituloTienda: 'Tu pedido está listo',
+    asuntoTienda: 'Tu pedido está listo para recoger'
+  },
+  'entregado': {
+    titulo: 'Tu pedido fue entregado',
+    asunto: 'Tu pedido fue entregado',
+    texto: 'Tu pedido fue entregado. ¡Gracias por comprar con nosotros!',
+    textoTienda: 'Gracias por recoger tu pedido. ¡Esperamos verte pronto!',
+    tituloTienda: 'Pedido entregado'
+  }
+};
+
+function mensajeDeEstatus(estatus) {
+  return MENSAJES_ESTATUS[String(estatus || '').trim().toLowerCase()] || null;
+}
+
+function correoEstatus({ idEnvio, nombre, estatus, tipo, productos }) {
+  const m = mensajeDeEstatus(estatus);
+  if (!m) return null;
+
+  const tienda = tipo === 'tienda';
+  const titulo = (tienda && m.tituloTienda) || m.titulo;
+  const asunto = (tienda && m.asuntoTienda) || m.asunto;
+  const texto = (tienda && m.textoTienda) || m.texto;
+  const primerNombre = (nombre || '').split(' ')[0];
+
+  const lista = (productos || []).length
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">${productos.map(p => `
+      <tr>
+        <td style="padding:10px 0;border-bottom:1px solid ${COLOR.borde};font-size:15px;color:${COLOR.texto}">
+          <strong>${esc(p.nombre)}</strong>
+          ${detalleProducto(p) ? `<br><span style="font-size:13px;color:${COLOR.suave}">${esc(detalleProducto(p))}</span>` : ''}
+        </td>
+        <td style="padding:10px 0 10px 12px;border-bottom:1px solid ${COLOR.borde};font-size:15px;color:${COLOR.texto};text-align:right;white-space:nowrap">× ${esc(p.cantidad || 1)}</td>
+      </tr>`).join('')}</table>`
+    : '';
+
+  const contenido = `
+    <p style="margin:0 0 18px;font-size:16px;line-height:1.6">${primerNombre ? esc(primerNombre) + ', ' : ''}${esc(texto.charAt(0).toLowerCase() + texto.slice(1))}</p>
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:${COLOR.suave}">Pedido <strong style="color:${COLOR.negro}">${esc(idEnvio)}</strong> · Estatus: <strong style="color:${COLOR.negro}">${esc(estatus)}</strong></p>
+    ${lista}
+    ${tienda ? `<p style="margin:18px 0 0;font-size:14px;line-height:1.6;color:${COLOR.suave}">Boutique: Prol. P.º de la Reforma 413, Lomas de Santa Fe, 01219 Ciudad de México.</p>` : ''}
+    <p style="margin:24px 0 0;font-size:14px;line-height:1.6;color:${COLOR.suave}">Puedes ver el estatus de tu pedido en <a href="${SITIO}/cuenta" style="color:${COLOR.negro}">Mi cuenta → Pedidos</a>. Si tienes alguna duda, responde a este correo o escríbenos a contacto@in-equestrian.com.</p>`;
+
+  return { asunto: `${asunto} · ${idEnvio}`, html: plantilla(titulo, contenido) };
+}
+
+async function enviarCorreoEstatus(pedido) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('Correos desactivados: falta RESEND_API_KEY.');
+    return false;
+  }
+
+  if (!pedido.correo) return false;
+
+  const c = correoEstatus(pedido);
+  if (!c) return false;
+
+  await enviar({
+    para: pedido.correo,
+    asunto: c.asunto,
+    html: c.html,
+    responderA: process.env.CORREO_AVISO || 'contacto@in-equestrian.com'
+  });
+
+  return true;
+}
+
+module.exports = { enviarCorreosDePedido, correoCliente, correoTienda, correoEstatus, enviarCorreoEstatus };
