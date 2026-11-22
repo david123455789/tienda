@@ -145,6 +145,7 @@ function configurarMenu() {
     boton.addEventListener('click', event => {
       event.preventDefault();
       event.stopPropagation();
+      cerrarPanelBusqueda();
       const abrir = !item.classList.contains('open');
       dropdown.classList.remove('open');
       if (abrir) item.classList.add('open');
@@ -158,6 +159,9 @@ function configurarMenu() {
   document.addEventListener('click', () => {
     dropdown.classList.remove('open');
   });
+
+  const botonCuenta = document.getElementById('btn-cuenta');
+  if (botonCuenta) botonCuenta.addEventListener('click', cerrarPanelBusqueda);
 
   document.querySelectorAll('.category-btn').forEach(button => {
     button.addEventListener('click', event => {
