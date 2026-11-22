@@ -3273,6 +3273,7 @@ function cerrarPanelBusqueda() {
   if (!busquedaPanel) return;
   busquedaPanel.classList.add('oculto');
   busquedaPanel.setAttribute('aria-hidden', 'true');
+  if (inputBusqueda) inputBusqueda.value = '';
 }
 
 function normalizarBusqueda(valor) {
