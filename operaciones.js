@@ -3263,12 +3263,20 @@ function configurarBusqueda() {
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape') cerrarPanelBusqueda();
   });
+
+  window.addEventListener('scroll', () => {
+    if (busquedaPanel.classList.contains('oculto')) return;
+    if (Math.abs(window.scrollY - scrollAlAbrirBusqueda) > 60) cerrarPanelBusqueda();
+  }, { passive: true });
 }
+
+let scrollAlAbrirBusqueda = 0;
 
 function abrirBusqueda() {
   if (!busquedaPanel || !inputBusqueda) return;
   busquedaPanel.classList.remove('oculto');
   busquedaPanel.setAttribute('aria-hidden', 'false');
+  scrollAlAbrirBusqueda = window.scrollY;
   inputBusqueda.focus();
   renderizarResultadosBusqueda(inputBusqueda.value);
 }
