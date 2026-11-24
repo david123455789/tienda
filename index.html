@@ -253,23 +253,11 @@
 </div>
 <main>
   <section id="vista-inicio">
-    <section class="video-section">
-      <video class="video-bg" autoplay muted loop playsinline preload="auto" data-src="imagenes/video.mp4"></video>
-      <script>
-        (function () {
-          var v = document.querySelector('.video-bg[data-src]');
-          if (v && (location.pathname === '/' || location.pathname === '/index.html')) {
-            v.src = v.getAttribute('data-src');
-            v.removeAttribute('data-src');
-          }
-        })();
-      </script>
-
-      <div class="video-overlay"></div>
-
-      <div class="video-content">
-        <h1>Ride Beyond <span class="video-destacado">Limits</span></h1>
-      </div>
+    <section class="hero-nacional">
+      <picture>
+        <source media="(max-width: 700px)" srcset="imagenes/nacional-movil.webp" width="1080" height="2041">
+        <img src="imagenes/nacional-escritorio.webp" width="2000" height="1125" fetchpriority="high" alt="Campeonato Nacional de Salto. Nos vemos en el Nacional. CSI2* del 25 al 29 de noviembre y CSI3* del 2 al 6 de diciembre, en El Marqués, Viñedos del Polo, Querétaro. Boutique Santa Fe cerrada del 24 de noviembre al 6 de diciembre; reabrimos el lunes 7 de diciembre. La tienda en línea sigue abierta.">
+      </picture>
     </section>
 
     <section class="home-categories">

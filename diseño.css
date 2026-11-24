@@ -566,7 +566,7 @@ header {
   width: 100%;
   height: 96px;
   object-fit: contain;
-  object-position: center;
+  object-position: center 36%;
   padding: 0;
   background: transparent;
   display: block;
@@ -3886,13 +3886,12 @@ html.cargando-ruta.ruta-producto .carga-producto{display:grid}
   .search-panel { top: 58px; }
 }
 
-
 #btn-maximilian .menu-label { font-weight: 700; }
 
 .producto-imagen,
 #productos-destacados .producto-card img {
   object-fit: contain;
-  object-position: center;
+  object-position: center 36%;
   background: var(--pearl);
 }
 .detalle-galeria img,
@@ -3907,4 +3906,23 @@ html.cargando-ruta.ruta-producto .carga-producto{display:grid}
 .search-result img {
   object-fit: contain;
   background: var(--pearl);
+}
+
+.hero-nacional {
+  background: #090909;
+  line-height: 0;
+}
+
+.hero-nacional img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (min-width: 701px) {
+  .hero-nacional img {
+    aspect-ratio: 2.1 / 1;
+    object-fit: cover;
+    object-position: center 36%;
+  }
 }
