@@ -260,6 +260,30 @@
       </picture>
     </section>
 
+    <section class="video-bag">
+      <div class="video-bag-marco">
+        <video id="video-bag" muted loop playsinline preload="none" poster="imagenes/bag-poster.webp" data-src="imagenes/bag.mp4" aria-label="Gear Backpack de IN: todo tu equipo en un solo lugar. Parches personalizados gratis en el Nacional."></video>
+      </div>
+      <a href="#" class="video-bag-boton" data-categoria="Propio" data-subcategoria="Bags">Ver Bags</a>
+      <script>
+        (function () {
+          var v = document.getElementById('video-bag');
+          if (!v) return;
+          function reproducir() {
+            if (!v.getAttribute('src')) v.src = v.getAttribute('data-src');
+            var p = v.play();
+            if (p && p.catch) p.catch(function () {});
+          }
+          if (!('IntersectionObserver' in window)) { reproducir(); return; }
+          new IntersectionObserver(function (entradas) {
+            entradas.forEach(function (e) {
+              if (e.isIntersecting) reproducir(); else v.pause();
+            });
+          }, { threshold: 0.35 }).observe(v);
+        })();
+      </script>
+    </section>
+
     <section class="home-categories">
       <div class="section-heading section-heading-logo">
         <h2 class="solo-lectores">Maximilian</h2>
